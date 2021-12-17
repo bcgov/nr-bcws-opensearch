@@ -1,108 +1,95 @@
 package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.xml.transform.TransformerConfigurationException;
-
 import org.json.JSONObject;
-import org.xml.sax.SAXException;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+/**
+ * Static handler for WFDM API Access.
+ */
 public class GetFileFromWFDMAPI {
 	// TODO:move to propeties file
 	private static final String BASE_URL = "<Enter base URL here>";
-	private static final String WFDM_URL = "<Enter WFDM URL here>";;
+	private static final String WFDM_URL = "<Enter WFDM URL here>";
 
 	static Properties proFile;
 
-	public void getAccessToken(String fileID) throws Exception {
-		String accessToken = getAccessToken();
-		String fileInformation = getFileInformation(accessToken, fileID);
+  // Private constructor hides the implicit public constructor
+  private GetFileFromWFDMAPI() { /* empty */ }
+
+  /**
+   * Fetch an Access Token for authentication with the WFDM API
+   * @param client The Client ID
+   * @param password The Client Secret
+   * @return
+   * @throws UnirestException
+   */
+	public static String getAccessToken (String client, String password) throws UnirestException {
+    HttpResponse<JsonNode> httpResponse =
+      Unirest.get(BASE_URL)
+              .basicAuth(client, password)
+              .asJson();
+
+    if (httpResponse.getStatus() == 200) {
+      JSONObject responseBody = httpResponse.getBody().getObject();
+      return responseBody.get("access_token").toString();
+    } else {
+      return null;
+    }
 	}
 
-	private static String getAccessToken() {
-		HttpResponse<JsonNode> httpResponse;
-		JSONObject responseBody = null;
-		String CLIENT_ID = "Clinet ID Goes Here";
-		String PASSWORD = "Password Goes Here";
-
-		try {
-			httpResponse = Unirest.get(BASE_URL).basicAuth(CLIENT_ID, PASSWORD).asJson();
-			responseBody = httpResponse.getBody().getObject();
-		} catch (UnirestException e) {
-			e.printStackTrace();
-		}
-		
-		return (String) responseBody.get("access_token");
+  /**
+   * Fetch the details of a WFDM File resource, including Metadata and security
+   * This method will not return the files bytes
+   * @param accessToken
+   * @param fileId
+   * @return
+   * @throws UnirestException
+   */
+	public static String getFileInformation (String accessToken, String fileId) throws UnirestException {
+    HttpResponse<String> detailsResponse =
+      Unirest.get(WFDM_URL + fileId)
+              .header("Authorization", "Bearer " + accessToken)
+              .header("Content-Type", "application/json").asString();
+    
+    if (detailsResponse.getStatus() == 200) {
+      return detailsResponse.getBody();
+    } else {
+      return null;
+    }
 	}
 
-	private static String getFileInformation(String accessToken, String fileId)
-			throws UnirestException, TransformerConfigurationException, SAXException {
-
-		HttpResponse<String> detailsResponse;
-		String detailsJson = null;
-		try {
-			detailsResponse = Unirest.get(WFDM_URL + fileId).header("Authorization", "Bearer " + accessToken)
-					.header("Content-Type", "application/json").asString();
-			detailsJson = detailsResponse.getBody();
-			JSONObject jsonObj = new JSONObject(detailsJson);
-			String filePath = jsonObj.getString("filePath");
-			String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-			// TOD0:Add more mimetype
-			// get file bytes if its a text/pdf
-			if (jsonObj.get("mimeType").equals("text/plain") || jsonObj.get("mimeType").equals("application/msword")
-					|| jsonObj.get("mimeType").equals("application/msword")
-					|| jsonObj.get("fileExtension").equals("docx")
-					|| jsonObj.get("mimeType").equals("application/pdf")) {
-				getFileBytes(accessToken, fileId, fileName);
-			}
-
-		} catch (UnirestException e) {
-			e.printStackTrace();
-		}
-		return detailsJson;
-
+  /**
+   * Fetch the bytes for a WFDM File resource. This will return a BufferedInputStream
+   * @param accessToken The WFDM authentication bearer token
+   * @param fileId The WFDM ID for a file resource
+   * @return A BufferedInputStream representing the file resources bytes
+   * @throws UnirestException
+   */
+  public static BufferedInputStream getFileStream (String accessToken, String fileId) throws UnirestException {
+    HttpResponse<InputStream> bytesResponse = 
+      Unirest.get(WFDM_URL + fileId + "/bytes")
+             .header("Accept", "*/*")
+             .header("Authorization", "Bearer " + accessToken)
+             .asBinary();
+    if (bytesResponse.getStatus() == 200) {
+      return new BufferedInputStream(bytesResponse.getBody());
+    } else {
+      return null;
+    }
 	}
 
-	private static byte[] getFileBytes(String accessToken, String fileId,String fileName) throws UnirestException, TransformerConfigurationException, SAXException {
-		System.out.println("Get file bytes for file:" + fileId + accessToken+" "+fileName);
-		byte[] fileBytes = null;
-		HttpResponse<InputStream> bytesResponse;
-		try {
-			bytesResponse = Unirest.get(WFDM_URL + fileId + "/bytes").header("Accept", "*/*")
-					.header("Authorization", "Bearer " + accessToken).asBinary();
-			BufferedInputStream BIStream = new BufferedInputStream(bytesResponse.getBody());
-			TikaParseDocument tikaParser = new TikaParseDocument();
-			tikaParser.ParseDocument(BIStream,fileName);
-			fileBytes = readFully(BIStream).toByteArray();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return fileBytes;
-
-	}
-
-	private static ByteArrayOutputStream readFully(InputStream inputStream) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] buffer = new byte[1024];
-		int length = 0;
-		while ((length = inputStream.read(buffer)) != -1) {
-			baos.write(buffer, 0, length);
-		}
-		return baos;
-	}
-
-	//Properties file not working in AWS-
-	//Need more research
+	// Properties file not working in AWS-
+	// Need more research
 	private static void readPropertiesFromFile() {
 		try (InputStream propertyFile = new FileInputStream("src/main/resources/wfdm-api-config.properties")) {
 			proFile = new Properties();
@@ -111,5 +98,4 @@ public class GetFileFromWFDMAPI {
 			ex.printStackTrace();
 		}
 	}
-
 }
