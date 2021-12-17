@@ -17,27 +17,27 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  * Static handler for WFDM API Access.
  */
 public class GetFileFromWFDMAPI {
-	// TODO:move to propeties file
-	private static final String BASE_URL = "<Enter base URL here>";
-	private static final String WFDM_URL = "<Enter WFDM URL here>";
+  // TODO:move to propeties file
+  private static final String BASE_URL = "<Enter base URL here>";
+  private static final String WFDM_URL = "<Enter WFDM URL here>";
 
-	static Properties proFile;
+  static Properties proFile;
 
   // Private constructor hides the implicit public constructor
-  private GetFileFromWFDMAPI() { /* empty */ }
+  private GetFileFromWFDMAPI() {/* empty */ }
 
   /**
    * Fetch an Access Token for authentication with the WFDM API
-   * @param client The Client ID
+   * 
+   * @param client   The Client ID
    * @param password The Client Secret
    * @return
    * @throws UnirestException
    */
-	public static String getAccessToken (String client, String password) throws UnirestException {
-    HttpResponse<JsonNode> httpResponse =
-      Unirest.get(BASE_URL)
-              .basicAuth(client, password)
-              .asJson();
+  public static String getAccessToken(String client, String password) throws UnirestException {
+    HttpResponse<JsonNode> httpResponse = Unirest.get(BASE_URL)
+        .basicAuth(client, password)
+        .asJson();
 
     if (httpResponse.getStatus() == 200) {
       JSONObject responseBody = httpResponse.getBody().getObject();
@@ -45,57 +45,58 @@ public class GetFileFromWFDMAPI {
     } else {
       return null;
     }
-	}
+  }
 
   /**
    * Fetch the details of a WFDM File resource, including Metadata and security
    * This method will not return the files bytes
+   * 
    * @param accessToken
    * @param fileId
    * @return
    * @throws UnirestException
    */
-	public static String getFileInformation (String accessToken, String fileId) throws UnirestException {
-    HttpResponse<String> detailsResponse =
-      Unirest.get(WFDM_URL + fileId)
-              .header("Authorization", "Bearer " + accessToken)
-              .header("Content-Type", "application/json").asString();
-    
+  public static String getFileInformation(String accessToken, String fileId) throws UnirestException {
+    HttpResponse<String> detailsResponse = Unirest.get(WFDM_URL + fileId)
+        .header("Authorization", "Bearer " + accessToken)
+        .header("Content-Type", "application/json").asString();
+
     if (detailsResponse.getStatus() == 200) {
       return detailsResponse.getBody();
     } else {
       return null;
     }
-	}
+  }
 
   /**
-   * Fetch the bytes for a WFDM File resource. This will return a BufferedInputStream
+   * Fetch the bytes for a WFDM File resource. This will return a
+   * BufferedInputStream
+   * 
    * @param accessToken The WFDM authentication bearer token
-   * @param fileId The WFDM ID for a file resource
+   * @param fileId      The WFDM ID for a file resource
    * @return A BufferedInputStream representing the file resources bytes
    * @throws UnirestException
    */
-  public static BufferedInputStream getFileStream (String accessToken, String fileId) throws UnirestException {
-    HttpResponse<InputStream> bytesResponse = 
-      Unirest.get(WFDM_URL + fileId + "/bytes")
-             .header("Accept", "*/*")
-             .header("Authorization", "Bearer " + accessToken)
-             .asBinary();
+  public static BufferedInputStream getFileStream(String accessToken, String fileId) throws UnirestException {
+    HttpResponse<InputStream> bytesResponse = Unirest.get(WFDM_URL + fileId + "/bytes")
+        .header("Accept", "*/*")
+        .header("Authorization", "Bearer " + accessToken)
+        .asBinary();
     if (bytesResponse.getStatus() == 200) {
       return new BufferedInputStream(bytesResponse.getBody());
     } else {
       return null;
     }
-	}
+  }
 
-	// Properties file not working in AWS-
-	// Need more research
-	private static void readPropertiesFromFile() {
-		try (InputStream propertyFile = new FileInputStream("src/main/resources/wfdm-api-config.properties")) {
-			proFile = new Properties();
-			proFile.load(propertyFile);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
+  // Properties file not working in AWS-
+  // Need more research
+  private static void readPropertiesFromFile() {
+    try (InputStream propertyFile = new FileInputStream("src/main/resources/wfdm-api-config.properties")) {
+      proFile = new Properties();
+      proFile.load(propertyFile);
+    } catch (IOException ex) {
+      ex.printStackTrace();
+    }
+  }
 }

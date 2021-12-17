@@ -23,45 +23,47 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
  */
 public class OpenSearchRESTClient {
   // should likely be moved into a config file...
-	private static String serviceName = "es";
-	private static String region = "ca-central-1";
-	private static String domainEndpoint = "add URL here";
-	private static String index = "my-index";
-	private static String id = String.valueOf(System.currentTimeMillis());
+  private static String serviceName = "es";
+  private static String region = "ca-central-1";
+  private static String domainEndpoint = "add URL here";
+  private static String index = "my-index";
+  private static String id = String.valueOf(System.currentTimeMillis());
 
-	static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+  static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   /**
    * Adds the provided content and metadata to the OpenSearch index
+   * 
    * @param content
    * @param fileName
    * @return
    * @throws IOException
    */
-	public IndexResponse addIndex (String content, String fileName) throws IOException {
-		RestHighLevelClient searchClient = searchClient(serviceName, region);
-		String type = "_doc";
+  public IndexResponse addIndex(String content, String fileName) throws IOException {
+    RestHighLevelClient searchClient = searchClient(serviceName, region);
+    String type = "_doc";
 
-		Map<String, Object> document = new HashMap<>();
-		document.put("key", fileName);
+    Map<String, Object> document = new HashMap<>();
+    document.put("key", fileName);
     document.put("text", content);
     // append attributes from file metadata
     // append attributes from security
 
-		// Form the indexing request, send it, and print the response
-		IndexRequest request = new IndexRequest(index, type, id).source(document);
+    // Form the indexing request, send it, and print the response
+    IndexRequest request = new IndexRequest(index, type, id).source(document);
 
     return searchClient.index(request, RequestOptions.DEFAULT);
-	}
+  }
 
-	// Adds the interceptor to the OpenSearch REST client
-	private static RestHighLevelClient searchClient(String serviceName, String region) {
-		AWS4Signer signer = new AWS4Signer();
-		signer.setServiceName(serviceName);
-		signer.setRegionName(region);
+  // Adds the interceptor to the OpenSearch REST client
+  private static RestHighLevelClient searchClient(String serviceName, String region) {
+    AWS4Signer signer = new AWS4Signer();
+    signer.setServiceName(serviceName);
+    signer.setRegionName(region);
 
-		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
-		return new RestHighLevelClient(RestClient.builder(HttpHost.create(domainEndpoint))
-      .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
-	}
+    HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
+        credentialsProvider);
+    return new RestHighLevelClient(RestClient.builder(HttpHost.create(domainEndpoint))
+        .setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)));
+  }
 }

@@ -27,8 +27,8 @@ import org.xml.sax.SAXException;
  * that will instruct the ClamAV lambda to execute
  */
 public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchResponse> {
-	@Override
-  public SQSBatchResponse handleRequest (SQSEvent sqsEvent, Context context) {
+  @Override
+  public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LambdaLogger logger = context.getLogger();
     List<SQSBatchResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();
     String messageBody = "";
@@ -37,19 +37,24 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     for (SQSEvent.SQSMessage message : sqsEvent.getRecords()) {
       try {
         // This MUST be verified/sanitized!!!!
-        // messageBody should be a fileId or a URL to the resource on WFDM. We can validate either condition
+        // messageBody should be a fileId or a URL to the resource on WFDM. We can
+        // validate either condition
         messageBody = message.getBody();
         logger.log("Info: SQS Message Received: " + messageBody);
 
-        // Should come for preferences, Client ID and secret for authentication with WFDM
+        // Should come for preferences, Client ID and secret for authentication with
+        // WFDM
         String CLIENT_ID = "Clinet ID Goes Here";
         String PASSWORD = "Password Goes Here";
 
-        // Fetch an authentication token. We fetch this each time so the tokens themselves
-        // aren't in a cache slowly getting stale. Could be replaced by a check token and
+        // Fetch an authentication token. We fetch this each time so the tokens
+        // themselves
+        // aren't in a cache slowly getting stale. Could be replaced by a check token
+        // and
         // a cached token
         String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
-        if (wfdmToken == null) throw new Exception("Could not authorize access for WFDM");
+        if (wfdmToken == null)
+          throw new Exception("Could not authorize access for WFDM");
 
         String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, messageBody);
 
@@ -74,7 +79,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           } else {
             // nothing to see here folks, we won't process this file. However
             // this isn't an error and we might want to handle metadata, etc.
-            logger.log("Info: Mime type of " + jsonObj.get("mimeType") + " is not processed for OpenSearch. Skipping Tika parse.");
+            logger.log("Info: Mime type of " + jsonObj.get("mimeType")
+                + " is not processed for OpenSearch. Skipping Tika parse.");
           }
           // Push content and File meta up to our Opensearch Index
           logger.log("Info: Indexing with OpenSearch...");
