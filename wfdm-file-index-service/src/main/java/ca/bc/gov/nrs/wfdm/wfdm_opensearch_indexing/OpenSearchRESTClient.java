@@ -11,6 +11,8 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -26,7 +28,7 @@ public class OpenSearchRESTClient {
   private static String serviceName = "es";
   private static String region = "ca-central-1";
   private static String domainEndpoint = "add URL here";
-  private static String index = "my-index";
+  private static String index = "wfdm-opensearch-index";
   private static String id = String.valueOf(System.currentTimeMillis());
 
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -39,15 +41,16 @@ public class OpenSearchRESTClient {
    * @return
    * @throws IOException
    */
-  public IndexResponse addIndex(String content, String fileName) throws IOException {
+  public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails) throws IOException {
     RestHighLevelClient searchClient = searchClient(serviceName, region);
     String type = "_doc";
 
     Map<String, Object> document = new HashMap<>();
     document.put("key", fileName);
     document.put("text", content);
-    // append attributes from file metadata
-    // append attributes from security
+    // attach the metadata and security
+    document.put("metadata", fileDetails.getJSONArray("metadata").toString());
+    document.put("security", fileDetails.getJSONArray("security").toString());
 
     // Form the indexing request, send it, and print the response
     IndexRequest request = new IndexRequest(index, type, id).source(document);

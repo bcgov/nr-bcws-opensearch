@@ -67,9 +67,9 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           BufferedInputStream stream = GetFileFromWFDMAPI.getFileStream(wfdmToken, messageBody);
           // Tika Time! (If Necessary, check mime types)
           logger.log("Info: Tika Parser...");
-          JSONObject jsonObj = new JSONObject(fileInfo);
+          JSONObject fileDetailsJson = new JSONObject(fileInfo);
 
-          String mimeType = jsonObj.get("mimeType").toString();
+          String mimeType = fileDetailsJson.get("mimeType").toString();
           String content = "";
 
           if (mimeType.equalsIgnoreCase("text/plain") ||
@@ -79,17 +79,17 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           } else {
             // nothing to see here folks, we won't process this file. However
             // this isn't an error and we might want to handle metadata, etc.
-            logger.log("Info: Mime type of " + jsonObj.get("mimeType")
+            logger.log("Info: Mime type of " + fileDetailsJson.get("mimeType")
                 + " is not processed for OpenSearch. Skipping Tika parse.");
           }
           // Push content and File meta up to our Opensearch Index
           logger.log("Info: Indexing with OpenSearch...");
-          String filePath = jsonObj.getString("filePath");
+          String filePath = fileDetailsJson.getString("filePath");
           String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
           OpenSearchRESTClient restClinet = new OpenSearchRESTClient();
 
-          restClinet.addIndex(content, fileName);
+          restClinet.addIndex(content, fileName, fileDetailsJson);
           // Cleanup
           logger.log("Info: Finalizing processing...");
           stream.close();
