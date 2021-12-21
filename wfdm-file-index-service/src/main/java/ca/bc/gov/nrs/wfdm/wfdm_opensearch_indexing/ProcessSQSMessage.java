@@ -33,6 +33,12 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     List<SQSBatchResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();
     String messageBody = "";
 
+    // null check sqsEvents!
+    if (sqsEvent == null || sqsEvent.getRecords() == null) {
+      logger.log("Info: No messages to handle\nInfo: Close SQS batch");
+      return new SQSBatchResponse(batchItemFailures);
+    }
+
     // Iterate the available messages
     for (SQSEvent.SQSMessage message : sqsEvent.getRecords()) {
       try {
