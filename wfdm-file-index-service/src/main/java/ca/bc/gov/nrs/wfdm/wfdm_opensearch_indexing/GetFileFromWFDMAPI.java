@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.mashape.unirest.http.HttpResponse;
@@ -87,13 +88,30 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  public static boolean setVirusScanMetadata (String accessToken, String fileId, String fileDetails) throws UnirestException {
+  public static boolean setVirusScanMetadata (String accessToken, String fileId, JSONObject fileDetails) throws UnirestException {
     // Add metadata to the File details to flag it as "Unscanned"
+    JSONArray metaArray = fileDetails.getJSONArray("metadata");
+    // Locate any existing scan meta and remove
+    for (int i = 0; i < metaArray.length(); i++) {
+      String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+      if (metadataName.equalsIgnoreCase("scanStatus")) {
+        metaArray.remove(i);
+        break;
+      }
+    }
+
+    // inject scan meta
+    JSONObject meta = new JSONObject();
+    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+    meta.put("metadataName", "scanStatus");
+    meta.put("metadataValue", "unscanned");
+    metaArray.put(meta);
 
     // PUT the changes
     HttpResponse<String> metaUpdateResponse = Unirest.put(WFDM_URL + fileId)
-        .header("Accept", "*/*")
+        .header("Content-Type", "application/json")
         .header("Authorization", "Bearer " + accessToken)
+        .body(fileDetails.toString())
         .asString();
 
     return metaUpdateResponse.getStatus() == 200;
