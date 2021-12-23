@@ -1,8 +1,6 @@
 package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -34,7 +32,7 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getAccessToken(String client, String password) throws UnirestException {
+  public static String getAccessToken (String client, String password) throws UnirestException {
     HttpResponse<JsonNode> httpResponse = Unirest.get(BASE_URL)
         .basicAuth(client, password)
         .asJson();
@@ -56,7 +54,7 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getFileInformation(String accessToken, String fileId) throws UnirestException {
+  public static String getFileInformation (String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(WFDM_URL + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
@@ -77,7 +75,7 @@ public class GetFileFromWFDMAPI {
    * @return A BufferedInputStream representing the file resources bytes
    * @throws UnirestException
    */
-  public static BufferedInputStream getFileStream(String accessToken, String fileId) throws UnirestException {
+  public static BufferedInputStream getFileStream (String accessToken, String fileId) throws UnirestException {
     HttpResponse<InputStream> bytesResponse = Unirest.get(WFDM_URL + fileId + "/bytes")
         .header("Accept", "*/*")
         .header("Authorization", "Bearer " + accessToken)
@@ -89,14 +87,15 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  // Properties file not working in AWS-
-  // Need more research
-  private static void readPropertiesFromFile() {
-    try (InputStream propertyFile = new FileInputStream("src/main/resources/wfdm-api-config.properties")) {
-      proFile = new Properties();
-      proFile.load(propertyFile);
-    } catch (IOException ex) {
-      ex.printStackTrace();
-    }
+  public static boolean setVirusScanMetadata (String accessToken, String fileId, String fileDetails) throws UnirestException {
+    // Add metadata to the File details to flag it as "Unscanned"
+
+    // PUT the changes
+    HttpResponse<String> metaUpdateResponse = Unirest.put(WFDM_URL + fileId)
+        .header("Accept", "*/*")
+        .header("Authorization", "Bearer " + accessToken)
+        .asString();
+
+    return metaUpdateResponse.getStatus() == 200;
   }
 }
