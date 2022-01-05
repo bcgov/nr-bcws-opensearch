@@ -52,7 +52,9 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
       try {
         messageBody = message.getBody();
         JSONObject messageDetails = new JSONObject(messageBody);
-        String fileId = messageDetails.getJSONObject("responsePayload").getString("input_key");
+        String inputKey = messageDetails.getJSONObject("responsePayload").getString("input_key");
+        String fileId = inputKey.split("-")[0];
+        String versionNumber = inputKey.split("-")[1];
         String status = messageDetails.getJSONObject("responsePayload").getString("status");
         logger.log("\nInfo: SQS Message Received: " + messageBody);
 
@@ -80,7 +82,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           logger.log("\nInfo: File found on WFDM: " + fileInfo);
           // Update Virus scan metadata
           // Note, current user likely lacks access to update metadata so we'll need to update webade
-          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, fileDetailsJson, status);
+          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, status);
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?
@@ -105,7 +107,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           }
 
           // Delete the file from the virus scan bucket, we don't need it anymore
-          s3client.deleteObject(new DeleteObjectRequest(clamavBucket.getName(), fileId));
+          s3client.deleteObject(new DeleteObjectRequest(clamavBucket.getName(), inputKey));
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
         logger.log("\nError: Failure to recieve file from WFDM: " + e.getLocalizedMessage());

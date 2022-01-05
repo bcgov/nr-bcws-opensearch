@@ -65,13 +65,13 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  public static boolean setVirusScanMetadata (String accessToken, String fileId, JSONObject fileDetails, String status) throws UnirestException {
+  public static boolean setVirusScanMetadata (String accessToken, String fileId, String versionNumber, JSONObject fileDetails, String status) throws UnirestException {
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("scanStatus")) {
+      if (metadataName.equalsIgnoreCase("wfdm-system-scanStatus-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -80,7 +80,7 @@ public class GetFileFromWFDMAPI {
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "scanStatus");
+    meta.put("metadataName", "wfdm-system-scanStatus-" + versionNumber);
     meta.put("metadataValue", status);
     metaArray.put(meta);
 

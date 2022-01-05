@@ -56,11 +56,12 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
       BufferedInputStream stream = null;
       try {
         // This MUST be verified/sanitized!!!!
-        // messageBody should be a fileId or a URL to the resource on WFDM. We can
-        // validate either condition
+        // messageBody is the complete file resource
         messageBody = message.getBody();
         logger.log("\nInfo: SQS Message Received: " + messageBody);
-
+        JSONObject fileDetailsJson = new JSONObject(messageBody);
+        String fileId = fileDetailsJson.getString("fileId");
+        String versionNumber = fileDetailsJson.getString("versionNumber");
         // Should come for preferences, Client ID and secret for authentication with
         // WFDM
         String CLIENT_ID = "Clinet ID Goes Here";
@@ -75,20 +76,22 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         if (wfdmToken == null)
           throw new Exception("Could not authorize access for WFDM");
 
-        String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, messageBody);
+        // attempt to fetch the file from WFDM, as a verification that the file actually exists
+        String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
 
         if (fileInfo == null) {
           throw new Exception("File not found!");
         } else {
-          JSONObject fileDetailsJson = new JSONObject(fileInfo);
+          // replace the passed-in file details with the details fetched
+          fileDetailsJson = new JSONObject(fileInfo);
 
           logger.log("\nInfo: File found on WFDM: " + fileInfo);
           // Fetch the bytes
           logger.log("\nInfo: Fetching file bytes...");
-          stream = GetFileFromWFDMAPI.getFileStream(wfdmToken, messageBody);
+          stream = GetFileFromWFDMAPI.getFileStream(wfdmToken, fileId, fileDetailsJson.get("versionNumber").toString());
           // Update Virus scan metadata
           // Note, current user likely lacks access to update metadata so we'll need to update webade
-          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, messageBody, fileDetailsJson);
+          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson);
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?
@@ -145,13 +148,13 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             // the stream for s3
             stream.close();
           }
-          stream = GetFileFromWFDMAPI.getFileStream(wfdmToken, messageBody);
+          stream = GetFileFromWFDMAPI.getFileStream(wfdmToken, fileId, fileDetailsJson.get("versionNumber").toString());
 
           ObjectMetadata meta = new ObjectMetadata();
           meta.setContentType(mimeType);
           meta.setContentLength(Long.parseLong(fileDetailsJson.get("fileSize").toString()));
-          meta.addUserMetadata("title", messageBody);
-          s3client.putObject(new PutObjectRequest(clamavBucket.getName(), messageBody, stream, meta));
+          meta.addUserMetadata("title", fileDetailsJson.get("fileId").toString() + "-" + fileDetailsJson.get("versionNumber").toString());
+          s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + fileDetailsJson.get("versionNumber").toString(), stream, meta));
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
         logger.log("\nError: Failure to recieve file " + messageBody + " from WFDM" + e.getLocalizedMessage());

@@ -16,7 +16,44 @@
                 {
                     "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
                     "receiptHandle": "MessageReceiptHandle",
-                    "body": "13245",
+                    "body": "13245-1",
+                    "attributes": {
+                        "ApproximateReceiveCount": "1",
+                        "SentTimestamp": "1523232000000",
+                        "SenderId": "123456789012",
+                        "ApproximateFirstReceiveTimestamp": "1523232000001"
+                    },
+                    "messageAttributes": {},
+                    "md5OfBody": "7b270e59b47ff90a553787216d55d91d",
+                    "eventSource": "aws:sqs",
+                    "eventSourceARN": "arn:{partition}:sqs:{region}:123456789012:MyQueue",
+                    "awsRegion": "{region}"
+                }
+            ]
+        }
+        },
+        "environmentVariables": {
+          "AWS_DEFAULT_REGION": "ca-central-1"
+        }
+      }
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "wfdm_clamav_scan",
+      "invokeTarget": {
+        "target": "template",
+        "templatePath": "${workspaceFolder}/wfdm-clamav-lambda/template.yaml",
+        "logicalId": "wfdmclamavscan"
+      },
+      "lambda": {
+        "payload": {
+          "json": {
+            "Records": [
+                {
+                    "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
+                    "receiptHandle": "MessageReceiptHandle",
+                    "body": "{'@type':'http://resources.wfdm.nrs.gov.bc.ca/fileDetails','links':[{'@type':'http://common.wfone.nrs.gov.bc.ca/v1/rellink','rel':'self','href':'https://d1wfapi.vividsolutions.com/wfdm-document-management-api/documents/13245','method':'GET'}],'fileId':'13245','filePath':'/WFIM/upload/6233085c-dfa3-40dc-be37-c3faa52161c2.txt','lastUpdatedTimestamp':'2021-11-12T13:26:55.32811','versionNumber':1,'fileExtension':'txt','fileType':'DOCUMENT','mimeType':'text/plain','fileSize':14,'retention':'111','security':[{'@type':'http://resources.wfdm.nrs.gov.bc.ca/fileSecurityResource','securityKey':{'@type':'http://resources.wfdm.nrs.gov.bc.ca/securityKey','securityKey':'GOV/516CF572D29243688677AAB70F39E676','displayLabel':'IDIR\INCIDENT_COMMANDER'},'grantorAccessInd':true,'readAccessInd':true,'writeAccessInd':true},{'@type':'http://resources.wfdm.nrs.gov.bc.ca/fileSecurityResource','securityKey':{'@type':'http://resources.wfdm.nrs.gov.bc.ca/securityKey','securityKey':'GOV/47BE04156B5D4A1FB45BB080D22F90EB','displayLabel':'IDIR\WNEVILLE'},'grantorAccessInd':true,'readAccessInd':true,'writeAccessInd':true},{'@type':'http://resources.wfdm.nrs.gov.bc.ca/fileSecurityResource','securityKey':{'@type':'http://resources.wfdm.nrs.gov.bc.ca/securityKey','securityKey':'WFIM.DOCUMENT_UPLOADER','displayLabel':'WFIM.DOCUMENT_UPLOADER'},'grantorAccessInd':false,'readAccessInd':true,'writeAccessInd':false}],'metadata':[],'versions':[{'@type':'http://resources.wfdm.nrs.gov.bc.ca/fileVersion','versionNumber':1,'fileSize':14,'uploadedById':'IDIR\INCIDENT_COMMANDER','uploadedOnTimestamp':'2021-11-12T13:26:55.817583'}],'uploadedBy':'IDIR\INCIDENT_COMMANDER','uploadedOnTimestamp':'2021-11-12T13:26:55.817583','lastUpdatedBy':'IDIR\INCIDENT_COMMANDER','lastUpdatedByGuid':null,'parent':{'@type':'http://resources.wfdm.nrs.gov.bc.ca/file','links':[{'@type':'http://common.wfone.nrs.gov.bc.ca/v1/rellink','rel':'self','href':'https://d1wfapi.vividsolutions.com/wfdm-document-management-api/documents/11603','method':'GET'}],'fileId':'11603','filePath':'/WFIM/upload','lastUpdatedTimestamp':'2021-11-04T21:53:21.948533'},'validStartTimestamp':'2021-11-12T13:26:55.32811','validEndTimestamp':'9999-12-31T23:59:59.00001','fileCheckout':null,'lockedInd':false}",
                     "attributes": {
                         "ApproximateReceiveCount": "1",
                         "SentTimestamp": "1523232000000",
