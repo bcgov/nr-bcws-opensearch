@@ -62,6 +62,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         JSONObject messageDetails = new JSONObject(messageBody);
         String fileId = messageDetails.getString("fileId");
+        // Where will we receive the event type? Message Body or attributes?
         String eventType = messageDetails.getString("eventType");
 
         // Check the event type. If this is a BYTES event, write the bytes
@@ -91,6 +92,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             if (!metaAdded) {
               // We failed to apply the metadata regarding the virus scan status...
               // Should we continue to process the data from this point, or just choke?
+              logger.log("\nERROR: Failed to add metadata to file resource");
             }
 
             AmazonS3 s3client = AmazonS3ClientBuilder

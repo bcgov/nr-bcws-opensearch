@@ -67,34 +67,13 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  /**
-   * Fetch the bytes for a WFDM File resource. This will return a
-   * BufferedInputStream
-   * 
-   * @param accessToken The WFDM authentication bearer token
-   * @param fileId      The WFDM ID for a file resource
-   * @return A BufferedInputStream representing the file resources bytes
-   * @throws UnirestException
-   */
-  public static BufferedInputStream getFileStream (String accessToken, String fileId, String versionNumber) throws UnirestException {
-    HttpResponse<InputStream> bytesResponse = Unirest.get(WFDM_URL + fileId + "/bytes?versionNumber=" + versionNumber)
-        .header("Accept", "*/*")
-        .header("Authorization", "Bearer " + accessToken)
-        .asBinary();
-    if (bytesResponse.getStatus() == 200) {
-      return new BufferedInputStream(bytesResponse.getBody());
-    } else {
-      return null;
-    }
-  }
-
-  public static boolean setVirusScanMetadata (String accessToken, String fileId, String versionNumber, JSONObject fileDetails) throws UnirestException {
+  public static boolean setIndexedMetadata (String accessToken, String fileId, String versionNumber, JSONObject fileDetails) throws UnirestException {
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("wfdm-system-scanStatus-" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -103,8 +82,8 @@ public class GetFileFromWFDMAPI {
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "wfdm-system-scanStatus-" + versionNumber);
-    meta.put("metadataValue", "unscanned");
+    meta.put("metadataName", "wfdm-indexed-v" + versionNumber);
+    meta.put("metadataValue", "true");
     metaArray.put(meta);
 
     // PUT the changes
