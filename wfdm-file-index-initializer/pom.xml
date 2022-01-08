@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ca.bc.gov.nrs.wfdm</groupId>
+  <artifactId>wfdm-file-index-initializer</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+  <name>wfdm-clamav-scan-handler</name>
+  <url>http://maven.apache.org</url>
+
+ <properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<aws.java.sdk.version>2.14.11</aws.java.sdk.version>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>ca.bc.gov.nrs.wfdm</groupId>
+			<artifactId>aws-lambda-layer-base</artifactId>
+			<version>1.0</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
