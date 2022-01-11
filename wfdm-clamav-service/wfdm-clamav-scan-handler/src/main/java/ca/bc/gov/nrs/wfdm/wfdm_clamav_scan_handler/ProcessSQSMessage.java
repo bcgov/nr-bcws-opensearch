@@ -7,15 +7,15 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaAsyncClient;
+import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import org.json.JSONObject;
@@ -86,28 +86,21 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?
+            logger.log("\nERROR: Failed to add metadata to file resource");
           }
 
-          AmazonS3 s3client = AmazonS3ClientBuilder
-            .standard()
-            .withCredentials(credentialsProvider)
-            .withRegion(region)
-            .build();
+          // Meta only update, so fire a message to the Indexer Lambda
+          AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
 
-          Bucket clamavBucket = null;
-          List<Bucket> buckets = s3client.listBuckets();
-          for(Bucket bucket : buckets) {
-            if (bucket.getName().equalsIgnoreCase(bucketName)) {
-              clamavBucket = bucket;
-            }
-          }
+          // ensure the default eventType of "Bytes" is appended
+          // so the tika parser lambda knows to check for data
+          // and not just meta
+          fileDetailsJson.put("eventType", "bytes");
+          fileDetailsJson.put("versionNumber", versionNumber);
 
-          if(clamavBucket == null) {
-            throw new Exception("S3 Bucket " + bucketName + " does not exist.");
-          }
-
-          // Delete the file from the virus scan bucket, we don't need it anymore
-          s3client.deleteObject(new DeleteObjectRequest(clamavBucket.getName(), inputKey));
+          InvokeRequest request = new InvokeRequest();
+          request.withFunctionName("wfdm-open-search").withPayload(fileDetailsJson.toString());
+          InvokeResult invoke = client.invoke(request);
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
         logger.log("\nError: Failure to recieve file from WFDM: " + e.getLocalizedMessage());

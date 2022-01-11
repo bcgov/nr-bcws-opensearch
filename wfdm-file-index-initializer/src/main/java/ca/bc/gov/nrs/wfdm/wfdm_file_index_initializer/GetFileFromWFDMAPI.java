@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
+package ca.bc.gov.nrs.wfdm.wfdm_file_index_initializer;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
@@ -17,8 +17,8 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class GetFileFromWFDMAPI {
   // TODO:move to propeties file
-  private static final String BASE_URL = "<Enter base URL here>";
-  private static final String WFDM_URL = "<Enter WFDM URL here>";
+  private static final String BASE_URL = "<URL>";
+  private static final String WFDM_URL = "<URL>";
 
   static Properties proFile;
 
@@ -67,13 +67,12 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  public static boolean setIndexedMetadata (String accessToken, String fileId, String versionNumber, JSONObject fileDetails) throws UnirestException {
-    // Add metadata to the File details to flag it as "Unscanned"
+  public static boolean setVirusScanMetadata (String accessToken, String fileId, String versionNumber, JSONObject fileDetails) throws UnirestException {
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("wfdm-system-scanStatus-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -82,8 +81,8 @@ public class GetFileFromWFDMAPI {
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "wfdm-indexed-v" + versionNumber);
-    meta.put("metadataValue", "true");
+    meta.put("metadataName", "wfdm-system-scanStatus-" + versionNumber);
+    meta.put("metadataValue", "PENDING");
     metaArray.put(meta);
 
     // PUT the changes
@@ -94,5 +93,26 @@ public class GetFileFromWFDMAPI {
         .asString();
 
     return metaUpdateResponse.getStatus() == 200;
+  }
+
+    /**
+   * Fetch the bytes for a WFDM File resource. This will return a
+   * BufferedInputStream
+   * 
+   * @param accessToken The WFDM authentication bearer token
+   * @param fileId      The WFDM ID for a file resource
+   * @return A BufferedInputStream representing the file resources bytes
+   * @throws UnirestException
+   */
+  public static BufferedInputStream getFileStream (String accessToken, String fileId, String versionNumber) throws UnirestException {
+    HttpResponse<InputStream> bytesResponse = Unirest.get(WFDM_URL + fileId + "/bytes?versionNumber=" + versionNumber)
+        .header("Accept", "*/*")
+        .header("Authorization", "Bearer " + accessToken)
+        .asBinary();
+    if (bytesResponse.getStatus() == 200) {
+      return new BufferedInputStream(bytesResponse.getBody());
+    } else {
+      return null;
+    }
   }
 }

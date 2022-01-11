@@ -6,3 +6,5 @@ aws-lambda-layer-base/.settings
 wfdm-file-index-service/target
 wfdm-file-index-service/.settings
 wfdm-file-index-service/.settings
+wfdm-clamav-service/wfdm-clamav-scan-handler/target
+wfdm-file-index-initializer/target
