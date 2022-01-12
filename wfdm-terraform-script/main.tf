@@ -13,7 +13,14 @@ resource "aws_iam_role" "lambda_role" {
       },
       "Effect": "Allow",
       "Sid": ""
-    }
+    },
+    {
+            "Action": [
+                "sqs:*"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        }
   ]
 }
 EOF
@@ -108,7 +115,11 @@ resource "aws_sqs_queue" "queue" {
         "sqs:ListQueueTags",
         "sqs:ListQueues",
         "sqs:ReceiveMessage",
-        "sqs:SendMessage"
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:DeleteMessage"
+
+
       ],
       "Resource": "arn:aws:sqs:ca-central-1:460053263286:wfdm-index-searching-queue"
     }
@@ -128,11 +139,26 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 }
 
 
+#Create s3 bucket
+resource "aws_s3_bucket" "terraform-s3-bucket" {
+  bucket = var.s3_bucket_name
+  acl    = "private"
+
+}
+
+#Upload java.zip to s3bucket
+resource "aws_s3_bucket_object" "java_zip" {
+  bucket       = aws_s3_bucket.terraform-s3-bucket.id
+  key          = var.layer_file_name
+  acl          = "private" 
+  source       = "aws-lambda-layer-base/java.zip"
+}
+
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   layer_name = var.layer_name
-  s3_bucket = "aws-lambda-layer-base"
-  s3_key = "java.zip"
+  s3_bucket = var.s3_bucket_name
+  s3_key = var.layer_file_name
   description = "Common layer with java jars files"
   compatible_runtimes = ["java8"]
   skip_destroy        = true
@@ -154,6 +180,47 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
  
 }
 
+#Create Openseach
+resource "aws_elasticsearch_domain" "es" {
+  domain_name           = var.domain
+  elasticsearch_version = "OpenSearch_1.0"
+
+  cluster_config {
+    instance_type = var.instance_type
+  }
+  snapshot_options {
+    automated_snapshot_start_hour = 23
+  }
+  vpc_options {
+    subnet_ids = ["subnet-09f043b74e40907c0"] 
+  }
+  ebs_options {
+    ebs_enabled = var.ebs_volume_size > 0 ? true : false
+    volume_size = var.ebs_volume_size
+    volume_type = var.volume_type
+  }
+  tags = {
+    Domain = var.tag_domain
+  }
+}
+
+
+resource "aws_elasticsearch_domain_policy" "main" {
+  domain_name = aws_elasticsearch_domain.es.domain_name
+  access_policies = <<POLICIES
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "es:*",
+            "Principal": "*",
+            "Effect": "Allow",
+            "Resource": "${aws_elasticsearch_domain.es.arn}/*"
+        }
+    ]
+}
+POLICIES
+}
 
 
 
