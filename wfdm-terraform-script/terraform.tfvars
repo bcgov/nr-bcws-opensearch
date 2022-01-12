@@ -1,0 +1,11 @@
+iam_role_lambda_function = "iam-role-lambda-index-searching"
+queue_name ="terrafrom-queue-test"
+s3_bucket_name = "terrafrom-s3bucket-test"
+domain = "terraform-opensearch-dev" 
+instance_type = "t3.medium.elasticsearch"
+tag_domain = "terrafrom-test"
+volume_type = "gp2"
+ebs_volume_size = 10
+lambda_function_handler = "ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing.ProcessSQSMessage"
+lambda_payload_filename = "../wfdm-file-index-service/target/wfdm-opensearch-indexing-1.0.jar"
+java_layer_name = "aws-java-base-layer-terraform"
