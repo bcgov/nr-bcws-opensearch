@@ -5,6 +5,10 @@ import java.util.List;
 
 import javax.xml.transform.TransformerConfigurationException;
 
+import org.apache.commons.lang.StringUtils;
+import org.json.JSONObject;
+import org.xml.sax.SAXException;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.lambda.AWSLambda;
@@ -17,9 +21,6 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.mashape.unirest.http.exceptions.UnirestException;
-
-import org.json.JSONObject;
-import org.xml.sax.SAXException;
 
 /**
  * Processor for the received SQS messages. As messages are placed onto the Queue
@@ -51,6 +52,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     for (SQSEvent.SQSMessage message : sqsEvent.getRecords()) {
       try {
         messageBody = message.getBody();
+        logger.log("\nInfo: SQS Message Received: " + messageBody);
         JSONObject messageDetails = new JSONObject(messageBody);
         String inputKey = messageDetails.getJSONObject("responsePayload").getString("input_key");
         String fileId = inputKey.split("-")[0];
@@ -60,8 +62,11 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         // Should come for preferences, Client ID and secret for authentication with
         // WFDM
-        String CLIENT_ID = "<SCL>";
-        String PASSWORD = "<SECRET>";
+        String wfdmSecretName = PropertyLoader.getProperty("wfdm.document.secretmanager.secretname").trim();
+        String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
+        String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+  	  	String CLIENT_ID = secretCD[0];
+  	  	String PASSWORD = secretCD[1];
 
         // Fetch an authentication token. We fetch this each time so the tokens
         // themselves
