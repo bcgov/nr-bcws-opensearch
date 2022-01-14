@@ -101,7 +101,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           // so the tika parser lambda knows to check for data
           // and not just meta
           fileDetailsJson.put("eventType", "bytes");
-          fileDetailsJson.put("versionNumber", versionNumber);
+          fileDetailsJson.put("fileVersionNumber", versionNumber);
 
           InvokeRequest request = new InvokeRequest();
           request.withFunctionName("wfdm-open-search").withPayload(fileDetailsJson.toString());
