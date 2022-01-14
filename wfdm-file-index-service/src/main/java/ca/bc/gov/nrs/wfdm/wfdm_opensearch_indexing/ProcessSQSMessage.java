@@ -7,6 +7,11 @@ import java.util.Map;
 
 import javax.xml.transform.TransformerConfigurationException;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.tika.exception.TikaException;
+import org.json.JSONObject;
+import org.xml.sax.SAXException;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -20,10 +25,6 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import org.apache.tika.exception.TikaException;
-import org.json.JSONObject;
-import org.xml.sax.SAXException;
-
 /**
  * Processor for the received SQS messages. As messages are placed onto the Queue
  * they'll be pulled by this handler. The message should be a WFDM fileID. This file
@@ -33,15 +34,15 @@ import org.xml.sax.SAXException;
  * Once this process is complete, this handler will place a message on another Queue
  * that will instruct the ClamAV lambda to execute
  */
-public class ProcessSQSMessage implements RequestHandler<Map<String,String>, String> {
+public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, String> {
   private static String region = "ca-central-1";
   private static String bucketName = "wfdmclamavstack-wfdmclamavbucket78961613-4r53u9f2ef2v";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   @Override
-  public String handleRequest(Map<String,String> event, Context context) {
+  public String handleRequest(Map<String,Object> event, Context context) {
     LambdaLogger logger = context.getLogger();
-
+    System.out.println("ProcessSQSMessage");
     // null check sqsEvents!
     if (event == null) {
       logger.log("\nInfo: No messages to handle\nInfo: Closeing");
@@ -53,13 +54,20 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,String>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
-      String fileId = fileDetailsJson.getString("fileId");
-      String versionNumber = fileDetailsJson.getString("versionNumber");
-      String eventType = fileDetailsJson.getString("eventType");
+      String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
+	  JSONObject jsonObject = new JSONObject(jsonArray);
+      String fileId = jsonObject.get("fileId").toString();
+      String versionNumber = jsonObject.get("fileVersionNumber").toString();
+      //TODO:Update to correct event type from WFDM-API
+      String eventType = "metadata";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
-      String CLIENT_ID = "WFDM_DOCUMENTS_INDEX";
-      String PASSWORD = "Password";
+      String wfdmSecretName = PropertyLoader.getProperty("wfdm.document.secretmanager.secretname").trim();
+      String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
+	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+	  String CLIENT_ID = secretCD[0];
+	  String PASSWORD = secretCD[1];
+
 
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
@@ -107,6 +115,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,String>, Str
           }
 
           logger.log("\nInfo: Fetching file bytes...");
+        
+          
           S3Object scannedObject = s3client.getObject(new GetObjectRequest(bucketName, fileId + "-" + versionNumber));
           stream = new BufferedInputStream(scannedObject.getObjectContent());
 
