@@ -58,7 +58,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         String fileId = inputKey.split("-")[0];
         String versionNumber = inputKey.split("-")[1];
         String status = messageDetails.getJSONObject("responsePayload").getString("status");
-        logger.log("\nInfo: SQS Message Received: " + messageBody);
+        String summary = messageDetails.getJSONObject("responsePayload").getString("message");
+        logger.log("\nInfo: SQS Message Received: " + messageBody+summary);
 
         // Should come for preferences, Client ID and secret for authentication with
         // WFDM
@@ -101,8 +102,10 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           // so the tika parser lambda knows to check for data
           // and not just meta
           fileDetailsJson.put("eventType", "bytes");
-          fileDetailsJson.put("versionNumber", versionNumber);
-
+          fileDetailsJson.put("fileVersionNumber", versionNumber);
+          fileDetailsJson.put("status", status);
+          fileDetailsJson.put("message", summary);
+          logger.log("\n calling wfdm-open-search Lambda. "+fileDetailsJson.toString());
           InvokeRequest request = new InvokeRequest();
           request.withFunctionName("wfdm-open-search").withPayload(fileDetailsJson.toString());
           InvokeResult invoke = client.invoke(request);

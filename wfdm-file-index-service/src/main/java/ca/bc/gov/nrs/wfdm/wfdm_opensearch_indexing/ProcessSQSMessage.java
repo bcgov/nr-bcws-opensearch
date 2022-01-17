@@ -52,14 +52,19 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     BufferedInputStream stream = null;
     try {
       // messageBody is the complete file resource
-      logger.log("\nInfo: Event Received: " + event);
+      logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
-      String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
-	  JSONObject jsonObject = new JSONObject(jsonArray);
-      String fileId = jsonObject.get("fileId").toString();
-      String versionNumber = jsonObject.get("fileVersionNumber").toString();
+     // String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
+	 // JSONObject jsonObject = new JSONObject(jsonArray);
+      String fileId = fileDetailsJson.getString("fileId");
+      String versionNumber = fileDetailsJson.getString("fileVersionNumber");
       //TODO:Update to correct event type from WFDM-API
-      String eventType = "metadata";
+      String eventType = fileDetailsJson.getString("eventType");
+      String scanStatus;
+      if(fileDetailsJson.has("message") && !fileDetailsJson.isNull("message") )
+    	  scanStatus = fileDetailsJson.getString("message");
+      else
+    	  scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
       String wfdmSecretName = PropertyLoader.getProperty("wfdm.document.secretmanager.secretname").trim();
@@ -68,7 +73,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 	  String CLIENT_ID = secretCD[0];
 	  String PASSWORD = secretCD[1];
 
-
+	  //System.out.println("message"+fileDetailsJson.getString("message"));
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
       // aren't in a cache slowly getting stale. Could be replaced by a check token
@@ -127,8 +132,10 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
           if (mimeType.equalsIgnoreCase("text/plain") ||
               mimeType.equalsIgnoreCase("application/msword") ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")||
               mimeType.equalsIgnoreCase("application/pdf")) {
             content = TikaParseDocument.parseStream(stream);
+            logger.log("\nInfo: content after parsing "+content);
           } else {
             // nothing to see here folks, we won't process this file. However
             // this isn't an error and we might want to handle metadata, etc.
@@ -146,7 +153,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
         OpenSearchRESTClient restClient = new OpenSearchRESTClient();
-        restClient.addIndex(content, fileName, fileDetailsJson);
+        restClient.addIndex(content, fileName, fileDetailsJson,scanStatus);
         // Push ID onto SQS for clamAV
         logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
