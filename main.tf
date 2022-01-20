@@ -1,5 +1,3 @@
-19 lines (17 sloc)  506 Bytes
-   
 # The configuration for the `remote` backend.
 terraform {
     backend "remote" {
