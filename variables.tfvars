@@ -1,4 +1,4 @@
-//VARIABLES USED ACROSS ALL RESOURCES
+/*VARIABLES USED ACROSS ALL RESOURCES*/
 
 variable "application" {
     type="string"
@@ -48,7 +48,7 @@ variable "suffix" {
   default = null
 }
 
-//VPC-RELATED VARIABLES
+/*VPC-RELATED VARIABLES*/
 variable "vpc_cidr_block" {
   type=string
   description="CIDR block to be used by vpc"
