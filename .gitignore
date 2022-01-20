@@ -8,3 +8,4 @@ wfdm-file-index-service/.settings
 wfdm-file-index-service/.settings
 wfdm-clamav-service/wfdm-clamav-scan-handler/target
 wfdm-file-index-initializer/target
+main_work.tf
