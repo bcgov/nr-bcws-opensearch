@@ -1,4 +1,4 @@
-﻿aws-lambda-layer-base/java.zip
+aws-lambda-layer-base/java.zip
 aws-lambda-layer-base/.project
 aws-lambda-layer-base/.classpath
 aws-lambda-layer-base/target
@@ -9,3 +9,7 @@ wfdm-file-index-service/.settings
 wfdm-clamav-service/wfdm-clamav-scan-handler/target
 wfdm-file-index-initializer/target
 main_work.tf
+main_work
+/.terraform
+.terraform
+.terraform.lock.hcl
