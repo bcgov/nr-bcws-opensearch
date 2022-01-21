@@ -26,7 +26,7 @@ variable "application" {
 variable "customer" {
   type        = string
   description = "name of customer"
-  default     = WildFireOne
+  default     = "WildFireOne"
 }
 
 variable "tool" {
