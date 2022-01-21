@@ -99,14 +99,6 @@ variable "private_subnet_block" {
   default     = "10.0.1.0/24"
 }
 
-variable "route" {
-  type = object({
-    cidr_block = string
-    gateway_id = string
-  })
-}
-
-
 
 //CREATE THE VPC AND SUBNETS
 //Main VPC
