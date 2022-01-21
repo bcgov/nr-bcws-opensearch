@@ -311,7 +311,6 @@ variable "ultrawarm_node_instance_type" {
 
 variable "domain" {
   type = string
-  default = "WFDM"
 }
 /*
 variable "ultrawarm_node_volume_size" {
@@ -351,13 +350,13 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   domain_name           = "${var.application}-${var.tool}-${var.env}"
   elasticsearch_version = var.ElasticSearch_Version
   cluster_config {
-    dedicated_master_count  = var.master_node_instance_count
+    dedicated_master_count   = var.master_node_instance_count
     dedicated_master_enabled = var.master_node_usage
-    dedicated_master_type   = var.master_node_instance_type
-    instance_count          = var.data_node_instance_count
-    instance_type           = var.data_node_instance_type
-    warm_count              = var.ultrawarm_node_instance_count
-    warm_type               = var.ultrawarm_node_instance_type
+    dedicated_master_type    = var.master_node_instance_type
+    instance_count           = var.data_node_instance_count
+    instance_type            = var.data_node_instance_type
+    warm_count               = var.ultrawarm_node_instance_count
+    warm_type                = var.ultrawarm_node_instance_type
 
   }
   ebs_options {
