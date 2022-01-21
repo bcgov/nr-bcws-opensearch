@@ -40,21 +40,21 @@ resource "aws_vpc_ipam_pool" "test" {
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr         = "${var.vpc_cidr_block}"
+  cidr         = var.vpc_cidr_block
 }
 
 resource "aws_vpc" "main_vpc" {
-    ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-    ipv4_netmask_length = 16
-    depends_on = [
-      aws_vpc_ipam_pool_cidr.test
-    ]
-    instance_tenancy = "default"
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 16
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+  instance_tenancy = "default"
 
-    tags = {
-        Name = "${var.application}-vpc-${var.env}"
-        Application = "${var.application}"
-        Customer = "${var.customer}"
-        Environment = "${var.env}"
-    }
+  tags = {
+    Name        = "${var.application}-vpc-${var.env}"
+    Application = "${var.application}"
+    Customer    = "${var.customer}"
+    Environment = "${var.env}"
+  }
 }
