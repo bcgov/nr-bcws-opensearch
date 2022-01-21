@@ -30,8 +30,8 @@ resource "aws_vpc" "main_vpc" {
     }
     tags {
         Name = "${var.application}-vpc-${var.env}"
-        Application = var.application
-        Customer = var.customer
-        Environment = var.env
+        Application = "${var.application}"
+        Customer = "${var.customer}"
+        Environment = "${var.env}"
     }
 }
