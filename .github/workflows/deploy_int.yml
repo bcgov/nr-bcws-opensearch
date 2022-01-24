@@ -38,7 +38,7 @@ jobs:
             # Install/Setup terragrunt CLI
       - uses: peter-murray/terragrunt-github-action@v1.0.0
         with:
-          terragrunt_version: ${{ env.TG_VERSION }
+          terragrunt_version: ${{ env.TG_VERSION }}
 
             # Apply changes
       - name: Terragrunt Apply
