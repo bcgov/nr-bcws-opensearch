@@ -344,12 +344,6 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   enabled          = true
   function_name    = aws_lambda_function.terraform_wfdm_indexing_function.arn
   batch_size       = 1
-  tags = {
-    Name        = "${var.application}-event-source-mapping-${var.env}"
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 }
 
 
