@@ -387,12 +387,6 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   description = "Common layer with java jars files"
   compatible_runtimes = ["java8"]
   skip_destroy        = true
-  tags = {
-    Name        = "${var.application}-java-base-layer${var.env}"
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 
 }
 
