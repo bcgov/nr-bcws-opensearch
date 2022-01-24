@@ -42,7 +42,7 @@ jobs:
 
             # Apply changes
       - name: Terragrunt Apply
-        working-directory: wfdm-terragrunt-scripts/INT
+        working-directory: terragrunt/INT
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
         run: terragrunt apply-all --terragrunt-non-interactive
