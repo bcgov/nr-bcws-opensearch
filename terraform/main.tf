@@ -6,14 +6,6 @@ terraform {
     }
   }
   required_version = ">= 1.1.0"
-
-  cloud {
-    organization = "vivid-solutions"
-
-    workspaces {
-      name = "nr-bcws-opensearch"
-    }
-  }
 }
 
 //CREATE THE VPC AND SUBNETS
