@@ -41,8 +41,8 @@ public class OpenSearchRESTClient {
 	// should likely be moved into a config file...
 	private static String serviceName = "es";
 	private static String region = "ca-central-1";
-	private static String domainEndpoint = "";
-	private static String indexName = "";
+	private static String domainEndpoint = " ";
+	private static String indexName = " ";
 	static RestHighLevelClient restClient;
 
 	static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
