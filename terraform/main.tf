@@ -1,7 +1,162 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "3.72.0"
+    }
+  }
+  required_version = ">= 1.1.0"
+
+  cloud {
+    organization = "vivid-solutions"
+
+    workspaces {
+      name = "nr-bcws-opensearch"
+    }
+  }
+}
+
+//CREATE THE VPC AND SUBNETS
+//Main VPC
+resource "aws_vpc" "main_vpc" {
+  cidr_block = var.vpc_cidr_block
+
+  tags = {
+    Name        = "${var.application}-vpc-${var.env}"
+    Application = "${var.application}"
+    Customer    = "${var.customer}"
+    Environment = "${var.env}"
+  }
+}
+
+resource "aws_internet_gateway" "main_internet_gateway" {
+  vpc_id = aws_vpc.main_vpc.id
+  tags = {
+    Name        = "${var.application}-internet-gateway-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.main_vpc.id
+  cidr_block = var.private_subnet_block
+  tags = {
+    Name        = "${var.application}-private-subnet-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_nat_gateway" "main_nat_gateway" {
+  subnet_id = aws_subnet.private_subnet.id
+  tags = {
+    Name        = "${var.application}-nat-gateway-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_route_table" "main_route_table" {
+  depends_on = [aws_nat_gateway.main_nat_gateway]
+  vpc_id     = aws_vpc.main_vpc.id
+  route = [{
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.main_nat_gateway.id
+    # workaround as suggested here: https://github.com/hashicorp/terraform-provider-aws/issues/20756#issuecomment-913284042
+    carrier_gateway_id         = ""
+    destination_prefix_list_id = ""
+    egress_only_gateway_id     = ""
+    instance_id                = ""
+    ipv6_cidr_block            = ""
+    local_gateway_id           = ""
+    nat_gateway_id             = ""
+    network_interface_id       = ""
+    transit_gateway_id         = ""
+    vpc_endpoint_id            = ""
+    vpc_peering_connection_id  = ""
+  }]
+  tags = {
+    Name        = "${var.application}-main-route-table-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.main_vpc.id
+  cidr_block              = var.public_subnet_block
+  map_public_ip_on_launch = true
+  tags = {
+    Name        = "${var.application}-public-subnet-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_route_table" "public_route_table" {
+  depends_on = [aws_internet_gateway.main_internet_gateway]
+  vpc_id     = aws_vpc.main_vpc.id
+  route = [{
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main_internet_gateway.id
+    # workaround as suggested here: https://github.com/hashicorp/terraform-provider-aws/issues/20756#issuecomment-913284042
+    carrier_gateway_id         = ""
+    destination_prefix_list_id = ""
+    egress_only_gateway_id     = ""
+    instance_id                = ""
+    ipv6_cidr_block            = ""
+    local_gateway_id           = ""
+    nat_gateway_id             = ""
+    network_interface_id       = ""
+    transit_gateway_id         = ""
+    vpc_endpoint_id            = ""
+    vpc_peering_connection_id  = ""
+  }]
+  tags = {
+    Name        = "${var.application}-public-route-table-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_route_table_association" "main_association" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.main_route_table.id
+  tags = {
+    Name        = "${var.application}-private-association-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
+resource "aws_route_table_association" "public_association" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_route_table.id
+  tags = {
+    Name        = "${var.application}-public-association-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
 # Creating IAM role so that Lambda service to assume the role and access other  AWS services. 
  
 resource "aws_iam_role" "lambda_role" {
- name   = "iam_role_lambda_index_searching"
+ name   = "${var.application}-iam_role_lambda_index_searching-${var.env}"
+ tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -29,8 +184,13 @@ EOF
 
 # lambda policy
 resource "aws_iam_policy" "iam_policy_for_lambda" {
-  name = "lambda-invoke-policy"
+  name = "${var.application}-lambda-invoke-policy-${var.env}"
   path = "/"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 
   policy = <<EOF
 {
@@ -55,9 +215,14 @@ EOF
 # IAM policy for logging from a lambda
 
 resource "aws_iam_policy" "lambda_logging" {
-  name         = "iam_policy_lambda_logging_function"
+  name         = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
   path         = "/"
   description  = "IAM policy for logging from a lambda"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -81,6 +246,12 @@ EOF
 resource "aws_iam_role_policy_attachment" "policy_attach" {
   role        = aws_iam_role.lambda_role.name
   policy_arn  = aws_iam_policy.lambda_logging.arn
+  tags = {
+    Name        = "${var.application}-lambda-logging-policy-attach-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 }
 
 
@@ -88,7 +259,13 @@ resource "aws_iam_role_policy_attachment" "policy_attach" {
 # SQS queue
 
 resource "aws_sqs_queue" "queue" {
-  name = var.queue_name
+  name = "${var.application}-sqs-queue-${var.env}"
+
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 
   policy = <<POLICY
 {
@@ -102,7 +279,7 @@ resource "aws_sqs_queue" "queue" {
         "AWS": "arn:aws:iam::460053263286:root"
       },
       "Action": "sqs:*",
-      "Resource": "arn:aws:sqs::*:*:var.queue_name"
+      "Resource": "arn:aws:sqs::*:*:${var.application}-sqs-queue-${var.env}"
     },
     {
       "Sid": "Stmt1640124883525",
@@ -136,13 +313,24 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   enabled          = true
   function_name    = aws_lambda_function.terraform_wfdm_indexing_function.arn
   batch_size       = 1
+  tags = {
+    Name        = "${var.application}-event-source-mapping-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 }
 
 
 #Create s3 bucket
 resource "aws_s3_bucket" "terraform-s3-bucket" {
-  bucket = var.s3_bucket_name
+  bucket = "${var.application}-s3-bucket-${var.env}"
   acl    = "private"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 
 }
 
@@ -152,16 +340,28 @@ resource "aws_s3_bucket_object" "java_zip" {
   key          = var.layer_file_name
   acl          = "private" 
   source       = "aws-lambda-layer-base/java.zip"
+  tags = {
+    Name        = "${var.application}-s3-bucket-object-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 }
 
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   layer_name = var.layer_name
-  s3_bucket = var.s3_bucket_name
+  s3_bucket = aws_s3_bucket.terraform-s3-bucket
   s3_key = var.layer_file_name
   description = "Common layer with java jars files"
   compatible_runtimes = ["java8"]
   skip_destroy        = true
+  tags = {
+    Name        = "${var.application}-java-base-layer${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 
 }
 
@@ -177,33 +377,100 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   source_code_hash = "${filebase64sha256(var.lambda_payload_filename)}"
   runtime          = "java8"
   layers = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  tags = {
+    Name        = "${var.application}-wfdm-indexing-function-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
  
 }
 
-#Create Openseach
-resource "aws_elasticsearch_domain" "es" {
-  domain_name           = var.domain
-  elasticsearch_version = "OpenSearch_1.0"
+#Create OpenSearch and related resources
+#COMPONENTS FOR OPENSEARCH
 
-  cluster_config {
-    instance_type = var.instance_type
-  }
-  snapshot_options {
-    automated_snapshot_start_hour = 23
-  }
-  vpc_options {
-    subnet_ids = ["subnet-09f043b74e40907c0"] 
-  }
-  ebs_options {
-    ebs_enabled = var.ebs_volume_size > 0 ? true : false
-    volume_size = var.ebs_volume_size
-    volume_type = var.volume_type
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_security_group" "es" {
+  name        = "${var.application}-elasticsearch-security-group-${var.env}"
+  description = "Managed by Terraform"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    from_port = 443
+    to_port   = 443
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      var.private_subnet_block
+    ]
+    
   }
   tags = {
-    Domain = var.tag_domain
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
   }
 }
 
+resource "aws_iam_service_linked_role" "es" {
+  aws_service_name = "es.amazonaws.com"
+}
+
+resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
+  domain_name           = "${var.application}-${var.tool}-${var.env}"
+  elasticsearch_version = var.ElasticSearch_Version
+  cluster_config {
+    dedicated_master_count   = var.master_node_instance_count
+    dedicated_master_enabled = var.master_node_usage
+    dedicated_master_type    = var.master_node_instance_type
+    instance_count           = var.data_node_instance_count
+    instance_type            = var.data_node_instance_type
+    warm_count               = var.ultrawarm_node_instance_count
+    warm_type                = var.ultrawarm_node_instance_type
+
+  }
+  ebs_options {
+    ebs_enabled = "true"
+    volume_size = var.ebs_volume_size
+  }
+
+  vpc_options {
+    subnet_ids = [
+      aws_subnet.private_subnet.id
+    ]
+
+    security_group_ids = [aws_security_group.es.id]
+  }
+
+  advanced_options = {
+    "rest.action.multi.allow_explicit_index" = "true"
+  }
+
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+
+  access_policies = <<CONFIG
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "es:*",
+            "Principal": "*",
+            "Effect": "Allow",
+            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.application}-${var.tool}-${var.env}/*"
+        }
+    ]
+}
+CONFIG
+}
+
+/*
 
 resource "aws_elasticsearch_domain_policy" "main" {
   domain_name = aws_elasticsearch_domain.es.domain_name
@@ -221,6 +488,7 @@ resource "aws_elasticsearch_domain_policy" "main" {
 }
 POLICIES
 }
+*/
 
 
 
