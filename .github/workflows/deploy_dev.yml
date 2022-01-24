@@ -9,7 +9,7 @@ on:
     tags: [deploy-dev*]
 
 env:
-  TF_VERSION: 0.15.3
+  TF_VERSION: 1.1.0
   TG_VERSION: 0.29.2
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
