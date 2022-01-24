@@ -3,7 +3,12 @@ package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -60,18 +65,40 @@ public class OpenSearchRESTClient {
 
 		Map<String, Object> document = new HashMap<>();
 		document.put("key", fileName);
+		document.put("absoluteFilePath",fileDetails.getString("filePath"));
+		
 		if (content != null && !content.isEmpty()) {
 			JSONObject jsonObj = new JSONObject(content);
 			document.put("fileContent", jsonObj.getString("Text"));
 		}
 
+		DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US);
+		String lastUpdatedTime =String.valueOf(fileDetails.get("lastUpdatedTimestamp"));
+		LocalDateTime localDate = LocalDateTime.parse(lastUpdatedTime, datetimeFormatter);
+		document.put("lastModified", fileDetails.get("lastUpdatedTimestamp"));
+		
+		document.put("lastUpdatedBy", fileDetails.get("lastUpdatedBy"));
+		document.put("mimeType",fileDetails.get("mimeType"));
+		
 		document.put("fileName", fileName);
+		document.put("fileRetention", fileDetails.get("retention"));
+		
+		JSONObject parent = fileDetails.getJSONObject("parent");
+		JSONArray parentLinkArray = parent.getJSONArray("links");
+		JSONObject parentLinkObj = parentLinkArray.getJSONObject(0);
+		document.put("fileLink", parentLinkObj.get("href"));
+		document.put("filePath", parent.getString("filePath"));
+		
+		Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
+	    String fileSize =  humanReadableByteCountBin(fileSizeLong);
+	    document.put("fileSize", fileSize);
+		
 
 		JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
 		System.out.println("metadataArray :" + metadataArray);
 		document.put("metadata", metadataArray.toString());
-
+		
 		JSONArray securityArray = fileDetails.getJSONArray("security");
 		JSONArray jsonArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
@@ -79,10 +106,30 @@ public class OpenSearchRESTClient {
 			jsonArray.put(objects.get("securityKey"));
 
 		}
+	    
 		JSONArray jsonSecurityArray = filterDataFromFileDetails(jsonArray.toString(), "displayLabel", "securityKey");
 		System.out.println("jsonSecurityArray :" + jsonSecurityArray);
 		document.put("security", jsonSecurityArray.toString());
-		document.put("Scan status", scanStatus);
+		
+		
+		JSONArray scopeArray = new JSONArray();
+		for (int i = 0; i < securityArray.length(); i++) {
+			JSONObject objects = securityArray.getJSONObject(i);
+			JSONObject scopeObj = new JSONObject() ;
+			jsonArray.put(objects.get("securityKey"));
+			scopeObj.put("Read", objects.get("readAccessInd"));
+			scopeObj.put("Write", objects.get("grantorAccessInd"));
+			scopeObj.put("displayLabel", jsonArray.toString());
+			JSONObject jsobObjects = filterSecurityScope(scopeObj);
+			scopeArray.put(jsobObjects);
+			
+		}
+		
+		document.put("securityScope", scopeArray.toString());
+	
+		
+		
+		document.put("scanStatus", scanStatus);
 		String id = fileDetails.getString("fileId");
 
 		String json;
@@ -177,5 +224,45 @@ public class OpenSearchRESTClient {
 		return jArray;
 
 	}
+	
+	
+	private static JSONObject filterSecurityScope(JSONObject scopeObj) {
+		JSONObject jobject = new JSONObject();
+		boolean canRead = scopeObj.getBoolean("Read");
+		boolean canWrite = scopeObj.getBoolean("Write");
+		if (canRead || canWrite) {
+			jobject.put("canReadorWrite", "true");
+		} else {
+			jobject.put("canReadorWrite", "false");
+		}
 
+		JSONArray jsonArray = new JSONArray(scopeObj.getString("displayLabel"));
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject json = jsonArray.getJSONObject(i);
+			jobject.put("displayLabel", json.getString("displayLabel"));
+		}
+
+		return jobject;
+
+	}
+	
+	
+	
+	//Copied from stackoverflow
+	public static String humanReadableByteCountBin(long bytes) {
+	    long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
+	    if (absB < 1024) {
+	        return bytes + " B";
+	    }
+	    long value = absB;
+	    CharacterIterator ci = new StringCharacterIterator("KMGTPE");
+	    for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
+	        value >>= 10;
+	        ci.next();
+	    }
+	    value *= Long.signum(bytes);
+	    return String.format("%.1f %ciB", value / 1024.0, ci.current());
+	}
+	
+	
 }
