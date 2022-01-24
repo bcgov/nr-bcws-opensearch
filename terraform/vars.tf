@@ -157,6 +157,7 @@ variable "ultrawarm_node_volume_size" {
 #IAM-RELATED VARIABLES
 variable "iam_role_lambda_function"{
 	type = string
+  default = null
 }
 
 variable "lambda_function_handler" {
