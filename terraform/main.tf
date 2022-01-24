@@ -121,23 +121,11 @@ resource "aws_route_table" "public_route_table" {
 resource "aws_route_table_association" "main_association" {
   subnet_id      = aws_subnet.private_subnet.id
   route_table_id = aws_route_table.main_route_table.id
-  tags = {
-    Name        = "${var.application}-private-association-${var.env}"
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 }
 
 resource "aws_route_table_association" "public_association" {
   subnet_id      = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.public_route_table.id
-  tags = {
-    Name        = "${var.application}-public-association-${var.env}"
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 }
 
 # Creating IAM role so that Lambda service to assume the role and access other  AWS services. 
@@ -168,6 +156,62 @@ resource "aws_iam_role" "lambda_role" {
             "Effect": "Allow",
             "Resource": "*"
         }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "opensearch_role" {
+ name   = "${var.application}-iam-role-opensearch-sqs-${var.env}"
+ tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+ assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "VisualEditor0",
+      "Effect": "Allow",
+      "Action": [
+          "sqs:DeleteMessage",
+          "sqs:GetQueueUrl",
+          "sqs:ChangeMessageVisibility",
+          "sqs:UntagQueue",
+          "sqs:ReceiveMessage",
+          "sqs:SendMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ListQueueTags",
+          "sqs:TagQueue",
+          "sqs:ListDeadLetterSourceQueues",
+          "sqs:PurgeQueue",
+          "sqs:DeleteQueue",
+          "sqs:CreateQueue",
+          "sqs:SetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
+  },
+  {
+      "Sid": "VisualEditor1",
+      "Effect": "Allow",
+      "Action": "sqs:ListQueues",
+      "Resource": "*"
+  }
   ]
 }
 EOF
@@ -238,12 +282,6 @@ EOF
 resource "aws_iam_role_policy_attachment" "policy_attach" {
   role        = aws_iam_role.lambda_role.name
   policy_arn  = aws_iam_policy.lambda_logging.arn
-  tags = {
-    Name        = "${var.application}-lambda-logging-policy-attach-${var.env}"
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 }
 
 
@@ -251,6 +289,7 @@ resource "aws_iam_role_policy_attachment" "policy_attach" {
 # SQS queue
 
 resource "aws_sqs_queue" "queue" {
+  depends_on = [aws_iam_role.opensearch_role]
   name = "${var.application}-sqs-queue-${var.env}"
 
   tags = {
@@ -277,7 +316,7 @@ resource "aws_sqs_queue" "queue" {
       "Sid": "Stmt1640124883525",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::460053263286:role/wfdm-opensearch-sqs-dev-role"
+        "AWS": "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_role.name}"
       },
       "Action": [
         "sqs:ListDeadLetterSourceQueues",
@@ -290,7 +329,7 @@ resource "aws_sqs_queue" "queue" {
 
 
       ],
-      "Resource": "arn:aws:sqs:ca-central-1:460053263286:wfdm-index-searching-queue"
+      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
     }
   ]
 }
