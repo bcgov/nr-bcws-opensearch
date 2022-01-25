@@ -337,7 +337,7 @@ POLICY
 }
 
 
-
+/*
 # Event source from SQS
 resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   event_source_arn = aws_sqs_queue.queue.arn
@@ -345,7 +345,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
   function_name    = aws_lambda_function.terraform_wfdm_indexing_function.arn
   batch_size       = 1
 }
-
+*/
 
 #Create s3 bucket
 resource "aws_s3_bucket" "terraform-s3-bucket" {
@@ -359,7 +359,7 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 
 }
 
-/*
+/* 
 #Upload java.zip to s3bucket
 resource "aws_s3_bucket_object" "java_zip" {
   bucket       = aws_s3_bucket.terraform-s3-bucket.id
