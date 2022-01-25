@@ -3,7 +3,7 @@ terraform {
 }
 
 locals {
-  target_env = "INT"
+  target_env = "int"
 }
 
 generate "backend" {
