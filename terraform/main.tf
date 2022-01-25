@@ -44,7 +44,7 @@ resource "aws_subnet" "private_subnet" {
 
 resource "aws_nat_gateway" "main_nat_gateway" {
   subnet_id = aws_subnet.private_subnet.id
-  allocation_id = var.aws_ip_association_id
+  allocation_id = var.aws_ip_allocation_id
   tags = {
     Name        = "${var.application}-nat-gateway-${var.env}"
     Application = var.application
@@ -479,10 +479,12 @@ resource "aws_security_group" "es" {
   }
 }
 
+/*
 resource "aws_iam_service_linked_role" "es" {
   aws_service_name = "es.amazonaws.com"
   custom_suffix = "${var.env}"
 }
+*/
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   domain_name           = "${var.domain}"

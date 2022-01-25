@@ -179,7 +179,7 @@ variable "layer_file_name" {
   default = "java.zip"
 }
 
-variable "aws_ip_association_id" {
+variable "aws_ip_allocation_id" {
   type = string
   default = null
 }
