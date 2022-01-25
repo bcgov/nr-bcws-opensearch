@@ -158,17 +158,19 @@ EOF
 resource "aws_iam_policy" "lambda_role_sqs_policy" {
   name = "${var.application}-all-sqs-role-policy-${var.env}"
   policy = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": ["sqs:*"],
-        "Effect": "Allow",
-        "Resource": "*"
-      }
-    ]
-  }
-  EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "sqs:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_role" "opensearch_sqs_role" {
