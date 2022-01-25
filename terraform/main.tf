@@ -162,11 +162,9 @@ resource "aws_iam_policy" "lambda_role_sqs_policy" {
     "Version": "2012-10-17",
     "Statement": [
       {
-            "Action": [
-                "sqs:*"
-            ],
-            "Effect": "Allow",
-            "Resource": "*"
+        "Action": ["sqs:*"],
+        "Effect": "Allow",
+        "Resource": "*"
       }
     ]
   }
@@ -183,7 +181,7 @@ resource "aws_iam_role" "opensearch_sqs_role" {
  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement" = [
+  "Statement": [
      {
        "Action": "sts:AssumeRole",
         "Principal": {
@@ -195,7 +193,6 @@ resource "aws_iam_role" "opensearch_sqs_role" {
    ]
 }
 EOF
- 
 }
 
 resource "aws_iam_policy" "iam_policy_for_opensearch" {
