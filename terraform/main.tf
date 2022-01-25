@@ -183,18 +183,19 @@ resource "aws_iam_role" "opensearch_sqs_role" {
     Customer    = var.customer
     Environment = var.env
   }
- assume_role_policy = <<EOF 
- {
-   {
-   "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "opensearch.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
- }
- EOF
+ assume_role_policy = JSONEncode({
+   Statement = [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "opensearch.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+   ]
+ })
+ 
 }
 
 resource "aws_iam_policy" "iam_policy_for_opensearch" {
