@@ -322,7 +322,7 @@ resource "aws_iam_role_policy_attachment" "policy_attach" {
   policy_arn  = aws_iam_policy.lambda_logging.arn
 }
 
-resource "aws_iam_role_policy_attachment" "policy_attach" {
+resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
   role = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_role_sqs_policy.arn
 }
