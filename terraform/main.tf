@@ -8,6 +8,14 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
+module "var_declarations" {
+  source = "./terraform.tfvars"
+}
+
+module "var_definitions" {
+  source = "./variables.tf"
+}
+
 //CREATE THE VPC AND SUBNETS
 //Main VPC
 resource "aws_vpc" "main_vpc" {
@@ -359,6 +367,7 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 
 }
 
+/*
 #Upload java.zip to s3bucket
 resource "aws_s3_bucket_object" "java_zip" {
   bucket       = aws_s3_bucket.terraform-s3-bucket.id
@@ -405,6 +414,8 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
  
 }
 
+
+*/
 #Create OpenSearch and related resources
 #COMPONENTS FOR OPENSEARCH
 
