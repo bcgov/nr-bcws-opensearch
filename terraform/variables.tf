@@ -171,7 +171,7 @@ variable "lambda_payload_filename" {
 
 variable "java_layer_name" {
   type        = string
-  default     = null
+  default     = "aws-java-base-layer-terraform"
 }
 
 variable "layer_file_name" {
