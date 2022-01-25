@@ -157,7 +157,6 @@ EOF
 
 resource "aws_iam_policy" "lambda_role_sqs_policy" {
   name = "${var.application}-all-sqs-role-policy-${var.env}"
-  role = aws_iam_role.lambda_role.id
   policy = <<EOF
   {
     {
