@@ -2,7 +2,7 @@
 variable "application" {
   type        = string
   description = "name of application"
-  default     = "WFDM"
+  default     = "wfdm"
 }
 
 variable "customer" {

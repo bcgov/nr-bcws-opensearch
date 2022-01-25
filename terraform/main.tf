@@ -376,7 +376,7 @@ resource "aws_s3_bucket_object" "java_zip" {
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   layer_name = var.java_layer_name
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket
+  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key = var.layer_file_name
   description = "Common layer with java jars files"
   compatible_runtimes = ["java8"]
