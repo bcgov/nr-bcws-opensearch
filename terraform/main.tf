@@ -157,9 +157,8 @@ EOF
 
 resource "aws_iam_policy" "lambda_role_sqs_policy" {
   name = "${var.application}-all-sqs-role-policy-${var.env}"
-  policy = jsonencode(
-  {
-    Statement [
+  policy = jsonencode({
+    Statement = [
     {
             "Action": [
                 "sqs:*"
