@@ -179,4 +179,8 @@ variable "layer_file_name" {
   default = "java.zip"
 }
 
+variable "aws_ip_association_id" {
+  type = string
+  default = null
+}
 

@@ -44,6 +44,7 @@ resource "aws_subnet" "private_subnet" {
 
 resource "aws_nat_gateway" "main_nat_gateway" {
   subnet_id = aws_subnet.private_subnet.id
+  aws_ip_association_id = var.aws_ip_association_id
   tags = {
     Name        = "${var.application}-nat-gateway-${var.env}"
     Application = var.application
@@ -148,27 +149,62 @@ resource "aws_iam_role" "lambda_role" {
       },
       "Effect": "Allow",
       "Sid": ""
-    },
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "lambda_role_sqs_policy" {
+  name = "${var.application}-all-sqs-role-policy-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  role = aws_iam_role.lambda_role.id
+  policy = <<EOF
+  {
     {
             "Action": [
                 "sqs:*"
             ],
             "Effect": "Allow",
             "Resource": "*"
-        }
-  ]
-}
-EOF
+    }
+  }
+  EOF
 }
 
-resource "aws_iam_role" "opensearch_role" {
+resource "aws_iam_role" "opensearch_sqs_role" {
  name   = "${var.application}-iam-role-opensearch-sqs-${var.env}"
  tags = {
     Application = var.application
     Customer    = var.customer
     Environment = var.env
   }
- assume_role_policy = <<EOF
+ assume_role_policy = <<EOF 
+ {
+   {
+   "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "opensearch.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+ }
+ EOF
+}
+
+resource "aws_iam_policy" "iam_policy_for_opensearch" {
+  name = "${var.application}-opensearch-sqs-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -215,6 +251,7 @@ resource "aws_iam_role" "opensearch_role" {
   ]
 }
 EOF
+  
 }
 
 
@@ -284,12 +321,17 @@ resource "aws_iam_role_policy_attachment" "policy_attach" {
   policy_arn  = aws_iam_policy.lambda_logging.arn
 }
 
+resource "aws_iam_role_policy_attachment" "policy_attach" {
+  role = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_role_sqs_policy.arn
+}
+
 
 
 # SQS queue
 
 resource "aws_sqs_queue" "queue" {
-  depends_on = [aws_iam_role.opensearch_role]
+  depends_on = [aws_iam_role.opensearch_sqs_role]
   name = "${var.application}-sqs-queue-${var.env}"
 
   tags = {
@@ -316,7 +358,7 @@ resource "aws_sqs_queue" "queue" {
       "Sid": "Stmt1640124883525",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_role.name}"
+        "AWS": "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}"
       },
       "Action": [
         "sqs:ListDeadLetterSourceQueues",
