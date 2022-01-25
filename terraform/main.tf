@@ -157,17 +157,20 @@ EOF
 
 resource "aws_iam_policy" "lambda_role_sqs_policy" {
   name = "${var.application}-all-sqs-role-policy-${var.env}"
-  policy = jsonencode({
-    Statement = [
-    {
+  policy = <<EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
             "Action": [
                 "sqs:*"
             ],
             "Effect": "Allow",
             "Resource": "*"
-    }
+      }
     ]
-  })
+  }
+  EOF
 }
 
 resource "aws_iam_role" "opensearch_sqs_role" {
@@ -177,8 +180,10 @@ resource "aws_iam_role" "opensearch_sqs_role" {
     Customer    = var.customer
     Environment = var.env
   }
- assume_role_policy = jsonencode({
-   Statement = [
+ assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement" = [
      {
        "Action": "sts:AssumeRole",
         "Principal": {
@@ -188,7 +193,8 @@ resource "aws_iam_role" "opensearch_sqs_role" {
         "Sid": ""
      }
    ]
- })
+}
+EOF
  
 }
 
@@ -476,6 +482,7 @@ resource "aws_security_group" "es" {
 
 resource "aws_iam_service_linked_role" "es" {
   aws_service_name = "es.amazonaws.com"
+  custom_suffix = "${var.env}"
 }
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
