@@ -157,8 +157,9 @@ EOF
 
 resource "aws_iam_policy" "lambda_role_sqs_policy" {
   name = "${var.application}-all-sqs-role-policy-${var.env}"
-  policy = <<EOF
+  policy = jsonencode(
   {
+    Statement [
     {
             "Action": [
                 "sqs:*"
@@ -166,8 +167,8 @@ resource "aws_iam_policy" "lambda_role_sqs_policy" {
             "Effect": "Allow",
             "Resource": "*"
     }
-  }
-  EOF
+    ]
+  })
 }
 
 resource "aws_iam_role" "opensearch_sqs_role" {
