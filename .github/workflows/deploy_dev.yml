@@ -45,4 +45,4 @@ jobs:
         working-directory: terragrunt/DEV
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
-        run: terragrunt run-all apply -var-file terraform.tfvars --terragrunt-non-interactive
+        run: terragrunt run-all apply --terragrunt-non-interactive
