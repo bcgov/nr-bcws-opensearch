@@ -31,6 +31,6 @@ generate "inputs" {
   if_exists = "overwrite_terragrunt"
   contents = <<EOF
   env = "${local.target_env}"
-  domain = "WFDM-opensearch-${local.target_env}"
+  domain = "wfdm-opensearch-${local.target_env}"
 EOF
 }
