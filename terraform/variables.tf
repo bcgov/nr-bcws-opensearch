@@ -144,9 +144,6 @@ variable "ultrawarm_node_instance_type" {
   default = "ultrawarm1.medium.elasticsearch"
 }
 
-variable "domain" {
-  type = string
-}
 /*
 variable "ultrawarm_node_volume_size" {
   type = number
@@ -166,7 +163,7 @@ variable "lambda_payload_filename" {
   default = null
 }
 
-variable "layer_name" {
+variable "java_layer_name" {
   type        = string
   default     = null
 }
