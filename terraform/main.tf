@@ -44,7 +44,7 @@ resource "aws_subnet" "private_subnet" {
 
 resource "aws_nat_gateway" "main_nat_gateway" {
   subnet_id = aws_subnet.private_subnet.id
-  aws_ip_association_id = var.aws_ip_association_id
+  allocation_id = var.aws_ip_association_id
   tags = {
     Name        = "${var.application}-nat-gateway-${var.env}"
     Application = var.application
@@ -155,13 +155,8 @@ resource "aws_iam_role" "lambda_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "lambda_role_sqs_policy" {
+resource "aws_iam_policy" "lambda_role_sqs_policy" {
   name = "${var.application}-all-sqs-role-policy-${var.env}"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
   role = aws_iam_role.lambda_role.id
   policy = <<EOF
   {
@@ -183,7 +178,7 @@ resource "aws_iam_role" "opensearch_sqs_role" {
     Customer    = var.customer
     Environment = var.env
   }
- assume_role_policy = JSONEncode({
+ assume_role_policy = jsonencode({
    Statement = [
      {
        "Action": "sts:AssumeRole",
