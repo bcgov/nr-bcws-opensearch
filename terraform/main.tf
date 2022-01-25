@@ -8,10 +8,6 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
-module "var_declarations" {
-  source = "./terraform.tfvars"
-}
-
 module "var_definitions" {
   source = "./variables.tf"
 }
