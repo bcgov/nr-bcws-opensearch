@@ -8,10 +8,6 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
-module "var_definitions" {
-  source = "./variables.tf"
-}
-
 //CREATE THE VPC AND SUBNETS
 //Main VPC
 resource "aws_vpc" "main_vpc" {
