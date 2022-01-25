@@ -17,6 +17,12 @@ variable "tool" {
   default     = "opensearch"
 }
 
+variable "domain" {
+  type = string
+  description = "name of opensearch domain"
+  default = null
+}
+
 variable "region" {
   type        = string
   description = "AWS Region, where to deploy cluster."
@@ -170,7 +176,7 @@ variable "java_layer_name" {
 
 variable "layer_file_name" {
   type        = string
-  default = null
+  default = "java.zip"
 }
 
 

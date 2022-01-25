@@ -362,7 +362,7 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 #Upload java.zip to s3bucket
 resource "aws_s3_bucket_object" "java_zip" {
   bucket       = aws_s3_bucket.terraform-s3-bucket.id
-  key          = var.layer_file_name
+  key          = "${var.layer_file_name}"
   acl          = "private" 
   source       = "aws-lambda-layer-base/java.zip"
   tags = {
@@ -439,7 +439,7 @@ resource "aws_iam_service_linked_role" "es" {
 }
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
-  domain_name           = "${var.application}-${var.tool}-${var.env}"
+  domain_name           = "${var.domain}"
   elasticsearch_version = var.ElasticSearch_Version
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
