@@ -184,3 +184,8 @@ variable "aws_ip_allocation_id" {
   default = null
 }
 
+variable "main_route53_zone" {
+  type = string
+  default = null
+}
+

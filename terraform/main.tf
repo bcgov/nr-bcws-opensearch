@@ -487,7 +487,7 @@ resource "aws_iam_service_linked_role" "es" {
 */
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
-  domain_name           = "${var.domain}"
+  domain_name           = "${var.application}-opensearch-${var.env}.${var.domain}"
   elasticsearch_version = var.ElasticSearch_Version
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
@@ -557,5 +557,18 @@ POLICIES
 }
 */
 
+data "aws_route53_zone" "main_route53_zone" {
+  name = "${var.main_route53_zone}"
+}
+
+resource "aws_route53_record" "sqs-route53-record"{
+  zone_id = data.aws_route53_zone.main_route53_zone.id
+  name = "${var.application}-sqs-${var.env}.${var.domain}"
+  type="A"
+  ttl=300
+  records=[
+    "${aws_sqs_queue.queue.url}"
+  ]
+}
 
 
