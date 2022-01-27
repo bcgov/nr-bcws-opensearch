@@ -415,10 +415,6 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
                 "s3:List*",
                 "s3:DeleteObject*",
                 "s3:Put*"
-            ],
-            "Resource": [
-                "${aws_s3_bucket.terraform-s3-bucket.arn}",
-                "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
             ]
         },
         {
@@ -429,7 +425,6 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
                 ]
             },
             "Action": "s3:GetObject",
-            "Resource": "${aws_s3_bucket.terraform-s3-bucket.arn}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:ExistingObjectTag/scan-status": [
