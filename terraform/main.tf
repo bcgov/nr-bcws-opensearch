@@ -405,7 +405,7 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 }
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
-  name = "${application}-s3-bucket-add-remove-role-${env}"
+  name = "${var.application}-s3-bucket-add-remove-role-${env}"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -429,7 +429,7 @@ EOF
 }
 
 resource "aws_iam_role" "s3-clamav-bucket-role" {
-  name = "${application}-s3-clamav-role-${env}"
+  name = "${var.application}-s3-clamav-role-${env}"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -453,7 +453,7 @@ EOF
 }
 
 resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
-  name = "${application}-s3-bucket-add-remove-policy-${env}"
+  name = "${var.application}-s3-bucket-add-remove-policy-${env}"
   policy = <<EOF
   {
     "Version": "2012-10-17",
@@ -468,19 +468,19 @@ resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
                 "s3:Put*"
             ],
             "Resource": [
-                "${aws_s3_bucket.terraform-s3-bucket.ARN}",
-                "${aws_s3_bucket.terraform-s3-bucket.ARN}/*"
+                "${aws_s3_bucket.terraform-s3-bucket.arn}",
+                "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
             ]
         },
         {
             "Effect": "Deny",
             "NotPrincipal": {
                 "AWS": [
-                    "${aws_iam_role.s3-clamav-bucket-role.ARN}"
+                    "${aws_iam_role.s3-clamav-bucket-role.arn}"
                 ]
             },
             "Action": "s3:GetObject",
-            "Resource": "${aws_s3_bucket.terraform-s3-bucket.ARN}/*",
+            "Resource": "${aws_s3_bucket.terraform-s3-bucket.arn}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:ExistingObjectTag/scan-status": [
@@ -671,7 +671,7 @@ resource "aws_route53_record" "sqs-route53-record"{
 resource "aws_api_gateway_vpc_link" "vpc-opensearch-api-link" {
   name = "${var.application}-api-gateway-vpc-link-${var.env}"
   description = "Make the opensearch REST api accessible through the VPC"
-  target_arns = [aws_elasticsearch_domain.main_elasticsearch_domain.ARN]
+  target_arns = [aws_elasticsearch_domain.main_elasticsearch_domain.arn]
 
   tags = {
     Application = var.application
