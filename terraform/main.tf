@@ -394,6 +394,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 #Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
+  depends-on = [aws_iam_role.s3-bucket-add-remove-role, aws_iam_role.s3-clamav-bucket-role]
   bucket = "${var.application}-s3-bucket-${var.env}"
   acl    = "private"
   tags = {
