@@ -405,7 +405,7 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 }
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
-  name = "${var.application}-s3-bucket-add-remove-role-${env}"
+  name = "${var.application}-s3-bucket-add-remove-role-${var.env}"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -429,7 +429,7 @@ EOF
 }
 
 resource "aws_iam_role" "s3-clamav-bucket-role" {
-  name = "${var.application}-s3-clamav-role-${env}"
+  name = "${var.application}-s3-clamav-role-${var.env}"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -453,7 +453,7 @@ EOF
 }
 
 resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
-  name = "${var.application}-s3-bucket-add-remove-policy-${env}"
+  name = "${var.application}-s3-bucket-add-remove-policy-${var.env}"
   policy = <<EOF
   {
     "Version": "2012-10-17",
