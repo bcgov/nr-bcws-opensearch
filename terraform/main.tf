@@ -389,7 +389,10 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 }
 */
 
-#Create s3 bucket
+
+
+
+#Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
   bucket = "${var.application}-s3-bucket-${var.env}"
   acl    = "private"
@@ -400,6 +403,100 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
   }
 
 }
+
+resource "aws_iam_role" "s3-bucket-add-remove-role" {
+  name = "${application}-s3-bucket-add-remove-role-${env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+   assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+   ]
+}
+EOF
+}
+
+resource "aws_iam_role" "s3-clamav-bucket-role" {
+  name = "${application}-s3-clamav-role-${env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+   assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+   ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
+  name = "${application}-s3-bucket-add-remove-policy-${env}"
+  policy = <<EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Principal": "${aws_iam_role.s3-bucket-add-remove-role}",
+            "Effect": "Allow",
+            "Action": [
+                "s3:Get*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:Put*"
+            ],
+            "Resource": [
+                "${aws_s3_bucket.terraform-s3-bucket.ARN}",
+                "${aws_s3_bucket.terraform-s3-bucket.ARN}/*"
+            ]
+        },
+        {
+            "Effect": "Deny",
+            "NotPrincipal": {
+                "AWS": [
+                    "${aws_iam_role.s3-clamav-bucket-role.ARN}"
+                ]
+            },
+            "Action": "s3:GetObject",
+            "Resource": "${aws_s3_bucket.terraform-s3-bucket.ARN}/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:ExistingObjectTag/scan-status": [
+                        "IN PROGRESS",
+                        "INFECTED",
+                        "ERROR"
+                    ]
+                }
+            }
+        }
+    ]
+}
+EOF
+}
+
+
 
 /* 
 #Upload java.zip to s3bucket
@@ -506,7 +603,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
 
   vpc_options {
     subnet_ids = [
-      aws_subnet.private_subnet.id
+      aws_subnet.public_subnet.id
     ]
 
     security_group_ids = [aws_security_group.es.id]
@@ -569,6 +666,18 @@ resource "aws_route53_record" "sqs-route53-record"{
   records=[
     "${aws_sqs_queue.queue.url}"
   ]
+}
+
+resource "aws_api_gateway_vpc_link" "vpc-opensearch-api-link" {
+  name = "${var.application}-api-gateway-vpc-link-${var.env}"
+  description = "Make the opensearch REST api accessible through the VPC"
+  target_arns = [aws_elasticsearch_domain.main_elasticsearch_domain.ARN]
+
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
 }
 
 
