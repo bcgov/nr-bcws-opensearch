@@ -401,6 +401,10 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
     Customer    = var.customer
     Environment = var.env
   }
+}
+
+resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
+  bucket = aws_s3_bucket.terraform-s3-bucket.id
   policy = <<POLICY
   {
     "Version": "2012-10-17",
