@@ -3,6 +3,7 @@ terraform {
 }
 
 locals {
+  application = "wfdm"
   target_env = "int"
 }
 
@@ -31,6 +32,5 @@ generate "inputs" {
   if_exists = "overwrite_terragrunt"
   contents = <<EOF
   env = "${local.target_env}"
-  domain = "wfdm-opensearch-${local.target_env}"
 EOF
 }
