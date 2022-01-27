@@ -401,7 +401,48 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
     Customer    = var.customer
     Environment = var.env
   }
-
+  policy = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Principal": {
+                "AWS": "${aws_iam_role.s3-bucket-add-remove-role.arn}"
+            },
+            "Effect": "Allow",
+            "Action": [
+                "s3:Get*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:Put*"
+            ],
+            "Resource": [
+                "${aws_s3_bucket.terraform-s3-bucket.arn}",
+                "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
+            ]
+        },
+        {
+            "Effect": "Deny",
+            "NotPrincipal": {
+                "AWS": [
+                    "${aws_iam_role.s3-clamav-bucket-role.arn}"
+                ]
+            },
+            "Action": "s3:GetObject",
+            "Resource": "${aws_s3_bucket.terraform-s3-bucket.arn}/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:ExistingObjectTag/scan-status": [
+                        "IN PROGRESS",
+                        "INFECTED",
+                        "ERROR"
+                    ]
+                }
+            }
+        }
+    ]
+}
+POLICY
 }
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
