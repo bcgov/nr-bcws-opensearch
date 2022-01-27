@@ -672,7 +672,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
             httpMethod           = "ANY"
             payloadFormatVersion = "1.0"
             type                 = "AWS"
-            uri                  = "${aws_sqs.queue.arn}"
+            uri                  = "${aws_sqs_queue.queue.arn}"
           }
         }
       }
