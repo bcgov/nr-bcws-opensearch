@@ -584,7 +584,7 @@ resource "aws_iam_service_linked_role" "es" {
 */
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
-  domain_name           = "${var.application}-opensearch-${var.env}.${var.domain}"
+  domain_name           = "${var.application}-opensearch-${var.env}"
   elasticsearch_version = var.ElasticSearch_Version
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
