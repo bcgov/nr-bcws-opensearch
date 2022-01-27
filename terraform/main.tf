@@ -459,7 +459,9 @@ resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Principal": "${aws_iam_role.s3-bucket-add-remove-role.arn}",
+            "Principal": {
+                "AWS": "${aws_iam_role.s3-bucket-add-remove-role.arn}"
+            },
             "Effect": "Allow",
             "Action": [
                 "s3:Get*",
