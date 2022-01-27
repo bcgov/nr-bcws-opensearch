@@ -43,7 +43,7 @@ resource "aws_subnet" "private_subnet" {
 }
 
 resource "aws_nat_gateway" "main_nat_gateway" {
-  subnet_id = aws_subnet.private_subnet.id
+  subnet_id     = aws_subnet.private_subnet.id
   allocation_id = var.aws_ip_allocation_id
   tags = {
     Name        = "${var.application}-nat-gateway-${var.env}"
@@ -130,15 +130,15 @@ resource "aws_route_table_association" "public_association" {
 }
 
 # Creating IAM role so that Lambda service to assume the role and access other  AWS services. 
- 
+
 resource "aws_iam_role" "lambda_role" {
- name   = "${var.application}-iam_role_lambda_index_searching-${var.env}"
- tags = {
+  name = "${var.application}-iam_role_lambda_index_searching-${var.env}"
+  tags = {
     Application = var.application
     Customer    = var.customer
     Environment = var.env
   }
- assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -156,7 +156,7 @@ EOF
 }
 
 resource "aws_iam_policy" "lambda_role_sqs_policy" {
-  name = "${var.application}-all-sqs-role-policy-${var.env}"
+  name   = "${var.application}-all-sqs-role-policy-${var.env}"
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -174,13 +174,13 @@ EOF
 }
 
 resource "aws_iam_role" "opensearch_sqs_role" {
- name   = "${var.application}-iam-role-opensearch-sqs-${var.env}"
- tags = {
+  name = "${var.application}-iam-role-opensearch-sqs-${var.env}"
+  tags = {
     Application = var.application
     Customer    = var.customer
     Environment = var.env
   }
- assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -251,7 +251,7 @@ resource "aws_iam_policy" "iam_policy_for_opensearch" {
   ]
 }
 EOF
-  
+
 }
 
 
@@ -288,9 +288,9 @@ EOF
 # IAM policy for logging from a lambda
 
 resource "aws_iam_policy" "lambda_logging" {
-  name         = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
-  path         = "/"
-  description  = "IAM policy for logging from a lambda"
+  name        = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
+  path        = "/"
+  description = "IAM policy for logging from a lambda"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -317,12 +317,12 @@ EOF
 # Policy Attachment on the role.
 
 resource "aws_iam_role_policy_attachment" "policy_attach" {
-  role        = aws_iam_role.lambda_role.name
-  policy_arn  = aws_iam_policy.lambda_logging.arn
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
-  role = aws_iam_role.lambda_role.name
+  role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_role_sqs_policy.arn
 }
 
@@ -332,7 +332,7 @@ resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
 
 resource "aws_sqs_queue" "queue" {
   depends_on = [aws_iam_role.opensearch_sqs_role]
-  name = "${var.application}-sqs-queue-${var.env}"
+  name       = "${var.application}-sqs-queue-${var.env}"
 
   tags = {
     Application = var.application
@@ -394,9 +394,8 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 #Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
-  depends-on = [aws_iam_role.s3-bucket-add-remove-role, aws_iam_role.s3-clamav-bucket-role]
-  bucket = "${var.application}-s3-bucket-${var.env}"
-  acl    = "private"
+  bucket     = "${var.application}-s3-bucket-${var.env}"
+  acl        = "private"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -448,7 +447,7 @@ resource "aws_iam_role" "s3-bucket-add-remove-role" {
     Customer    = var.customer
     Environment = var.env
   }
-   assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -472,7 +471,7 @@ resource "aws_iam_role" "s3-clamav-bucket-role" {
     Customer    = var.customer
     Environment = var.env
   }
-   assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -488,54 +487,6 @@ resource "aws_iam_role" "s3-clamav-bucket-role" {
 }
 EOF
 }
-
-resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
-  name = "${var.application}-s3-bucket-add-remove-policy-${var.env}"
-  policy = <<POLICY
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Principal": {
-                "AWS": "${aws_iam_role.s3-bucket-add-remove-role.arn}"
-            },
-            "Effect": "Allow",
-            "Action": [
-                "s3:Get*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:Put*"
-            ],
-            "Resource": [
-                "${aws_s3_bucket.terraform-s3-bucket.arn}",
-                "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-            ]
-        },
-        {
-            "Effect": "Deny",
-            "NotPrincipal": {
-                "AWS": [
-                    "${aws_iam_role.s3-clamav-bucket-role.arn}"
-                ]
-            },
-            "Action": "s3:GetObject",
-            "Resource": "${aws_s3_bucket.terraform-s3-bucket.arn}/*",
-            "Condition": {
-                "StringEquals": {
-                    "s3:ExistingObjectTag/scan-status": [
-                        "IN PROGRESS",
-                        "INFECTED",
-                        "ERROR"
-                    ]
-                }
-            }
-        }
-    ]
-}
-POLICY
-}
-
-
 
 /* 
 #Upload java.zip to s3bucket
@@ -606,7 +557,7 @@ resource "aws_security_group" "es" {
     cidr_blocks = [
       var.private_subnet_block
     ]
-    
+
   }
   tags = {
     Application = var.application
@@ -694,7 +645,7 @@ POLICIES
 */
 
 data "aws_route53_zone" "main_route53_zone" {
-  name = "${var.main_route53_zone}"
+  name = var.main_route53_zone
 }
 
 resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
@@ -743,18 +694,18 @@ resource "aws_api_gateway_stage" "sqs-api-gateway-stage" {
   stage_name    = "${var.application}-sqs-api-gateway-stage-${var.env}"
 }
 
-resource "aws_route53_record" "sqs-route53-record"{
+resource "aws_route53_record" "sqs-route53-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
-  name = "${var.application}-sqs-${var.env}.${var.domain}"
-  type="A"
-  ttl=300
-  records=[
+  name    = "${var.application}-sqs-${var.env}.${var.domain}"
+  type    = "A"
+  ttl     = 300
+  records = [
     "${aws_api_gateway_stage.sqs-api-gateway-stage.invoke_url}"
   ]
 }
 
 resource "aws_api_gateway_vpc_link" "vpc-opensearch-api-link" {
-  name = "${var.application}-api-gateway-vpc-link-${var.env}"
+  name        = "${var.application}-api-gateway-vpc-link-${var.env}"
   description = "Make the opensearch REST api accessible through the VPC"
   target_arns = [aws_elasticsearch_domain.main_elasticsearch_domain.arn]
 

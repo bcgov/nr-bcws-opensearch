@@ -18,9 +18,9 @@ variable "tool" {
 }
 
 variable "domain" {
-  type = string
+  type        = string
   description = "name of opensearch domain"
-  default = null
+  default     = null
 }
 
 variable "region" {
@@ -160,32 +160,32 @@ variable "ultrawarm_node_volume_size" {
 #LAMBDA-RELATED VARIABLES
 
 variable "lambda_function_handler" {
-	type = string
+  type    = string
   default = null
 }
 
 variable "lambda_payload_filename" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "java_layer_name" {
-  type        = string
-  default     = "aws-java-base-layer-terraform"
+  type    = string
+  default = "aws-java-base-layer-terraform"
 }
 
 variable "layer_file_name" {
-  type        = string
+  type    = string
   default = "java.zip"
 }
 
 variable "aws_ip_allocation_id" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "main_route53_zone" {
-  type = string
+  type    = string
   default = null
 }
 
