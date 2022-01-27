@@ -454,7 +454,7 @@ EOF
 
 resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
   name = "${var.application}-s3-bucket-add-remove-policy-${var.env}"
-  policy = <<EOF
+  policy = <<POLICY
   {
     "Version": "2012-10-17",
     "Statement": [
@@ -493,7 +493,7 @@ resource "aws_iam_policy" "s3-bucket-add-remove-policy" {
         }
     ]
 }
-EOF
+POLICY
 }
 
 
@@ -658,13 +658,59 @@ data "aws_route53_zone" "main_route53_zone" {
   name = "${var.main_route53_zone}"
 }
 
+resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
+  body = jsonencode({
+    openapi = "3.0.1"
+    info = {
+      title   = "example"
+      version = "1.0"
+    }
+    paths = {
+      "/" = {
+        any = {
+          x-amazon-apigateway-integration = {
+            httpMethod           = "ANY"
+            payloadFormatVersion = "1.0"
+            type                 = "AWS"
+            uri                  = "${aws_sqs.queue.arn}"
+          }
+        }
+      }
+    }
+  })
+
+  name = "${var.application}-sqs-api-gateway-${var.env}"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
+resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
+  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.sqs-api-gateway.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "sqs-api-gateway-stage" {
+  deployment_id = aws_api_gateway_deployment.sqs-api-gateway-deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
+  stage_name    = "${var.application}-sqs-api-gateway-stage-${var.env}"
+}
+
 resource "aws_route53_record" "sqs-route53-record"{
   zone_id = data.aws_route53_zone.main_route53_zone.id
   name = "${var.application}-sqs-${var.env}.${var.domain}"
   type="A"
   ttl=300
   records=[
-    "${aws_sqs_queue.queue.url}"
+    "${aws_api_gateway_stage.sqs-api-gateway-stage.invoke_url}"
   ]
 }
 
