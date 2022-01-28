@@ -197,7 +197,7 @@ resource "aws_iam_role" "opensearch_sqs_role" {
 EOF
 }
 
-resource "aws_iam_policy" "iam_policy_for_opensearch" {
+resource "aws_iam_policy" "sqs-iam-policy" {
   name = "${var.application}-opensearch-sqs-${var.env}"
   tags = {
     Application = var.application
@@ -252,6 +252,11 @@ resource "aws_iam_policy" "iam_policy_for_opensearch" {
 }
 EOF
 
+}
+
+resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
+  role = aws_iam_role.opensearch_sqs_role.name
+  policy_arn = aws_iam_policy.sqs-iam-policy.arn
 }
 
 
@@ -342,6 +347,7 @@ resource "aws_sqs_queue" "queue" {
 
   policy = <<POLICY
 {
+  }
   "Version": "2012-10-17",
   "Id": "Policy1640124887139",
   "Statement": [
@@ -660,63 +666,99 @@ data "aws_route53_zone" "main_route53_zone" {
 }
 
 resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
-  body = jsonencode({
-    openapi = "3.0.1"
-    info = {
-      title   = "example"
-      version = "1.0"
-    }
-    paths = {
-      "/" = {
-        get = {
-          x-amazon-apigateway-integration = {
-            httpMethod = "GET"
-            payloadFormatVersion = "1.0"
-            type                 = "AWS"
-            uri                  = "${aws_sqs_queue.queue.url}"
-            passthroughBehaviour = "when_no_match"
-            requestParameters = {
-              "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
-            }
-          }
-        }
-        post = {
-          x-amazon-apigateway-integration = {
-            httpMethod = "POST"
-            payloadFormatVersion = "1.0"
-            type                = "AWS"
-            uri                  = "${aws_sqs_queue.queue.url}"
-            passthroughBehaviour = "when_no_match"
-            requestParameters = {
-              "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
-            }
-          }
-        }
-        put = {
-          x-amazon-apigateway-integration = {
-            httpMethod = "PUT"
-            payloadFormatVersion = "1.0"
-            type                 = "AWS"
-            uri                  = "${aws_sqs_queue.queue.url}"
-            passthroughBehaviour = "when_no_match"
-            requestParameters = {
-              "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
-            }
-          }
-        }
-      }
-    }
-  })
+  name        = "api-gateway-SQS"
+  description = "POST records to SQS queue"
+}
 
-  name = "${var.application}-sqs-api-gateway-${var.env}"
+resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
+    rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+    parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
+    path_part   = ""
+}
 
-  endpoint_configuration {
-    types = ["REGIONAL"]
+resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
+  name                        = "queryValidator"
+  rest_api_id                 = aws_api_gateway_rest_api.sqs-api-gateway.id
+  validate_request_body       = false
+  validate_request_parameters = true
+}
+
+resource "aws_api_gateway_method" "sqs-gateway-post-method" {
+    rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
+    resource_id   = aws_api_gateway_resource.sqs-api-gateway-resource.id
+    http_method   = "POST"
+    authorization = "NONE"
+
+    request_parameters = {
+      "method.request.path.proxy"        = false
+      "method.request.querystring.unity" = true
   }
+  request_validator_id = aws_api_gateway_request_validator.sqs-api-gateway-validator.id
+}
+
+
+resource "aws_api_gateway_integration" "api" {
+  rest_api_id             = aws_api_gateway_rest_api.sqs-api-gateway.id
+  resource_id             = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
+  type                    = "AWS"
+  integration_http_method = "POST"
+  credentials             = aws_iam_role.opensearch_sqs_role.arn
+  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${aws_sqs_queue.queue.name}"
+
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
+
+  # Request Template for passing Method, Body, QueryParameters and PathParams to SQS messages
+  request_templates = {
+    "application/json" = <<EOF
+Action=SendMessage&MessageBody={
+  "method": "$context.httpMethod",
+  "body-json" : $input.json('$'),
+  "queryParams": {
+    #foreach($param in $input.params().querystring.keySet())
+    "$param": "$util.escapeJavaScript($input.params().querystring.get($param))" #if($foreach.hasNext),#end
+  #end
+  },
+  "pathParams": {
+    #foreach($param in $input.params().path.keySet())
+    "$param": "$util.escapeJavaScript($input.params().path.get($param))" #if($foreach.hasNext),#end
+    #end
+  }
+}
+EOF
+  }
+  depends_on = [
+    aws_iam_role_policy_attachment.sqs-api-exec-role
+  ]
+}
+
+resource "aws_api_gateway_method_response" "http200" {
+ rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+ resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
+ http_method = aws_api_gateway_method.sqs-gateway-post-method.http_method
+ status_code = 200
+}
+
+resource "aws_api_gateway_integration_response" "http200" {
+ rest_api_id       = aws_api_gateway_rest_api.sqs-api-gateway.id
+ resource_id       = aws_api_gateway_resource.sqs-api-gateway-resource.id
+ http_method       = aws_api_gateway_method.sqs-gateway-post-method.http_method
+ status_code       = aws_api_gateway_method_response.http200.status_code
+ selection_pattern = "^2[0-9][0-9]"                                       // regex pattern for any 200 message that comes back from SQS
+
+ depends_on = [
+   aws_api_gateway_integration.api
+   ]
 }
 
 resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+  stage_name = var.env
+  depends_on = [
+    aws_api_gateway_integration.api
+  ]
 
   triggers = {
     redeployment = sha1(jsonencode(aws_api_gateway_rest_api.sqs-api-gateway.body))
@@ -727,19 +769,13 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   }
 }
 
-resource "aws_api_gateway_stage" "sqs-api-gateway-stage" {
-  deployment_id = aws_api_gateway_deployment.sqs-api-gateway-deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
-  stage_name    = "${var.application}-sqs-api-gateway-stage-${var.env}"
-}
-
 resource "aws_route53_record" "sqs-route53-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
   name    = "${var.application}-sqs-${var.env}.${var.domain}"
   type    = "A"
   ttl     = 300
   records = [
-    "${aws_api_gateway_stage.sqs-api-gateway-stage.invoke_url}"
+    "${aws_api_gateway_deployment.sqs-api-gateway-deployment.invoke_url}"
   ]
 }
 
