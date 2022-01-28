@@ -673,7 +673,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
             httpMethod = "GET"
             payloadFormatVersion = "1.0"
             type                 = "AWS"
-            uri                  = "${aws_sqs_queue.queue.arn}"
+            uri                  = "${aws_sqs_queue.queue.url}"
             passthroughBehaviour = "when_no_match"
             requestParameters = {
               "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
@@ -685,7 +685,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
             httpMethod = "POST"
             payloadFormatVersion = "1.0"
             type                = "AWS"
-            uri                  = "${aws_sqs_queue.queue.arn}"
+            uri                  = "${aws_sqs_queue.queue.url}"
             passthroughBehaviour = "when_no_match"
             requestParameters = {
               "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
@@ -697,7 +697,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
             httpMethod = "PUT"
             payloadFormatVersion = "1.0"
             type                 = "AWS"
-            uri                  = "${aws_sqs_queue.queue.arn}"
+            uri                  = "${aws_sqs_queue.queue.url}"
             passthroughBehaviour = "when_no_match"
             requestParameters = {
               "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
