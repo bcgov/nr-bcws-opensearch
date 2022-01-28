@@ -420,6 +420,10 @@ resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
                 "s3:DeleteObject*",
                 "s3:Put*"
             ]
+            "Resources": [
+              "${aws_s3_bucket.terraform-s3-bucket.arn}",
+              "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
+            ]
         },
         {
             "Effect": "Deny",
@@ -429,6 +433,10 @@ resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
                 ]
             },
             "Action": "s3:GetObject",
+            "Resources": [
+              "${aws_s3_bucket.terraform-s3-bucket.arn}",
+              "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
+            ]
             "Condition": {
                 "StringEquals": {
                     "s3:ExistingObjectTag/scan-status": [
@@ -661,21 +669,23 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
     }
     paths = {
       "/" = {
-        x-amazon-apigateway-any-method = {
-          "HttpMethod" : "ANY"
-          "isdefaultroute" = true
-          "x-amazon-apigateway-integration" : {
+        "x-amazon-apigateway-any-method" = {
+          "HttpMethod" = "ANY"
+          "isdefaultroute" = "true"
+          "responses" = {
+            "200" = {
+              "description" = "OK"
+            }
+          }
+          "x-amazon-apigateway-integration" = {
             "payloadFormatVersion" = "1.0"
             "type"                 = "AWS"
             "uri"                  = "${aws_sqs_queue.queue.arn}"
             "passthroughBehaviour" = "when_no_match"
-            "requestParameters" : {
-              "integration.request.header.Content-Type" : "method.request.header.application/x-www-form-urlencoded"
+            "requestParameters" = {
+              "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
             }
           }
-          "responses" : [
-            { "200" : { "description" : "OK" } }
-          ]
         }
       }
     }
