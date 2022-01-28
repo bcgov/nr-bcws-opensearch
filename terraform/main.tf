@@ -405,51 +405,50 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 
 resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
   bucket = aws_s3_bucket.terraform-s3-bucket.id
-  policy = <<POLICY
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Principal": {
-                "AWS": "${aws_iam_role.s3-bucket-add-remove-role.arn}"
-            },
-            "Effect": "Allow",
-            "Action": [
-                "s3:Get*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:Put*"
-            ],
-            "Resources": [
-              "${aws_s3_bucket.terraform-s3-bucket.arn}",
-              "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-            ]
-        },
-        {
-            "Effect": "Deny",
-            "NotPrincipal": {
-                "AWS": [
-                    "${aws_iam_role.s3-clamav-bucket-role.arn}"
-                ]
-            },
-            "Action": "s3:GetObject",
-            "Resources": [
-              "${aws_s3_bucket.terraform-s3-bucket.arn}",
-              "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-            ],
-            "Condition": {
-                "StringEquals": {
-                    "s3:ExistingObjectTag/scan-status": [
-                        "IN PROGRESS",
-                        "INFECTED",
-                        "ERROR"
-                    ]
-                }
-            }
-        }
-    ]
+  policy = data.aws_iam_policy_document.s3-bucket-policy.json
 }
-POLICY
+
+data "aws_iam_policy_document" "s3-bucket-policy" {
+
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["${aws_iam_role.s3-bucket-add-remove-role.arn}"]
+    }
+    effect = "Allow"
+    actions = [
+      "s3:Get*",
+      "s3:List*",
+      "s3:DeleteObject*",
+      "s3:Put*"
+    ]
+    resources = [
+      "${aws_s3_bucket.terraform-s3-bucket.arn}",
+      "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
+    ]
+  }
+
+  statement {
+    effect = "Deny"
+    not_principals {
+      type        = "AWS"
+      identifiers = ["${aws_iam_role.s3-clamav-bucket-role.arn}"]
+    }
+    actions = ["s3:GetObject"]
+    resources = [
+      "${aws_s3_bucket.terraform-s3-bucket.arn}",
+      "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "s3:ExistingObjectTag/scan-status"
+      values = [
+        "IN PROGRESS",
+        "INFECTED",
+        "ERROR"
+      ]
+    }
+  }
 }
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
@@ -670,7 +669,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
     paths = {
       "/" = {
         "x-amazon-apigateway-any-method" = {
-          "HttpMethod" = "ANY"
+          "HttpMethod"     = "ANY"
           "isdefaultroute" = "true"
           "responses" = {
             "200" = {
