@@ -769,6 +769,7 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   }
 }
 
+/*
 resource "aws_route53_record" "sqs-route53-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
   name    = "${var.application}-sqs-${var.env}.${var.domain}"
@@ -778,5 +779,5 @@ resource "aws_route53_record" "sqs-route53-record" {
     "${aws_api_gateway_deployment.sqs-api-gateway-deployment.invoke_url}"
   ]
 }
-
+*/
 
