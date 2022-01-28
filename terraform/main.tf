@@ -668,20 +668,38 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
     }
     paths = {
       "/" = {
-        "x-amazon-apigateway-any-method" = {
-          "HttpMethod"     = "ANY"
-          "isdefaultroute" = "true"
-          "responses" = {
-            "200" = {
-              "description" = "OK"
+        get = {
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            payloadFormatVersion = "1.0"
+            type                 = "AWS"
+            uri                  = "${aws_sqs_queue.queue.arn}"
+            passthroughBehaviour = "when_no_match"
+            requestParameters = {
+              "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
             }
           }
-          "x-amazon-apigateway-integration" = {
-            "payloadFormatVersion" = "1.0"
-            "type"                 = "AWS"
-            "uri"                  = "${aws_sqs_queue.queue.arn}"
-            "passthroughBehaviour" = "when_no_match"
-            "requestParameters" = {
+        }
+        post = {
+          x-amazon-apigateway-integration = {
+            httpMethod = "POST"
+            payloadFormatVersion = "1.0"
+            type                = "AWS"
+            uri                  = "${aws_sqs_queue.queue.arn}"
+            passthroughBehaviour = "when_no_match"
+            requestParameters = {
+              "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
+            }
+          }
+        }
+        put = {
+          x-amazon-apigateway-integration = {
+            httpMethod = "PUT"
+            payloadFormatVersion = "1.0"
+            type                 = "AWS"
+            uri                  = "${aws_sqs_queue.queue.arn}"
+            passthroughBehaviour = "when_no_match"
+            requestParameters = {
               "integration.request.header.Content-Type" = "method.request.header.application/x-www-form-urlencoded"
             }
           }
