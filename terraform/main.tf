@@ -673,7 +673,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
 resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
   parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
-  path_part   = "/"
+  path_part   = "{proxy+}"
 }
 
 resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
