@@ -419,7 +419,7 @@ resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
                 "s3:List*",
                 "s3:DeleteObject*",
                 "s3:Put*"
-            ]
+            ],
             "Resources": [
               "${aws_s3_bucket.terraform-s3-bucket.arn}",
               "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
@@ -436,7 +436,7 @@ resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
             "Resources": [
               "${aws_s3_bucket.terraform-s3-bucket.arn}",
               "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-            ]
+            ],
             "Condition": {
                 "StringEquals": {
                     "s3:ExistingObjectTag/scan-status": [
