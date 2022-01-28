@@ -255,7 +255,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
-  role = aws_iam_role.opensearch_sqs_role.name
+  role       = aws_iam_role.opensearch_sqs_role.name
   policy_arn = aws_iam_policy.sqs-iam-policy.arn
 }
 
@@ -347,7 +347,7 @@ resource "aws_sqs_queue" "queue" {
 
   policy = <<POLICY
 {
-  }
+  
   "Version": "2012-10-17",
   "Id": "Policy1640124887139",
   "Statement": [
@@ -671,9 +671,9 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
 }
 
 resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
-    rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-    parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
-    path_part   = ""
+  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+  parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
+  path_part   = ""
 }
 
 resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
@@ -684,14 +684,14 @@ resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
 }
 
 resource "aws_api_gateway_method" "sqs-gateway-post-method" {
-    rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
-    resource_id   = aws_api_gateway_resource.sqs-api-gateway-resource.id
-    http_method   = "POST"
-    authorization = "NONE"
+  rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
+  resource_id   = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  http_method   = "POST"
+  authorization = "NONE"
 
-    request_parameters = {
-      "method.request.path.proxy"        = false
-      "method.request.querystring.unity" = true
+  request_parameters = {
+    "method.request.path.proxy"        = false
+    "method.request.querystring.unity" = true
   }
   request_validator_id = aws_api_gateway_request_validator.sqs-api-gateway-validator.id
 }
@@ -735,27 +735,27 @@ EOF
 }
 
 resource "aws_api_gateway_method_response" "http200" {
- rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
- resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
- http_method = aws_api_gateway_method.sqs-gateway-post-method.http_method
- status_code = 200
+  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+  resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  http_method = aws_api_gateway_method.sqs-gateway-post-method.http_method
+  status_code = 200
 }
 
 resource "aws_api_gateway_integration_response" "http200" {
- rest_api_id       = aws_api_gateway_rest_api.sqs-api-gateway.id
- resource_id       = aws_api_gateway_resource.sqs-api-gateway-resource.id
- http_method       = aws_api_gateway_method.sqs-gateway-post-method.http_method
- status_code       = aws_api_gateway_method_response.http200.status_code
- selection_pattern = "^2[0-9][0-9]"                                       // regex pattern for any 200 message that comes back from SQS
+  rest_api_id       = aws_api_gateway_rest_api.sqs-api-gateway.id
+  resource_id       = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  http_method       = aws_api_gateway_method.sqs-gateway-post-method.http_method
+  status_code       = aws_api_gateway_method_response.http200.status_code
+  selection_pattern = "^2[0-9][0-9]" // regex pattern for any 200 message that comes back from SQS
 
- depends_on = [
-   aws_api_gateway_integration.api
-   ]
+  depends_on = [
+    aws_api_gateway_integration.api
+  ]
 }
 
 resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  stage_name = var.env
+  stage_name  = var.env
   depends_on = [
     aws_api_gateway_integration.api
   ]
