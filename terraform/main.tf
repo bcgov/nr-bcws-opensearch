@@ -662,6 +662,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
     paths = {
       "/" = {
         x-amazon-apigateway-any-method = {
+          "HttpMethod" : "ANY"
           "isdefaultroute" = true
           "x-amazon-apigateway-integration" : {
             "payloadFormatVersion" = "1.0"
@@ -672,6 +673,9 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
               "integration.request.header.Content-Type" : "method.request.header.application/x-www-form-urlencoded"
             }
           }
+          "responses" : [
+            { "200" : { "description" : "OK" } }
+          ]
         }
       }
     }
