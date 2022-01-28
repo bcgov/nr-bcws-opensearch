@@ -394,8 +394,8 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 #Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
-  bucket     = "${var.application}-s3-bucket-${var.env}"
-  acl        = "private"
+  bucket = "${var.application}-s3-bucket-${var.env}"
+  acl    = "private"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -661,12 +661,16 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
     }
     paths = {
       "/" = {
-        any = {
-          x-amazon-apigateway-integration = {
-            httpMethod           = "ANY"
-            payloadFormatVersion = "1.0"
-            type                 = "AWS"
-            uri                  = "${aws_sqs_queue.queue.arn}"
+        x-amazon-apigateway-any-method = {
+          "isdefaultroute" = true
+          "x-amazon-apigateway-integration" : {
+            "payloadFormatVersion" = "1.0"
+            "type"                 = "AWS"
+            "uri"                  = "${aws_sqs_queue.queue.arn}"
+            "passthroughBehaviour" = "when_no_match"
+            "requestParameters" : {
+              "integration.request.header.Content-Type" : "method.request.header.application/x-www-form-urlencoded"
+            }
           }
         }
       }
@@ -706,18 +710,6 @@ resource "aws_route53_record" "sqs-route53-record" {
   records = [
     "${aws_api_gateway_stage.sqs-api-gateway-stage.invoke_url}"
   ]
-}
-
-resource "aws_api_gateway_vpc_link" "vpc-opensearch-api-link" {
-  name        = "${var.application}-api-gateway-vpc-link-${var.env}"
-  description = "Make the opensearch REST api accessible through the VPC"
-  target_arns = [aws_elasticsearch_domain.main_elasticsearch_domain.arn]
-
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 }
 
 
