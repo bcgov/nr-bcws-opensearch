@@ -505,13 +505,13 @@ resource "aws_iam_role" "s3-clamav-bucket-role" {
 EOF
 }
 
-/* 
+
 #Upload java.zip to s3bucket
 resource "aws_s3_bucket_object" "java_zip" {
-  bucket       = aws_s3_bucket.terraform-s3-bucket.id
-  key          = "${var.layer_file_name}"
-  acl          = "private" 
-  source       = "aws-lambda-layer-base/java.zip"
+  bucket = aws_s3_bucket.terraform-s3-bucket.id
+  key    = var.layer_file_name
+  acl    = "private"
+  source = "aws-lambda-layer-base/java.zip"
   tags = {
     Name        = "${var.application}-s3-bucket-object-${var.env}"
     Application = var.application
@@ -522,10 +522,10 @@ resource "aws_s3_bucket_object" "java_zip" {
 
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
-  layer_name = "${var.java_layer_name}"
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key = var.layer_file_name
-  description = "Common layer with java jars files"
+  layer_name          = var.java_layer_name
+  s3_bucket           = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key              = var.layer_file_name
+  description         = "Common layer with java jars files"
   compatible_runtimes = ["java8"]
   skip_destroy        = true
 
@@ -536,24 +536,24 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 #Lambda Function Handler
 
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
-  function_name = "terraform-wfdm-indexing-function"
-  filename      = "${var.lambda_payload_filename}"
+  function_name    = "terraform-wfdm-indexing-function"
+  filename         = var.lambda_payload_filename
   role             = aws_iam_role.lambda_role.arn
-  handler          = "${var.lambda_function_handler}"
-  source_code_hash = "${filebase64sha256(var.lambda_payload_filename)}"
+  handler          = var.lambda_function_handler
+  source_code_hash = filebase64sha256(var.lambda_payload_filename)
   runtime          = "java8"
-  layers = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   tags = {
     Name        = "${var.application}-wfdm-indexing-function-${var.env}"
     Application = var.application
     Customer    = var.customer
     Environment = var.env
   }
- 
+
 }
 
 
-*/
+
 #Create OpenSearch and related resources
 #COMPONENTS FOR OPENSEARCH
 
