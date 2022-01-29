@@ -507,6 +507,7 @@ EOF
 
 
 #Upload java.zip to s3bucket
+/*
 resource "aws_s3_bucket_object" "java_zip" {
   bucket = aws_s3_bucket.terraform-s3-bucket.id
   key    = var.layer_file_name
@@ -519,10 +520,13 @@ resource "aws_s3_bucket_object" "java_zip" {
     Environment = var.env
   }
 }
+*/
+
+/*NOTE: have placed s3 objects manually into s3 to bypass issues with upload*/
 
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
-  layer_name          = var.java_layer_name
+  layer_name          = "${var.application}-${var.java_layer_name}-${var.env}"
   s3_bucket           = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key              = var.layer_file_name
   description         = "Common layer with java jars files"
@@ -537,7 +541,8 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   function_name    = "terraform-wfdm-indexing-function"
-  filename         = var.lambda_payload_filename
+  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key = var.lambda_payload_filename
   role             = aws_iam_role.lambda_role.arn
   handler          = var.lambda_function_handler
   source_code_hash = filebase64sha256(var.lambda_payload_filename)
@@ -549,7 +554,6 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
     Customer    = var.customer
     Environment = var.env
   }
-
 }
 
 
