@@ -2,11 +2,11 @@ aws-lambda-layer-base/.project
 aws-lambda-layer-base/.classpath
 aws-lambda-layer-base/target
 aws-lambda-layer-base/.settings
-wfdm-file-index-service/target
+wfdm-file-index-service/target/*/
 wfdm-file-index-service/.settings
 wfdm-file-index-service/.settings
-wfdm-clamav-service/wfdm-clamav-scan-handler/target
-wfdm-file-index-initializer/target
+wfdm-clamav-service/wfdm-clamav-scan-handler/target/*/
+wfdm-file-index-initializer/target/*/
 main_work.tf
 main_work
 /.terraform
