@@ -522,7 +522,16 @@ resource "aws_s3_bucket_object" "java_zip" {
 }
 */
 
-/*NOTE: have placed s3 objects manually into s3 to bypass issues with upload*/
+data "aws_s3_bucket_object" "java_zip" {
+  bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  key = var.layer_file_name
+}
+
+data "aws_s3_bucket_object" "s3_lambda_payload_object" {
+  bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  key = var.lambda_payload_filename
+}
+
 
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
@@ -545,7 +554,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   s3_key = var.lambda_payload_filename
   role             = aws_iam_role.lambda_role.arn
   handler          = var.lambda_function_handler
-  source_code_hash = filebase64sha256(var.lambda_payload_filename)
+  //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   tags = {
