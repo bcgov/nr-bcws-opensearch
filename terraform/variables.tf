@@ -68,7 +68,7 @@ variable "suffix" {
 #s3-related variables
 
 variable "s3BucketName" {
-  type        = number
+  type        = string
   description = "name of s3 bucket"
   default     = null
 }
