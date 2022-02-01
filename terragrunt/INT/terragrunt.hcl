@@ -4,7 +4,9 @@ terraform {
 
 locals {
   application = "WF1-WFDM"
+  application_lowercase = "wfdm"
   target_env = "INT"
+  env_lowercase = "int"
 }
 
 generate "backend" {
@@ -33,5 +35,8 @@ generate "inputs" {
   contents = <<EOF
   env = "${local.target_env}"
   opensearchDomainName = "wf1-wfdm-opensearch-int"
+  s3BucketName = "wfdm-s3-bucket-int"
+  env_lowercase = "${local.env_lowercase}"
+  application_lowercase = "${local.application_lowercase}"
 EOF
 }

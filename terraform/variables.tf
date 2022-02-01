@@ -5,6 +5,18 @@ variable "application" {
   default     = "WF1-WFDM"
 }
 
+variable "application_lowercase" {
+  type = string
+  description = "application name in lowercase"
+  default = "wfdm"
+}
+
+variable "env_lowercase" {
+  type = string
+  description = "env in lowercase"
+  default = null
+}
+
 variable "customer" {
   type        = string
   description = "name of customer"

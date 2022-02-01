@@ -604,7 +604,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_security_group" "es" {
-  name        = "${var.application}-elasticsearch-security-group-${var.env}"
+  name        = "${var.application_lowercase}-elasticsearch-security-group-${var.env_lowercase}"
   description = "Managed by Terraform"
   vpc_id      = aws_vpc.main_vpc.id
 
