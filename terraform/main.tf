@@ -586,6 +586,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   vpc_config {
     subnet_ids = [aws_subnet.private_subnet.id]
+    security_group_ids = [aws_vpc.main_vpc.default_security_group_id]
   }
   tags = {
     Name        = "${var.application}-wfdm-indexing-function-${var.env}"
