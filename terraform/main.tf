@@ -185,8 +185,8 @@ resource "aws_iam_policy" "lambda_role_sqs_policy" {
     {
       "Action": [
         "secretsmanager:*"
-      ]
-      "Effect":"Allow"
+      ],
+      "Effect":"Allow",
       "Resource":"*"
     }
   ]
