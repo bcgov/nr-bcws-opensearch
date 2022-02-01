@@ -174,6 +174,20 @@ resource "aws_iam_policy" "lambda_role_sqs_policy" {
       ],
       "Effect":"Allow",
       "Resource":"*"
+    },
+    {
+      "Action": [
+        "EC2:*"
+      ],
+      "Effect":"Allow",
+      "Resource":"*"
+    },
+    {
+      "Action": [
+        "secretsmanager:*"
+      ]
+      "Effect":"Allow"
+      "Resource":"*"
     }
   ]
 }
