@@ -428,7 +428,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 #Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
-  bucket = "${var.application}-s3-bucket-${var.env}"
+  bucket = "${var.s3BucketName}"
   acl    = "private"
   tags = {
     Application = var.application

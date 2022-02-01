@@ -2,7 +2,7 @@
 variable "application" {
   type        = string
   description = "name of application"
-  default     = "wfdm"
+  default     = "WF1-WFDM"
 }
 
 variable "customer" {
@@ -53,6 +53,13 @@ variable "suffix" {
   default     = null
 }
 
+#s3-related variables
+
+variable "s3BucketName" {
+  type        = number
+  description = "name of s3 bucket"
+  default     = null
+}
 
 #SQS-specific variables
 
