@@ -359,7 +359,7 @@ resource "aws_sqs_queue" "queue" {
   
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.deadletter.arn
-    maxReceiveCount     = ${var.maxReceivedCount}
+    maxReceiveCount     = "${var.maxReceivedCount}"
 
   })
   redrive_allow_policy = jsonencode({
