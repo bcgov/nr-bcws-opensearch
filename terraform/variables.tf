@@ -94,6 +94,12 @@ variable "ElasticSearch_Version" {
   default     = "OpenSearch_1.1"
 }
 
+variable "opensearchDomainName" {
+  type        = string
+  description = "name for opensearch domain"
+  default     = null
+}
+
 variable "custom_endpoint_certificate_arn" {
   type        = string
   description = "Custom Endpoint Certificate ARN"
