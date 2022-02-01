@@ -3,8 +3,8 @@ terraform {
 }
 
 locals {
-  application = "wfdm"
-  target_env = "int"
+  application = "WF1-WFDM"
+  target_env = "INT"
 }
 
 generate "backend" {

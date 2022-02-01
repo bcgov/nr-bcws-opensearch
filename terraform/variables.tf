@@ -54,6 +54,20 @@ variable "suffix" {
 }
 
 
+#SQS-specific variables
+
+variable "maxReceivedCount" {
+  type        = number
+  description = "How many messages can be placed into the deadletter queue"
+  default     = 4
+}
+
+variable "visibilityTimeoutSeconds" {
+  type        = number
+  description = "Suffix appended to all managed resource names"
+  default     = 60
+}
+
 #VPC-RELATED VARIABLES
 variable "vpc_cidr_block" {
   type        = string

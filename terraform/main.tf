@@ -167,6 +167,13 @@ resource "aws_iam_policy" "lambda_role_sqs_policy" {
       ],
       "Effect": "Allow",
       "Resource": "*"
+    },
+    {
+      "Action": [
+        "opensearch:*"
+      ],
+      "Effect":"Allow",
+      "Resource":"*"
     }
   ]
 }
@@ -335,9 +342,30 @@ resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
 
 # SQS queue
 
+resource "aws_sqs_queue" "deadletter" {
+  name = "${var.application}-sqs-deadletter-${var.env}"
+  
+    tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
 resource "aws_sqs_queue" "queue" {
   depends_on = [aws_iam_role.opensearch_sqs_role]
+  visibility_timeout_seconds = var.visibilityTimeoutSeconds
   name       = "${var.application}-sqs-queue-${var.env}"
+  
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.deadletter.arn
+    maxReceiveCount     = ${var.maxReceivedCount}
+
+  })
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue",
+    sourceQueueArns   = ["${aws_sqs_queue.deadletter.arn}"]
+  })
 
   tags = {
     Application = var.application
@@ -547,9 +575,8 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 
 
 #Lambda Function Handler
-
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
-  function_name    = "terraform-wfdm-indexing-function"
+  function_name    = "${var.application}-indexing-function-${var.env}"
   s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key = var.lambda_payload_filename
   role             = aws_iam_role.lambda_role.arn
@@ -557,6 +584,9 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  vpc_config {
+    subnet_ids = [aws_subnet.private_subnet.id]
+  }
   tags = {
     Name        = "${var.application}-wfdm-indexing-function-${var.env}"
     Application = var.application
@@ -564,8 +594,6 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
     Environment = var.env
   }
 }
-
-
 
 #Create OpenSearch and related resources
 #COMPONENTS FOR OPENSEARCH
@@ -679,7 +707,7 @@ data "aws_route53_zone" "main_route53_zone" {
 }
 
 resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
-  name        = "api-gateway-SQS"
+  name        = "${var.application}-sqs-api-gateway-${var.env}"
   description = "POST records to SQS queue"
 }
 
