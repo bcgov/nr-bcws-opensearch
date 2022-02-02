@@ -5,10 +5,8 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import java.io.IOException;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,8 +39,6 @@ public class OpenSearchRESTClient {
 	// should likely be moved into a config file...
 	private static String serviceName = "es";
 	private static String region = "ca-central-1";
-	private static String domainEndpoint = " ";
-	private static String indexName = " ";
 	static RestHighLevelClient restClient;
 
 	static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -58,6 +54,7 @@ public class OpenSearchRESTClient {
 	 * @throws IOException
 	 */
 	public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails, String scanStatus) throws IOException {
+		String indexName = System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME").trim();
 		restClient = searchClient(serviceName, region);
 		System.out.println("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
 
@@ -72,9 +69,7 @@ public class OpenSearchRESTClient {
 			document.put("fileContent", jsonObj.getString("Text"));
 		}
 
-		DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US);
-		String lastUpdatedTime =String.valueOf(fileDetails.get("lastUpdatedTimestamp"));
-		LocalDateTime localDate = LocalDateTime.parse(lastUpdatedTime, datetimeFormatter);
+		
 		document.put("lastModified", fileDetails.get("lastUpdatedTimestamp"));
 		
 		document.put("lastUpdatedBy", fileDetails.get("lastUpdatedBy"));
@@ -94,22 +89,37 @@ public class OpenSearchRESTClient {
 	    document.put("fileSize", fileSize);
 		
 
-		JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
+	    JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
-		System.out.println("metadataArray :" + metadataArray);
-		document.put("metadata", metadataArray.toString());
-		
-		JSONArray securityArray = fileDetails.getJSONArray("security");
+	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
+	    JSONObject jsonOb = new JSONObject();
+	    for(int i= 0 ; i < metadataArray.length() ; i++) {
+	    	Map<String, Object> metadataKeyVal = new HashMap<>();
+	    	jsonOb = metadataArray.getJSONObject(i);
+	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
+	    	metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+	    	metadataList.add(metadataKeyVal);
+	    }
+	    document.put("metadata", metadataList);
+	    
+	    JSONArray securityArray = fileDetails.getJSONArray("security");
 		JSONArray jsonArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
 			JSONObject objects = securityArray.getJSONObject(i);
 			jsonArray.put(objects.get("securityKey"));
 
 		}
-	    
 		JSONArray jsonSecurityArray = filterDataFromFileDetails(jsonArray.toString(), "displayLabel", "securityKey");
-		System.out.println("jsonSecurityArray :" + jsonSecurityArray);
-		document.put("security", jsonSecurityArray.toString());
+		ArrayList<Map<String, Object>> securityList = new ArrayList<>();
+		for (int i = 0; i < jsonSecurityArray.length(); i++) {
+			Map<String, Object> securityKeyVal = new HashMap<>();
+			jsonOb = jsonSecurityArray.getJSONObject(i);
+			securityKeyVal.put("displayLabel", jsonOb.get("displayLabel"));
+			securityKeyVal.put("securityKey", jsonOb.get("securityKey"));
+			securityList.add(securityKeyVal);
+		}
+		document.put("security", securityList);
+		
 		
 		
 		JSONArray scopeArray = new JSONArray();
@@ -125,10 +135,17 @@ public class OpenSearchRESTClient {
 			
 		}
 		
+		ArrayList<Map<String, Object>> securityScopeList = new ArrayList<>();
+		for (int i = 0; i < scopeArray.length(); i++) {
+			Map<String, Object> securityScopeKeyVal = new HashMap<>();
+			jsonOb = scopeArray.getJSONObject(i);
+			securityScopeKeyVal.put("displayLabel", jsonOb.get("displayLabel"));
+			securityScopeKeyVal.put("canReadorWrite", jsonOb.getBoolean("canReadorWrite"));
+			securityScopeList.add(securityScopeKeyVal);
+		}
+				
 		document.put("securityScope", scopeArray.toString());
 	
-		
-		
 		document.put("scanStatus", scanStatus);
 		String id = fileDetails.getString("fileId");
 
@@ -200,7 +217,7 @@ public class OpenSearchRESTClient {
 		signer.setRegionName(region);
 		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
 				credentialsProvider);
-		RestClientBuilder builder = RestClient.builder(HttpHost.create(domainEndpoint))
+		RestClientBuilder builder = RestClient.builder(HttpHost.create(System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim()))
 				.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor));
 
 		restClient = new RestHighLevelClient(builder);
@@ -214,7 +231,6 @@ public class OpenSearchRESTClient {
 		JSONArray jArray = new JSONArray();
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject json = jsonArray.getJSONObject(i);
-
 			JSONObject jobject = new JSONObject();
 			jobject.put(metadataName, json.getString(metadataName));
 			jobject.put(metadataValue, json.getString(metadataValue));
