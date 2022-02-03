@@ -754,7 +754,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     "Statement": [
         {
             "Action": "es:*",
-            "Principal": "${data.aws_caller_identity.current.account_id}",
+            "Principal": "${data.aws_caller_identity.current.arn}",
             "Effect": "Allow",
             "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
         }
