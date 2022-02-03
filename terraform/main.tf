@@ -455,7 +455,7 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 
 resource "aws_s3_bucket" "clamav-bucket" {
   bucket = "${var.clamAVBucketName}"
-  acl = private
+  acl = "private"
   tags = {
     Application = var.application
     Customer    = var.customer
