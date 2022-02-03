@@ -468,7 +468,7 @@ resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
   policy = data.aws_iam_policy_document.s3-bucket-policy.json
 }
 
-resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
+resource "aws_s3_bucket_policy" "terraform-clamav-bucket-policy" {
   bucket = aws_s3_bucket.clamav-bucket.id
   policy = data.aws_iam_policy_document.s3-bucket-policy.json
 }
