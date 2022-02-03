@@ -221,6 +221,11 @@ variable "lambda_function_handler" {
   default = null
 }
 
+variable "indexing_function_handler" {
+  type = string
+  default = null
+}
+
 variable "lambda_payload_filename" {
   type    = string
   default = null

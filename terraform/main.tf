@@ -645,6 +645,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key = var.lambda_initializer_filename
   role             = aws_iam_role.lambda_role.arn
+  handler = var.indexing_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
