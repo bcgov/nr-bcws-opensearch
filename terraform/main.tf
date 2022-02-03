@@ -371,6 +371,8 @@ resource "aws_sqs_queue" "queue" {
   visibility_timeout_seconds = var.visibilityTimeoutSeconds
   name       = "${var.application}-sqs-queue-${var.env}"
   
+  
+
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.deadletter.arn
     maxReceiveCount     = "${var.maxReceivedCount}"
@@ -451,8 +453,23 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
   }
 }
 
+resource "aws_s3_bucket" "clamav-bucket" {
+  bucket = "${var.clamAVBucketName}"
+  acl = private
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+}
+
 resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
   bucket = aws_s3_bucket.terraform-s3-bucket.id
+  policy = data.aws_iam_policy_document.s3-bucket-policy.json
+}
+
+resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
+  bucket = aws_s3_bucket.clamav-bucket.id
   policy = data.aws_iam_policy_document.s3-bucket-policy.json
 }
 
@@ -598,16 +615,59 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  /*
   vpc_config {
     subnet_ids = [aws_subnet.private_subnet.id]
     security_group_ids = [aws_vpc.main_vpc.default_security_group_id]
   }
+  */
   tags = {
-    Name        = "${var.application}-wfdm-indexing-function-${var.env}"
+    Name        = "${var.application}-indexing-function-${var.env}"
     Application = var.application
     Customer    = var.customer
     Environment = var.env
   }
+  environment {
+    variables = {
+      ENVIRONMENT = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
+      WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
+      WFDM_DOCUMENT_OPENSEARCH_INDEXNAME = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
+      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
+    }
+  }
+}
+
+#Lambda File Indexing Initializer
+resource "aws_lambda_function" "terraform_indexing_initializer_function" {
+  function_name    = "${var.application}-indexing-initializer-${var.env}"
+  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key = var.lambda_initializer_filename
+  role             = aws_iam_role.lambda_role.arn
+  //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
+  runtime          = "java8"
+  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  tags = {
+    Name        = "${var.application}-indexing-initializer-function-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  environment {
+    variables = {
+      ENVIRONMENT = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
+      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+    }
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
+  event_source_arn = aws_sqs_queue.queue.arn
+  function_name = aws_lambda_function.terraform_indexing_initializer_function.arn
 }
 
 #Create OpenSearch and related resources
@@ -648,7 +708,9 @@ resource "aws_iam_service_linked_role" "es" {
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   domain_name           = "${var.opensearchDomainName}"
+
   elasticsearch_version = var.ElasticSearch_Version
+
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
     dedicated_master_enabled = var.master_node_usage
@@ -657,20 +719,21 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     instance_type            = var.data_node_instance_type
     warm_count               = var.ultrawarm_node_instance_count
     warm_type                = var.ultrawarm_node_instance_type
-
   }
+
   ebs_options {
     ebs_enabled = "true"
     volume_size = var.ebs_volume_size
   }
 
+/*
   vpc_options {
     subnet_ids = [
       aws_subnet.public_subnet.id
     ]
-
     security_group_ids = [aws_security_group.es.id]
   }
+*/
 
   advanced_options = {
     "rest.action.multi.allow_explicit_index" = "true"

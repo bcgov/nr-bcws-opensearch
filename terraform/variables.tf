@@ -11,12 +11,6 @@ variable "application_lowercase" {
   default = "wfdm"
 }
 
-variable "env_lowercase" {
-  type = string
-  description = "env in lowercase"
-  default = null
-}
-
 variable "customer" {
   type        = string
   description = "name of customer"
@@ -53,6 +47,18 @@ variable "env" {
   default     = null
 }
 
+variable "env_lowercase" {
+  type = string
+  description = "env in lowercase"
+  default = null
+}
+
+variable "env_full" {
+  type = string
+  description = "full name of environment (i.e. INTEGRATION)"
+  default = null
+}
+
 variable "pr" {
   type        = string
   description = "Suffix appended to all managed resource names"
@@ -71,6 +77,12 @@ variable "s3BucketName" {
   type        = string
   description = "name of s3 bucket"
   default     = null
+}
+
+variable "clamAVBucketName" {
+  type = string
+  description = "name of clamAV specific s3 bucket"
+  default = null
 }
 
 #SQS-specific variables
@@ -198,6 +210,12 @@ variable "ultrawarm_node_volume_size" {
 
 #LAMBDA-RELATED VARIABLES
 
+variable "document_token_url" {
+  type = string
+  description = "govt-side token url"
+  default = null
+}
+
 variable "lambda_function_handler" {
   type    = string
   default = null
@@ -205,6 +223,11 @@ variable "lambda_function_handler" {
 
 variable "lambda_payload_filename" {
   type    = string
+  default = null
+}
+
+variable "lambda_initializer_filename" {
+  type = string
   default = null
 }
 
@@ -228,3 +251,8 @@ variable "main_route53_zone" {
   default = null
 }
 
+variable "document_api_url" {
+  type = string
+  description = "url of govt-side API"
+  default = null
+}
