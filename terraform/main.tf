@@ -707,6 +707,14 @@ resource "aws_iam_service_linked_role" "es" {
 }
 */
 
+data "aws_caller_identity" "current" {}
+
+locals {
+    account_id = data.aws_caller_identity.current.account_id
+}
+
+
+
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   domain_name           = "${var.opensearchDomainName}"
 
@@ -752,7 +760,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     "Statement": [
         {
             "Action": "es:*",
-            "Principal": "*",
+            "Principal": "${local.account_id}",
             "Effect": "Allow",
             "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.application}-${var.tool}-${var.env}/*"
         }
