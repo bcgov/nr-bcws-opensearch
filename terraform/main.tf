@@ -779,8 +779,14 @@ resource "aws_iam_service_linked_role" "es" {
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   domain_name           = "${var.opensearchDomainName}"
-  custom_endpoint_url = "${var.opensearchDomainName}.${var.domain}"
-  custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
+
+  domain_endpoint_options {
+    custom_endpoint = "${var.opensearchDomainName}.${var.domain}"
+    custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
+    custom_endpoint_enabled = true
+  }
+  
+  
   elasticsearch_version = var.ElasticSearch_Version
 
   cluster_config {
