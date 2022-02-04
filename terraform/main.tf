@@ -716,6 +716,22 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key = var.lambda_clamav_filename
   role = aws_iam_role.lambda_role.arn
+  handler = var.clamav_function_handler
+  runtime = "java8"
+  tags = {
+    Name        = "${var.application}-clamav-handler-function-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  environment { 
+    variables = {
+      ENVIRONMENT = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
+      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      }
+  }
 }
 
 resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
