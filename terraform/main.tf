@@ -869,13 +869,13 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
   description = "POST records to SQS queue"
 }
 
-resource "aws_apigatewayv2_domain_name" "gateway_custom_domain" {
+resource "aws_apigate_way_domain_name" "gateway_custom_domain" {
   domain_name     = "${var.application}-sqs-${var.env}.${var.domain}"
-  domain_name_configuration {
-    certificate_arn = var.custom_endpoint_certificate_arn
-    endpoint_type = "REGIONAL"
-    security_policy = "TLS_1_2"
+  regional_certificate_arn = var.custom_endpoint_certificate_arn
+  endpoint_configuration {
+    types = ["REGIONAL"]
   }
+
 }
 
 resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
@@ -982,7 +982,11 @@ resource "aws_route53_record" "sqs-invoke-api-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
   name    = aws_apigatewayv2_domain_name.gateway_custom_domain.domain_name
   type    = "A"
-  ttl     = 300
+  alias {
+    evaluate_target_health = true
+    name                   = aws_api_gateway_domain_name.gateway_custom_domain.regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.example.regional_zone_id
+  }
 }
 
 resource "aws_route53_record" "sqs-url-correction-record" {
