@@ -470,7 +470,7 @@ resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
 
 resource "aws_s3_bucket_policy" "terraform-clamav-bucket-policy" {
   bucket = aws_s3_bucket.clamav-bucket.id
-  policy = data.aws_iam_policy_document.s3-bucket-policy.json
+  policy = data.aws_iam_policy_document.clamav-bucket-policy.json
 }
 
 data "aws_iam_policy_document" "s3-bucket-policy" {
@@ -513,6 +513,27 @@ data "aws_iam_policy_document" "s3-bucket-policy" {
         "ERROR"
       ]
     }
+  }
+}
+
+data "aws_iam_policy_document" "clamav-bucket-policy" {
+
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["${aws_iam_role.s3-clamav-bucket-role.arn}"]
+    }
+    effect = "Allow"
+    actions = [
+      "s3:Get*",
+      "s3:List*",
+      "s3:DeleteObject*",
+      "s3:Put*"
+    ]
+    resources = [
+      "${aws_s3_bucket.clamav-bucket.arn}",
+      "${aws_s3_bucket.clamav-bucket.arn}/*"
+    ]
   }
 }
 
