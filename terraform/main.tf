@@ -869,9 +869,12 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
   description = "POST records to SQS queue"
 }
 
-resource "aws_api_gateway_domain_name" "gateway_custom_domain" {
-  certificate_arn = var.custom_endpoint_certificate_arn
+resource "aws_apigatewayv2_domain_name" "gateway_custom_domain" {
   domain_name     = "${var.application}-sqs-${var.env}.${var.domain}"
+  domain_name_configuration {
+    certificate_arn = var.custom_endpoint_certificate_arn
+    endpoint_type = "REGIONAL"
+  }
 }
 
 resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
