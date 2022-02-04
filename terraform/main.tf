@@ -869,6 +869,11 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
   description = "POST records to SQS queue"
 }
 
+resource "aws_api_gateway_domain_name" "gateway_custom_domain" {
+  certificate_arn = var.custom_endpoint_certificate_arn
+  domain_name     = "${var.application}-sqs-${var.env}.${var.domain}"
+}
+
 resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
   parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
@@ -903,6 +908,8 @@ resource "aws_api_gateway_integration" "api" {
   type                    = "AWS"
   integration_http_method = "POST"
   credentials             = aws_iam_role.opensearch_sqs_role.arn
+  custom_endpoint = "sqs.${var.region}.${var.application}-sqs-${var.env}.${var.domain}"
+  custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
   uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${aws_sqs_queue.queue.name}"
 
   request_parameters = {
@@ -971,12 +978,9 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
 
 resource "aws_route53_record" "sqs-invoke-api-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
-  name    = "${var.application}-sqs-${var.env}.${var.domain}"
+  name    = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
   type    = "A"
   ttl     = 300
-  records = [
-    "${aws_api_gateway_deployment.sqs-api-gateway-deployment.invoke_url}"
-  ]
 }
 
 resource "aws_route53_record" "sqs-url-correction-record" {
