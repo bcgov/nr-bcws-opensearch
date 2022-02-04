@@ -27,8 +27,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static String getAccessToken (String client, String password) throws UnirestException {
-	String wfdmTokenUrl = PropertyLoader.getProperty("wfdm.document.token.url").trim();
-    HttpResponse<JsonNode> httpResponse = Unirest.get(wfdmTokenUrl)
+    HttpResponse<JsonNode> httpResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_TOKEN_URL").trim())
         .basicAuth(client, password)
         .asJson();
 
@@ -50,8 +49,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static String getFileInformation (String accessToken, String fileId) throws UnirestException {
-	  String wfdmAPIUrl = PropertyLoader.getProperty("wfdm.document.api.url").trim();
-	  HttpResponse<String> detailsResponse = Unirest.get(wfdmAPIUrl + fileId)
+	  HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
 
@@ -83,7 +81,7 @@ public class GetFileFromWFDMAPI {
 
     // PUT the changes
     String wfdmAPIUrl = PropertyLoader.getProperty("wfdm.document.api.url").trim();
-    HttpResponse<String> metaUpdateResponse = Unirest.put(wfdmAPIUrl + fileId)
+    HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Content-Type", "application/json")
         .header("Authorization", "Bearer " + accessToken)
         .body(fileDetails.toString())

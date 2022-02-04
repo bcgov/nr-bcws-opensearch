@@ -36,13 +36,12 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, String> {
   private static String region = "ca-central-1";
-  private static String bucketName = "wfdmclamavstack-wfdmclamavbucket78961613-4r53u9f2ef2v";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   @Override
   public String handleRequest(Map<String,Object> event, Context context) {
     LambdaLogger logger = context.getLogger();
-    System.out.println("ProcessSQSMessage");
+    String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
     // null check sqsEvents!
     if (event == null) {
       logger.log("\nInfo: No messages to handle\nInfo: Closeing");
@@ -54,6 +53,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
+      System.out.println("fileDetailsJson"+fileDetailsJson.getString("fileId"));
      // String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
 	 // JSONObject jsonObject = new JSONObject(jsonArray);
       String fileId = fileDetailsJson.getString("fileId");
@@ -67,7 +67,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     	  scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
-      String wfdmSecretName = PropertyLoader.getProperty("wfdm.document.secretmanager.secretname").trim();
+      System.out.println(eventType);
+      String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
       String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
 	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
 	  String CLIENT_ID = secretCD[0];
@@ -80,6 +81,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // and
       // a cached token
       String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
+      System.out.println("wfdmToken :"+wfdmToken);
       if (wfdmToken == null)
         throw new Exception("Could not authorize access for WFDM");
 

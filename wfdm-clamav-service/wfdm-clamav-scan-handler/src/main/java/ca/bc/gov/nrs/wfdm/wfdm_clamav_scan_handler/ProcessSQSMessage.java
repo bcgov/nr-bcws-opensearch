@@ -33,7 +33,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchResponse> {
   private static String region = "ca-central-1";
-  private static String bucketName = "wfdmclamavstack-wfdmclamavbucket78961613-4r53u9f2ef2v"; // open-search-index-bucket already exists? Use that?
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   @Override
@@ -63,7 +62,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         // Should come for preferences, Client ID and secret for authentication with
         // WFDM
-        String wfdmSecretName = PropertyLoader.getProperty("wfdm.document.secretmanager.secretname").trim();
+        String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
         String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
         String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
   	  	String CLIENT_ID = secretCD[0];
@@ -105,9 +104,9 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           fileDetailsJson.put("fileVersionNumber", versionNumber);
           fileDetailsJson.put("status", status);
           fileDetailsJson.put("message", summary);
-          logger.log("\n calling wfdm-open-search Lambda. "+fileDetailsJson.toString());
+          logger.log("\n Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" Lambda. "+fileDetailsJson.toString());
           InvokeRequest request = new InvokeRequest();
-          request.withFunctionName("wfdm-open-search").withPayload(fileDetailsJson.toString());
+          request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
           InvokeResult invoke = client.invoke(request);
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
