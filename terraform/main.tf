@@ -908,8 +908,6 @@ resource "aws_api_gateway_integration" "api" {
   type                    = "AWS"
   integration_http_method = "POST"
   credentials             = aws_iam_role.opensearch_sqs_role.arn
-  custom_endpoint = "sqs.${var.region}.${var.application}-sqs-${var.env}.${var.domain}"
-  custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
   uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${aws_sqs_queue.queue.name}"
 
   request_parameters = {
