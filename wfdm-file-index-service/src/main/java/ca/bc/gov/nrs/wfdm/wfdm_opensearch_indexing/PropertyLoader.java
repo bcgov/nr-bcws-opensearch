@@ -12,6 +12,9 @@ public class PropertyLoader {
 
 	static final Logger logger = LogManager.getLogger(PropertyLoader.class);
 
+	
+	//This method is no longer required, the properties are moved from
+	//properties file to Lambda->config->Environment variables
 	public static String getProperty(String key) {
 		ClassLoader classLoader = Utils.class.getClassLoader();
 

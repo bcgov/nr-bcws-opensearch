@@ -40,12 +40,12 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchResponse> {
   private static String region = "ca-central-1";
-  private static String bucketName = "wfdmclamavstack-wfdmclamavbucket78961613-4r53u9f2ef2v"; // open-search-index-bucket already exists? Use that?
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LambdaLogger logger = context.getLogger();
+    String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
     List<SQSBatchResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();
     String messageBody = "";
 
@@ -63,14 +63,23 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         JSONObject messageDetails = new JSONObject(messageBody);
         String fileId = messageDetails.getString("fileId");
+        
+        boolean isNumeric = fileId.chars().allMatch( Character::isDigit );
+        if(!isNumeric) {
+        	logger.log("\nInfo: file id is not valid"+fileId);
+        	return null;
+        }
+
+        
         // Where will we receive the event type? Message Body or attributes?
         String eventType = messageDetails.getString("eventType");
+        System.out.println("file id and event Type: "+fileId+" "+eventType);
         // Check the event type. If this is a BYTES event, write the bytes
         // otherwise, handle meta only and skip clam scan.
         if (eventType.equalsIgnoreCase("bytes")) {
           String versionNumber = messageDetails.getString("fileVersionNumber");
 
-          String wfdmSecretName = PropertyLoader.getProperty("wfdm.document.secretmanager.secretname").trim();
+          String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
           String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
     	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
     	  String CLIENT_ID = secretCD[0];
@@ -122,13 +131,15 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             meta.setContentType(mimeType);
             meta.setContentLength(Long.parseLong(fileDetailsJson.get("fileSize").toString()));
             meta.addUserMetadata("title", fileId + "-" + versionNumber);
+            System.out.println("putting into s3 bucket");
             s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
         } else {
           // Meta only update, so fire a message to the Indexer Lambda
+          System.out.println("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
           AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
           InvokeRequest request = new InvokeRequest();
-          request.withFunctionName("wfdm-open-search").withPayload(messageBody);
+          request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);
           InvokeResult invoke = client.invoke(request);
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
