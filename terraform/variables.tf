@@ -271,3 +271,23 @@ variable "document_api_url" {
   description = "url of govt-side API"
   default = null
 }
+
+variable "document_index_account_name" {
+  type = string
+  default = "WFDM_DOCUMENTS_INDEX"
+}
+
+variable "documents_index_password" {
+  type = string
+  default = "Password"
+}
+
+variable "secret_manager" {
+  type = string
+  default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
+}
+
+variable "virus_alert" {
+  type = string
+  default = "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION"
+}

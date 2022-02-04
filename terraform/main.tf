@@ -676,8 +676,11 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       ENVIRONMENT = "${var.env_full}"
       WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
       WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
+      WFDM_DOCUMENT_INDEX_ACCOUNT_NAME = var.document_index_account_name
+      WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD = var.documents_index_password
       WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
       WFDM_DOCUMENT_OPENSEARCH_INDEXNAME = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
+      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
       WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
     }
   }
@@ -706,6 +709,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
       WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
       WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
     }
   }
 }
@@ -728,8 +732,10 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
     variables = {
       ENVIRONMENT = "${var.env_full}"
       WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
+      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
       WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_SNS_VIRUS_ALERT = var.virus_alert
       }
   }
 }
@@ -942,88 +948,6 @@ EOF
   ]
 }
 
-resource "aws_api_gateway_model" "documentModel" {
-  name = "${var.application}-document-model-${var.env}"
-  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  content_type = "application/json"
-
-  schema = <<EOF
-    {
-      "properties":{
-         "key":{
-            "type":"text"
-         },
-         "absoluteFilePath":{
-            "type":"text"
-         },
-         "fileContent":{
-            "type":"text"
-         },
-         "lastModified":{
-           "type": "date"
-         },
-         "lastUpdatedBy":{
-            "type":"text"
-         },
-         "mimeType":{
-            "type":"text"
-         },
-         "fileName":{
-            "type":"text"
-         },
-          "fileRetention":{
-            "type":"text"
-         },
-         "fileLink":{
-            "type":"text"
-         },
-         "filePath":{
-            "type":"text"
-         },
-         "fileSize":{
-            "type":"text"
-         },
-        "scanStatus":{
-            "type":"text"
-         },
-         "metadata":{
-            "type":"nested",
-            "properties":{
-               "metadataValue":{
-                  "type":"keyword"
-               },
-               "metadataName":{
-                  "type":"keyword"
-               }
-            }
-         },
-         "security":{
-            "type":"nested",
-            "properties":{
-               "displayLabel":{
-                  "type":"keyword"
-               },
-               "securityKey":{
-                  "type":"keyword"
-               }
-            }
-         },
-         "securityScope":{
-            "type":"nested",
-            "properties":{
-               "displayLabel":{
-                  "type":"keyword"
-               },
-               "canReadorWrite":{
-                  "type":"keyword"
-               }
-            }
-         }    
-    
-    }
-  EOF
-}
-
 resource "aws_api_gateway_method_response" "http200" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
@@ -1081,3 +1005,53 @@ resource "aws_route53_record" "sqs-url-correction-record" {
   ]
 }
 
+resource "aws_sns_topic" "clamav_virus" {
+  name = "${var.application}-clamav-virus-topic-${var.env}"
+  delivery_policy = <<EOF
+{
+  "http": {
+    "defaultHealthyRetryPolicy": {
+      "minDelayTarget": 20,
+      "maxDelayTarget": 20,
+      "numRetries": 3,
+      "numMaxDelayRetries": 0,
+      "numNoDelayRetries": 0,
+      "numMinDelayRetries": 0,
+      "backoffFunction": "linear"
+    },
+    "disableSubscriptionOverrides": false
+  }
+}
+  EOF
+  policy = <<EOF
+  {
+    "Version": "2008-10-17",
+    "Id": "__default_policy_ID",
+    "Statement": [
+      {
+        "Sid": "__default_statement_ID",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "*"
+        },
+        "Action": [
+          "SNS:GetTopicAttributes",
+          "SNS:SetTopicAttributes",
+          "SNS:AddPermission",
+          "SNS:RemovePermission",
+          "SNS:DeleteTopic",
+          "SNS:Subscribe",
+          "SNS:ListSubscriptionsByTopic",
+          "SNS:Publish"
+        ],
+        "Resource": "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION",
+        "Condition": {
+          "StringEquals": {
+            "AWS:SourceOwner": "460053263286"
+          }
+        }
+      }
+    ]
+  }
+  EOF
+}
