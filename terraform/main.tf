@@ -942,6 +942,88 @@ EOF
   ]
 }
 
+resource "aws_api_gateway_model" "documentModel" {
+  name = "${var.application}-document-model-${var.env}"
+  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+  content_type = "application/json"
+
+  schema = <<EOF
+    {
+      "properties":{
+         "key":{
+            "type":"text"
+         },
+         "absoluteFilePath":{
+            "type":"text"
+         },
+         "fileContent":{
+            "type":"text"
+         },
+         "lastModified":{
+           "type": "date"
+         },
+         "lastUpdatedBy":{
+            "type":"text"
+         },
+         "mimeType":{
+            "type":"text"
+         },
+         "fileName":{
+            "type":"text"
+         },
+          "fileRetention":{
+            "type":"text"
+         },
+         "fileLink":{
+            "type":"text"
+         },
+         "filePath":{
+            "type":"text"
+         },
+         "fileSize":{
+            "type":"text"
+         },
+        "scanStatus":{
+            "type":"text"
+         },
+         "metadata":{
+            "type":"nested",
+            "properties":{
+               "metadataValue":{
+                  "type":"keyword"
+               },
+               "metadataName":{
+                  "type":"keyword"
+               }
+            }
+         },
+         "security":{
+            "type":"nested",
+            "properties":{
+               "displayLabel":{
+                  "type":"keyword"
+               },
+               "securityKey":{
+                  "type":"keyword"
+               }
+            }
+         },
+         "securityScope":{
+            "type":"nested",
+            "properties":{
+               "displayLabel":{
+                  "type":"keyword"
+               },
+               "canReadorWrite":{
+                  "type":"keyword"
+               }
+            }
+         }    
+    
+    }
+  EOF
+}
+
 resource "aws_api_gateway_method_response" "http200" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
