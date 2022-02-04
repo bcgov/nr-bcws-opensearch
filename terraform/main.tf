@@ -874,6 +874,7 @@ resource "aws_apigatewayv2_domain_name" "gateway_custom_domain" {
   domain_name_configuration {
     certificate_arn = var.custom_endpoint_certificate_arn
     endpoint_type = "REGIONAL"
+    security_policy = "TLS_1_2"
   }
 }
 
@@ -979,7 +980,7 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
 
 resource "aws_route53_record" "sqs-invoke-api-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
-  name    = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
+  name    = aws_apigatewayv2_domain_name.gateway_custom_domain.domain_name
   type    = "A"
   ttl     = 300
 }
