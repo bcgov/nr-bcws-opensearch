@@ -968,8 +968,8 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   }
 }
 
-/*
-resource "aws_route53_record" "sqs-route53-record" {
+
+resource "aws_route53_record" "sqs-invoke-api-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
   name    = "${var.application}-sqs-${var.env}.${var.domain}"
   type    = "A"
@@ -978,5 +978,14 @@ resource "aws_route53_record" "sqs-route53-record" {
     "${aws_api_gateway_deployment.sqs-api-gateway-deployment.invoke_url}"
   ]
 }
-*/
+
+resource "aws_route53_record" "sqs-url-correction-record" {
+  zone_id = data.aws_route53_zone.main_route53_zone.id
+  name = "sqs.${var.region}.${var.application}-sqs-${var.env}.${var.domain}"
+  type = "CNAME"
+  ttl = 300
+  records = [
+    "sqs.${var.region}.amazonaws.com"
+  ]
+}
 
