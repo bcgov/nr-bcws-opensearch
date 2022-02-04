@@ -585,6 +585,29 @@ resource "aws_iam_role" "s3-clamav-bucket-role" {
 EOF
 }
 
+resource "aws_iam_role" "lambda-clamav-role" {
+  name = "${var.application}-lambda-clamav-role-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+   ]
+}
+EOF
+}
 
 #Upload java.zip to s3bucket
 /*
@@ -685,6 +708,14 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
       WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
     }
   }
+}
+
+#Lambda ClamAV handler
+resource "aws_lambda_function" "lambda_clamav_handler" {
+  function_name = "${var.application}-clamav-handler-${var.env}"
+  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key = var.lambda_clamav_filename
+  role = aws_iam_role.lambda_role.arn
 }
 
 resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {

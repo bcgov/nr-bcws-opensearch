@@ -226,12 +226,22 @@ variable "indexing_function_handler" {
   default = null
 }
 
+variable "clamav_function_handler" {
+  type = string
+  default = null
+}
+
 variable "lambda_payload_filename" {
   type    = string
   default = null
 }
 
 variable "lambda_initializer_filename" {
+  type = string
+  default = null
+}
+
+variable "lambda_clamav_filename" {
   type = string
   default = null
 }
