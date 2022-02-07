@@ -10,3 +10,4 @@ java_layer_name = "aws-java-base-layer-terraform"
 layer_file_name = "java.zip"
 aws_ip_allocation_id = "eipalloc-01f46fab6aa887028"
 main_route53_zone = "bcwildfireservices.com"
+

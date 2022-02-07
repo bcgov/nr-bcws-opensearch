@@ -396,7 +396,6 @@ resource "aws_sqs_queue" "queue" {
   "Id": "Policy1640124887139",
   "Statement": [
     {
-      "Sid": "Stmt1640121864964",
       "Effect": "Allow",
       "Principal": {
         "AWS": "arn:aws:iam::460053263286:root"
@@ -405,10 +404,12 @@ resource "aws_sqs_queue" "queue" {
       "Resource": "arn:aws:sqs::*:*:${var.application}-sqs-queue-${var.env}"
     },
     {
-      "Sid": "Stmt1640124883525",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}"
+        "AWS": [
+          "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}",
+          "${aws_caller_identity.current.arn}"
+        ]
       },
       "Action": [
         "sqs:ListDeadLetterSourceQueues",
