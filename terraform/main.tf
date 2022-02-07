@@ -408,7 +408,7 @@ resource "aws_sqs_queue" "queue" {
       "Principal": {
         "AWS": [
           "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}",
-          "${aws_caller_identity.current.arn}"
+          "${data.aws_caller_identity.current.arn}"
         ]
       },
       "Action": [
