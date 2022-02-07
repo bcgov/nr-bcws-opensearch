@@ -188,6 +188,13 @@ resource "aws_iam_policy" "lambda_role_sqs_policy" {
       ],
       "Effect":"Allow",
       "Resource":"*"
+    },
+    {
+      "Action": [
+        "s3:*"
+      ],
+      "Effect":"Allow",
+      "Resource":"*"
     }
   ]
 }
@@ -408,7 +415,7 @@ resource "aws_sqs_queue" "queue" {
       "Principal": {
         "AWS": [
           "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}",
-          "${data.aws_caller_identity.current.arn}"
+          "${data.aws_caller_identity.current.account_id}"
         ]
       },
       "Action": [
