@@ -844,7 +844,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
         {
             "Action": "es:*",
             "Principal": {
-              "AWS": ["${data.aws_caller_identity.current.arn}"]
+              "AWS": ["${data.aws_caller_identity.current.account_id}"]
             },
             "Effect": "Allow",
             "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
@@ -884,7 +884,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
 }
 
 resource "aws_api_gateway_domain_name" "gateway_custom_domain" {
-  domain_name     = "${var.application}-sqs-api-${var.env}.${var.domain}"
+  domain_name     = "wf1-${var.application_lowercase}-sqs-api-${var.env_lowercase}.${var.domain}"
   regional_certificate_arn = var.custom_endpoint_certificate_arn
   endpoint_configuration {
     types = ["REGIONAL"]
