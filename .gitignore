@@ -12,3 +12,4 @@ main_work
 /.terraform
 .terraform
 .terraform.lock.hcl
+/cdk.out/*/

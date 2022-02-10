@@ -155,52 +155,6 @@ resource "aws_iam_role" "lambda_role" {
 EOF
 }
 
-resource "aws_iam_policy" "lambda_role_sqs_policy" {
-  name   = "${var.application}-all-sqs-role-policy-${var.env}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "sqs:*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    },
-    {
-      "Action": [
-        "opensearch:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "EC2:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "secretsmanager:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_iam_role" "opensearch_sqs_role" {
   name = "${var.application}-iam-role-opensearch-sqs-${var.env}"
   tags = {
@@ -225,62 +179,7 @@ resource "aws_iam_role" "opensearch_sqs_role" {
 EOF
 }
 
-resource "aws_iam_policy" "sqs-iam-policy" {
-  name = "${var.application}-log-and-sqs-${var.env}"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:DescribeLogGroups",
-          "logs:DescribeLogStreams",
-          "logs:PutLogEvents",
-          "logs:GetLogEvents",
-          "logs:FilterLogEvents"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "VisualEditor0",
-      "Effect": "Allow",
-      "Action": [
-          "sqs:DeleteMessage",
-          "sqs:GetQueueUrl",
-          "sqs:ChangeMessageVisibility",
-          "sqs:UntagQueue",
-          "sqs:ReceiveMessage",
-          "sqs:SendMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:ListQueueTags",
-          "sqs:TagQueue",
-          "sqs:ListDeadLetterSourceQueues",
-          "sqs:PurgeQueue",
-          "sqs:DeleteQueue",
-          "sqs:CreateQueue",
-          "sqs:SetQueueAttributes"
-      ],
-      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
-  },
-  {
-      "Sid": "VisualEditor1",
-      "Effect": "Allow",
-      "Action": "sqs:ListQueues",
-      "Resource": "*"
-  }
-  ]
-}
-EOF
 
-}
 
 resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
   role       = aws_iam_role.opensearch_sqs_role.name
@@ -288,64 +187,10 @@ resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
 }
 
 
-# lambda policy
-resource "aws_iam_policy" "iam_policy_for_lambda" {
-  name = "${var.application}-lambda-invoke-policy-${var.env}"
-  path = "/"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Sid": "LambdaPolicy",
-        "Effect": "Allow",
-        "Action": [
-          "cloudwatch:PutMetricData",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource": "*"
-      }
-    ]
-  }
-EOF
-}
 
 
-# IAM policy for logging from a lambda
 
-resource "aws_iam_policy" "lambda_logging" {
-  name        = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
-  path        = "/"
-  description = "IAM policy for logging from a lambda"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
+
 
 # Policy Attachment on the role.
 
@@ -683,7 +528,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
     variables = {
       ENVIRONMENT = "${var.env_full}"
       WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_INDEX_ACCOUNT_NAME = var.document_index_account_name
       WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD = var.documents_index_password
       WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
@@ -714,7 +559,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
     variables = {
       ENVIRONMENT = "${var.env_full}"
       WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
       WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
@@ -878,6 +723,34 @@ data "aws_route53_zone" "main_route53_zone" {
   name = var.main_route53_zone
 }
 
+
+
+
+
+
+
+
+
+
+
+//API GATEWAY RESOURCES
+
+//API Gateway Role
+resource "aws_iam_role" "api_gateway_integration_role" {
+  name = "${var.application}-sqs-api-gateway-role-${var.env}"
+  description = "Role used for POST from api gateway to sqs queue"
+}
+
+resource "aws_iam_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
+  roles = [aws_iam_role.api_gateway_integration_role]
+  policy_arn = aws_iam_policy.wfdm-send-sqs-message-from-api.arn
+}
+
+resource "aws_iam_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
+  roles = [aws_iam_role.api_gateway_integration_role]
+  policy_arn = aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
+}
+
 resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
   name        = "${var.application}-sqs-api-gateway-${var.env}"
   description = "POST records to SQS queue"
@@ -913,7 +786,6 @@ resource "aws_api_gateway_method" "sqs-gateway-post-method" {
 
   request_parameters = {
     "method.request.path.proxy"        = false
-    "method.request.querystring.unity" = true
   }
   request_validator_id = aws_api_gateway_request_validator.sqs-api-gateway-validator.id
 }
@@ -925,7 +797,7 @@ resource "aws_api_gateway_integration" "api" {
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
   type                    = "AWS"
   integration_http_method = "POST"
-  credentials             = aws_iam_role.opensearch_sqs_role.arn
+  credentials             = aws_iam_role.api_gateway_integration_role.arn
   uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
 
   request_parameters = {

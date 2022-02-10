@@ -1,0 +1,2576 @@
+{
+  "version": "tree-0.1",
+  "tree": {
+    "id": "App",
+    "path": "",
+    "children": {
+      "Tree": {
+        "id": "Tree",
+        "path": "Tree",
+        "constructInfo": {
+          "fqn": "constructs.Construct",
+          "version": "10.0.57"
+        }
+      },
+      "WfdmClamavStack": {
+        "id": "WfdmClamavStack",
+        "path": "WfdmClamavStack",
+        "children": {
+          "wfdmClamscanQueue": {
+            "id": "wfdmClamscanQueue",
+            "path": "WfdmClamavStack/wfdmClamscanQueue",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "WfdmClamavStack/wfdmClamscanQueue/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::SQS::Queue",
+                  "aws:cdk:cloudformation:props": {}
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_sqs.CfnQueue",
+                  "version": "2.12.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_sqs.Queue",
+              "version": "2.12.0"
+            }
+          },
+          "wfdmClamscan": {
+            "id": "wfdmClamscan",
+            "path": "WfdmClamavStack/wfdmClamscan",
+            "children": {
+              "ScanVPC": {
+                "id": "ScanVPC",
+                "path": "WfdmClamavStack/wfdmClamscan/ScanVPC",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::VPC",
+                      "aws:cdk:cloudformation:props": {
+                        "cidrBlock": "10.0.0.0/16",
+                        "enableDnsHostnames": true,
+                        "enableDnsSupport": true,
+                        "instanceTenancy": "default",
+                        "tags": [
+                          {
+                            "key": "Name",
+                            "value": "WfdmClamavStack/wfdmClamscan/ScanVPC"
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.CfnVPC",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "IsolatedSubnet1": {
+                    "id": "IsolatedSubnet1",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1",
+                    "children": {
+                      "Subnet": {
+                        "id": "Subnet",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1/Subnet",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                          "aws:cdk:cloudformation:props": {
+                            "cidrBlock": "10.0.0.0/17",
+                            "vpcId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            },
+                            "availabilityZone": {
+                              "Fn::Select": [
+                                0,
+                                {
+                                  "Fn::GetAZs": ""
+                                }
+                              ]
+                            },
+                            "mapPublicIpOnLaunch": false,
+                            "tags": [
+                              {
+                                "key": "aws-cdk:subnet-name",
+                                "value": "Isolated"
+                              },
+                              {
+                                "key": "aws-cdk:subnet-type",
+                                "value": "Isolated"
+                              },
+                              {
+                                "key": "Name",
+                                "value": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnSubnet",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "Acl": {
+                        "id": "Acl",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1/Acl",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.Resource",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "RouteTable": {
+                        "id": "RouteTable",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1/RouteTable",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                          "aws:cdk:cloudformation:props": {
+                            "vpcId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            },
+                            "tags": [
+                              {
+                                "key": "Name",
+                                "value": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnRouteTable",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "RouteTableAssociation": {
+                        "id": "RouteTableAssociation",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet1/RouteTableAssociation",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                          "aws:cdk:cloudformation:props": {
+                            "routeTableId": {
+                              "Ref": "wfdmClamscanScanVPCIsolatedSubnet1RouteTableEB7F0394"
+                            },
+                            "subnetId": {
+                              "Ref": "wfdmClamscanScanVPCIsolatedSubnet1Subnet7556D83D"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnSubnetRouteTableAssociation",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.PrivateSubnet",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "IsolatedSubnet2": {
+                    "id": "IsolatedSubnet2",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2",
+                    "children": {
+                      "Subnet": {
+                        "id": "Subnet",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2/Subnet",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::Subnet",
+                          "aws:cdk:cloudformation:props": {
+                            "cidrBlock": "10.0.128.0/17",
+                            "vpcId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            },
+                            "availabilityZone": {
+                              "Fn::Select": [
+                                1,
+                                {
+                                  "Fn::GetAZs": ""
+                                }
+                              ]
+                            },
+                            "mapPublicIpOnLaunch": false,
+                            "tags": [
+                              {
+                                "key": "aws-cdk:subnet-name",
+                                "value": "Isolated"
+                              },
+                              {
+                                "key": "aws-cdk:subnet-type",
+                                "value": "Isolated"
+                              },
+                              {
+                                "key": "Name",
+                                "value": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnSubnet",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "Acl": {
+                        "id": "Acl",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2/Acl",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.Resource",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "RouteTable": {
+                        "id": "RouteTable",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2/RouteTable",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::RouteTable",
+                          "aws:cdk:cloudformation:props": {
+                            "vpcId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            },
+                            "tags": [
+                              {
+                                "key": "Name",
+                                "value": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnRouteTable",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "RouteTableAssociation": {
+                        "id": "RouteTableAssociation",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/IsolatedSubnet2/RouteTableAssociation",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::SubnetRouteTableAssociation",
+                          "aws:cdk:cloudformation:props": {
+                            "routeTableId": {
+                              "Ref": "wfdmClamscanScanVPCIsolatedSubnet2RouteTableF6DB720F"
+                            },
+                            "subnetId": {
+                              "Ref": "wfdmClamscanScanVPCIsolatedSubnet2Subnet0DC705B8"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnSubnetRouteTableAssociation",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.PrivateSubnet",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "FlowLogs": {
+                    "id": "FlowLogs",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs",
+                    "children": {
+                      "IAMRole": {
+                        "id": "IAMRole",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/IAMRole",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/IAMRole/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                              "aws:cdk:cloudformation:props": {
+                                "assumeRolePolicyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "sts:AssumeRole",
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                        "Service": "vpc-flow-logs.amazonaws.com"
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "tags": [
+                                  {
+                                    "key": "Name",
+                                    "value": "WfdmClamavStack/wfdmClamscan/ScanVPC"
+                                  }
+                                ]
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                              "version": "2.12.0"
+                            }
+                          },
+                          "DefaultPolicy": {
+                            "id": "DefaultPolicy",
+                            "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/IAMRole/DefaultPolicy",
+                            "children": {
+                              "Resource": {
+                                "id": "Resource",
+                                "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/IAMRole/DefaultPolicy/Resource",
+                                "attributes": {
+                                  "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                                  "aws:cdk:cloudformation:props": {
+                                    "policyDocument": {
+                                      "Statement": [
+                                        {
+                                          "Action": [
+                                            "logs:CreateLogStream",
+                                            "logs:PutLogEvents",
+                                            "logs:DescribeLogStreams"
+                                          ],
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanScanVPCFlowLogsLogGroup214BDC5B",
+                                              "Arn"
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          "Action": "iam:PassRole",
+                                          "Effect": "Allow",
+                                          "Resource": {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanScanVPCFlowLogsIAMRole7282E719",
+                                              "Arn"
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      "Version": "2012-10-17"
+                                    },
+                                    "policyName": "wfdmClamscanScanVPCFlowLogsIAMRoleDefaultPolicy0099E7CF",
+                                    "roles": [
+                                      {
+                                        "Ref": "wfdmClamscanScanVPCFlowLogsIAMRole7282E719"
+                                      }
+                                    ]
+                                  }
+                                },
+                                "constructInfo": {
+                                  "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                                  "version": "2.12.0"
+                                }
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.Policy",
+                              "version": "2.12.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.Role",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "LogGroup": {
+                        "id": "LogGroup",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/LogGroup",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/LogGroup/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::Logs::LogGroup",
+                              "aws:cdk:cloudformation:props": {
+                                "retentionInDays": 731,
+                                "tags": [
+                                  {
+                                    "key": "Name",
+                                    "value": "WfdmClamavStack/wfdmClamscan/ScanVPC"
+                                  }
+                                ]
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_logs.CfnLogGroup",
+                              "version": "2.12.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_logs.LogGroup",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "FlowLog": {
+                        "id": "FlowLog",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/FlowLogs/FlowLog",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::FlowLog",
+                          "aws:cdk:cloudformation:props": {
+                            "resourceId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            },
+                            "resourceType": "VPC",
+                            "trafficType": "ALL",
+                            "deliverLogsPermissionArn": {
+                              "Fn::GetAtt": [
+                                "wfdmClamscanScanVPCFlowLogsIAMRole7282E719",
+                                "Arn"
+                              ]
+                            },
+                            "logDestinationType": "cloud-watch-logs",
+                            "logGroupName": {
+                              "Ref": "wfdmClamscanScanVPCFlowLogsLogGroup214BDC5B"
+                            },
+                            "tags": [
+                              {
+                                "key": "Name",
+                                "value": "WfdmClamavStack/wfdmClamscan/ScanVPC"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnFlowLog",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.FlowLog",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "S3Endpoint": {
+                    "id": "S3Endpoint",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/S3Endpoint",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanVPC/S3Endpoint/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::VPCEndpoint",
+                          "aws:cdk:cloudformation:props": {
+                            "serviceName": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "com.amazonaws.",
+                                  {
+                                    "Ref": "AWS::Region"
+                                  },
+                                  ".s3"
+                                ]
+                              ]
+                            },
+                            "vpcId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            },
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": [
+                                    "s3:GetObject",
+                                    "s3:ListBucket"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": "*"
+                                  },
+                                  "Resource": [
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                        "Arn"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": [
+                                    "s3:GetObject*",
+                                    "s3:GetBucket*",
+                                    "s3:List*"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD",
+                                          "Arn"
+                                        ]
+                                      },
+                                      {
+                                        "Fn::Join": [
+                                          "",
+                                          [
+                                            "arn:",
+                                            {
+                                              "Ref": "AWS::Partition"
+                                            },
+                                            ":sts::",
+                                            {
+                                              "Ref": "AWS::AccountId"
+                                            },
+                                            ":assumed-role/",
+                                            {
+                                              "Ref": "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD"
+                                            },
+                                            "/",
+                                            {
+                                              "Ref": "wfdmClamscanServerlessClamscan04BE3FCD"
+                                            }
+                                          ]
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "Resource": [
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmclamavbucket78961613",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "wfdmclamavbucket78961613",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": [
+                                    "s3:PutObjectTagging",
+                                    "s3:PutObjectVersionTagging"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD",
+                                          "Arn"
+                                        ]
+                                      },
+                                      {
+                                        "Fn::Join": [
+                                          "",
+                                          [
+                                            "arn:",
+                                            {
+                                              "Ref": "AWS::Partition"
+                                            },
+                                            ":sts::",
+                                            {
+                                              "Ref": "AWS::AccountId"
+                                            },
+                                            ":assumed-role/",
+                                            {
+                                              "Ref": "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD"
+                                            },
+                                            "/",
+                                            {
+                                              "Ref": "wfdmClamscanServerlessClamscan04BE3FCD"
+                                            }
+                                          ]
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "Resource": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        {
+                                          "Fn::GetAtt": [
+                                            "wfdmclamavbucket78961613",
+                                            "Arn"
+                                          ]
+                                        },
+                                        "/*"
+                                      ]
+                                    ]
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "routeTableIds": [
+                              {
+                                "Ref": "wfdmClamscanScanVPCIsolatedSubnet1RouteTableEB7F0394"
+                              },
+                              {
+                                "Ref": "wfdmClamscanScanVPCIsolatedSubnet2RouteTableF6DB720F"
+                              }
+                            ],
+                            "vpcEndpointType": "Gateway"
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnVPCEndpoint",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.GatewayVpcEndpoint",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_ec2.Vpc",
+                  "version": "2.12.0"
+                }
+              },
+              "ScanFileSystemSecurityGroup": {
+                "id": "ScanFileSystemSecurityGroup",
+                "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystemSecurityGroup",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystemSecurityGroup/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SecurityGroup",
+                      "aws:cdk:cloudformation:props": {
+                        "groupDescription": "WfdmClamavStack/wfdmClamscan/ScanFileSystemSecurityGroup",
+                        "securityGroupEgress": [
+                          {
+                            "cidrIp": "255.255.255.255/32",
+                            "description": "Disallow all traffic",
+                            "ipProtocol": "icmp",
+                            "fromPort": 252,
+                            "toPort": 86
+                          }
+                        ],
+                        "vpcId": {
+                          "Ref": "wfdmClamscanScanVPC274279B8"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.CfnSecurityGroup",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "from WfdmClamavStackwfdmClamscanServerlessClamscanSecurityGroup062DDF07:2049": {
+                    "id": "from WfdmClamavStackwfdmClamscanServerlessClamscanSecurityGroup062DDF07:2049",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystemSecurityGroup/from WfdmClamavStackwfdmClamscanServerlessClamscanSecurityGroup062DDF07:2049",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EC2::SecurityGroupIngress",
+                      "aws:cdk:cloudformation:props": {
+                        "ipProtocol": "tcp",
+                        "description": "from WfdmClamavStackwfdmClamscanServerlessClamscanSecurityGroup062DDF07:2049",
+                        "fromPort": 2049,
+                        "groupId": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanScanFileSystemSecurityGroupFFD6906F",
+                            "GroupId"
+                          ]
+                        },
+                        "sourceSecurityGroupId": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanServerlessClamscanSecurityGroupAE057082",
+                            "GroupId"
+                          ]
+                        },
+                        "toPort": 2049
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.CfnSecurityGroupIngress",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_ec2.SecurityGroup",
+                  "version": "2.12.0"
+                }
+              },
+              "ScanFileSystem": {
+                "id": "ScanFileSystem",
+                "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystem",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystem/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EFS::FileSystem",
+                      "aws:cdk:cloudformation:props": {
+                        "encrypted": true,
+                        "fileSystemTags": [
+                          {
+                            "key": "Name",
+                            "value": "WfdmClamavStack/wfdmClamscan/ScanFileSystem"
+                          }
+                        ],
+                        "lifecyclePolicies": [
+                          {
+                            "transitionToIa": "AFTER_7_DAYS"
+                          }
+                        ],
+                        "performanceMode": "generalPurpose"
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_efs.CfnFileSystem",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "EfsMountTarget1": {
+                    "id": "EfsMountTarget1",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystem/EfsMountTarget1",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EFS::MountTarget",
+                      "aws:cdk:cloudformation:props": {
+                        "fileSystemId": {
+                          "Ref": "wfdmClamscanScanFileSystemE829A5B5"
+                        },
+                        "securityGroups": [
+                          {
+                            "Fn::GetAtt": [
+                              "wfdmClamscanScanFileSystemSecurityGroupFFD6906F",
+                              "GroupId"
+                            ]
+                          }
+                        ],
+                        "subnetId": {
+                          "Ref": "wfdmClamscanScanVPCIsolatedSubnet1Subnet7556D83D"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_efs.CfnMountTarget",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "EfsMountTarget2": {
+                    "id": "EfsMountTarget2",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystem/EfsMountTarget2",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::EFS::MountTarget",
+                      "aws:cdk:cloudformation:props": {
+                        "fileSystemId": {
+                          "Ref": "wfdmClamscanScanFileSystemE829A5B5"
+                        },
+                        "securityGroups": [
+                          {
+                            "Fn::GetAtt": [
+                              "wfdmClamscanScanFileSystemSecurityGroupFFD6906F",
+                              "GroupId"
+                            ]
+                          }
+                        ],
+                        "subnetId": {
+                          "Ref": "wfdmClamscanScanVPCIsolatedSubnet2Subnet0DC705B8"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_efs.CfnMountTarget",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "ScanLambdaAP": {
+                    "id": "ScanLambdaAP",
+                    "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystem/ScanLambdaAP",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/ScanFileSystem/ScanLambdaAP/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EFS::AccessPoint",
+                          "aws:cdk:cloudformation:props": {
+                            "fileSystemId": {
+                              "Ref": "wfdmClamscanScanFileSystemE829A5B5"
+                            },
+                            "posixUser": {
+                              "uid": "1000",
+                              "gid": "1000"
+                            },
+                            "rootDirectory": {
+                              "creationInfo": {
+                                "ownerGid": "1000",
+                                "ownerUid": "1000",
+                                "permissions": "755"
+                              },
+                              "path": "/lambda"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_efs.CfnAccessPoint",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_efs.AccessPoint",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_efs.FileSystem",
+                  "version": "2.12.0"
+                }
+              },
+              "VirusDefsAccessLogsBucket": {
+                "id": "VirusDefsAccessLogsBucket",
+                "path": "WfdmClamavStack/wfdmClamscan/VirusDefsAccessLogsBucket",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsAccessLogsBucket/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                      "aws:cdk:cloudformation:props": {
+                        "accessControl": "LogDeliveryWrite",
+                        "bucketEncryption": {
+                          "serverSideEncryptionConfiguration": [
+                            {
+                              "serverSideEncryptionByDefault": {
+                                "sseAlgorithm": "AES256"
+                              }
+                            }
+                          ]
+                        },
+                        "loggingConfiguration": {
+                          "logFilePrefix": "access-logs-bucket-logs"
+                        },
+                        "publicAccessBlockConfiguration": {
+                          "blockPublicAcls": true,
+                          "blockPublicPolicy": true,
+                          "ignorePublicAcls": true,
+                          "restrictPublicBuckets": true
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.CfnBucket",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "Policy": {
+                    "id": "Policy",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsAccessLogsBucket/Policy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/VirusDefsAccessLogsBucket/Policy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::S3::BucketPolicy",
+                          "aws:cdk:cloudformation:props": {
+                            "bucket": {
+                              "Ref": "wfdmClamscanVirusDefsAccessLogsBucketC4C89A8B"
+                            },
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "s3:*",
+                                  "Condition": {
+                                    "Bool": {
+                                      "aws:SecureTransport": false
+                                    }
+                                  },
+                                  "Effect": "Deny",
+                                  "Principal": {
+                                    "AWS": "*"
+                                  },
+                                  "Resource": [
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanVirusDefsAccessLogsBucketC4C89A8B",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmClamscanVirusDefsAccessLogsBucketC4C89A8B",
+                                        "Arn"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_s3.CfnBucketPolicy",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketPolicy",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.Bucket",
+                  "version": "2.12.0"
+                }
+              },
+              "VirusDefsBucket": {
+                "id": "VirusDefsBucket",
+                "path": "WfdmClamavStack/wfdmClamscan/VirusDefsBucket",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsBucket/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                      "aws:cdk:cloudformation:props": {
+                        "bucketEncryption": {
+                          "serverSideEncryptionConfiguration": [
+                            {
+                              "serverSideEncryptionByDefault": {
+                                "sseAlgorithm": "AES256"
+                              }
+                            }
+                          ]
+                        },
+                        "loggingConfiguration": {
+                          "destinationBucketName": {
+                            "Ref": "wfdmClamscanVirusDefsAccessLogsBucketC4C89A8B"
+                          }
+                        },
+                        "publicAccessBlockConfiguration": {
+                          "blockPublicAcls": true,
+                          "blockPublicPolicy": true,
+                          "ignorePublicAcls": true,
+                          "restrictPublicBuckets": true
+                        },
+                        "tags": [
+                          {
+                            "key": "aws-cdk:auto-delete-objects",
+                            "value": "true"
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.CfnBucket",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "Policy": {
+                    "id": "Policy",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsBucket/Policy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/VirusDefsBucket/Policy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::S3::BucketPolicy",
+                          "aws:cdk:cloudformation:props": {
+                            "bucket": {
+                              "Ref": "wfdmClamscanVirusDefsBucketF9FCA9B6"
+                            },
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": [
+                                    "s3:GetBucket*",
+                                    "s3:List*",
+                                    "s3:DeleteObject*"
+                                  ],
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": {
+                                      "Fn::GetAtt": [
+                                        "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                                        "Arn"
+                                      ]
+                                    }
+                                  },
+                                  "Resource": [
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": "s3:*",
+                                  "Condition": {
+                                    "Bool": {
+                                      "aws:SecureTransport": false
+                                    }
+                                  },
+                                  "Effect": "Deny",
+                                  "Principal": {
+                                    "AWS": "*"
+                                  },
+                                  "Resource": [
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                        "Arn"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": [
+                                    "s3:GetObject",
+                                    "s3:ListBucket"
+                                  ],
+                                  "Condition": {
+                                    "StringEquals": {
+                                      "aws:SourceVpce": {
+                                        "Ref": "wfdmClamscanScanVPCS3Endpoint9ADCF3F1"
+                                      }
+                                    }
+                                  },
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "AWS": "*"
+                                  },
+                                  "Resource": [
+                                    {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          {
+                                            "Fn::GetAtt": [
+                                              "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                              "Arn"
+                                            ]
+                                          },
+                                          "/*"
+                                        ]
+                                      ]
+                                    },
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                        "Arn"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Action": [
+                                    "s3:PutBucketPolicy",
+                                    "s3:DeleteBucketPolicy"
+                                  ],
+                                  "Effect": "Deny",
+                                  "NotPrincipal": {
+                                    "AWS": {
+                                      "Fn::Join": [
+                                        "",
+                                        [
+                                          "arn:",
+                                          {
+                                            "Ref": "AWS::Partition"
+                                          },
+                                          ":iam::",
+                                          {
+                                            "Ref": "AWS::AccountId"
+                                          },
+                                          ":root"
+                                        ]
+                                      ]
+                                    }
+                                  },
+                                  "Resource": {
+                                    "Fn::GetAtt": [
+                                      "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                      "Arn"
+                                    ]
+                                  }
+                                },
+                                {
+                                  "Action": "s3:PutObject*",
+                                  "Effect": "Deny",
+                                  "NotPrincipal": {
+                                    "AWS": [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "wfdmClamscanDownloadDefsServiceRole0AF60566",
+                                          "Arn"
+                                        ]
+                                      },
+                                      {
+                                        "Fn::Join": [
+                                          "",
+                                          [
+                                            "arn:",
+                                            {
+                                              "Ref": "AWS::Partition"
+                                            },
+                                            ":sts::",
+                                            {
+                                              "Ref": "AWS::AccountId"
+                                            },
+                                            ":assumed-role/",
+                                            {
+                                              "Ref": "wfdmClamscanDownloadDefsServiceRole0AF60566"
+                                            },
+                                            "/",
+                                            {
+                                              "Ref": "wfdmClamscanDownloadDefsB814EDC8"
+                                            }
+                                          ]
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "Resource": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        {
+                                          "Fn::GetAtt": [
+                                            "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                            "Arn"
+                                          ]
+                                        },
+                                        "/*"
+                                      ]
+                                    ]
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_s3.CfnBucketPolicy",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.BucketPolicy",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "AutoDeleteObjectsCustomResource": {
+                    "id": "AutoDeleteObjectsCustomResource",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsBucket/AutoDeleteObjectsCustomResource",
+                    "children": {
+                      "Default": {
+                        "id": "Default",
+                        "path": "WfdmClamavStack/wfdmClamscan/VirusDefsBucket/AutoDeleteObjectsCustomResource/Default",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.CfnResource",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CustomResource",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.Bucket",
+                  "version": "2.12.0"
+                }
+              },
+              "ServerlessClamscan": {
+                "id": "ServerlessClamscan",
+                "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              },
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "DefaultPolicy": {
+                        "id": "DefaultPolicy",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/ServiceRole/DefaultPolicy",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/ServiceRole/DefaultPolicy/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                              "aws:cdk:cloudformation:props": {
+                                "policyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "elasticfilesystem:ClientMount",
+                                      "Condition": {
+                                        "StringEquals": {
+                                          "elasticfilesystem:AccessPointArn": {
+                                            "Fn::Join": [
+                                              "",
+                                              [
+                                                "arn:",
+                                                {
+                                                  "Ref": "AWS::Partition"
+                                                },
+                                                ":elasticfilesystem:",
+                                                {
+                                                  "Ref": "AWS::Region"
+                                                },
+                                                ":",
+                                                {
+                                                  "Ref": "AWS::AccountId"
+                                                },
+                                                ":access-point/",
+                                                {
+                                                  "Ref": "wfdmClamscanScanFileSystemScanLambdaAP2A210B30"
+                                                }
+                                              ]
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "Effect": "Allow",
+                                      "Resource": "*"
+                                    },
+                                    {
+                                      "Action": "elasticfilesystem:ClientWrite",
+                                      "Effect": "Allow",
+                                      "Resource": {
+                                        "Fn::Join": [
+                                          "",
+                                          [
+                                            "arn:",
+                                            {
+                                              "Ref": "AWS::Partition"
+                                            },
+                                            ":elasticfilesystem:",
+                                            {
+                                              "Ref": "AWS::Region"
+                                            },
+                                            ":",
+                                            {
+                                              "Ref": "AWS::AccountId"
+                                            },
+                                            ":file-system/",
+                                            {
+                                              "Ref": "wfdmClamscanScanFileSystemE829A5B5"
+                                            }
+                                          ]
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Action": [
+                                        "sqs:SendMessage",
+                                        "sqs:GetQueueAttributes",
+                                        "sqs:GetQueueUrl"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": {
+                                        "Fn::GetAtt": [
+                                          "wfdmClamscanQueue4193FD3B",
+                                          "Arn"
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Action": [
+                                        "s3:GetObject*",
+                                        "s3:GetBucket*",
+                                        "s3:List*"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": [
+                                        {
+                                          "Fn::GetAtt": [
+                                            "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                            "Arn"
+                                          ]
+                                        },
+                                        {
+                                          "Fn::Join": [
+                                            "",
+                                            [
+                                              {
+                                                "Fn::GetAtt": [
+                                                  "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                                  "Arn"
+                                                ]
+                                              },
+                                              "/*"
+                                            ]
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Action": [
+                                        "s3:GetObject*",
+                                        "s3:GetBucket*",
+                                        "s3:List*"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": [
+                                        {
+                                          "Fn::GetAtt": [
+                                            "wfdmclamavbucket78961613",
+                                            "Arn"
+                                          ]
+                                        },
+                                        {
+                                          "Fn::Join": [
+                                            "",
+                                            [
+                                              {
+                                                "Fn::GetAtt": [
+                                                  "wfdmclamavbucket78961613",
+                                                  "Arn"
+                                                ]
+                                              },
+                                              "/*"
+                                            ]
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "Action": [
+                                        "s3:PutObjectTagging",
+                                        "s3:PutObjectVersionTagging"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": {
+                                        "Fn::Join": [
+                                          "",
+                                          [
+                                            {
+                                              "Fn::GetAtt": [
+                                                "wfdmclamavbucket78961613",
+                                                "Arn"
+                                              ]
+                                            },
+                                            "/*"
+                                          ]
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "policyName": "wfdmClamscanServerlessClamscanServiceRoleDefaultPolicyFDB45ADC",
+                                "roles": [
+                                  {
+                                    "Ref": "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD"
+                                  }
+                                ]
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                              "version": "2.12.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.Policy",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Role",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "AssetImage": {
+                    "id": "AssetImage",
+                    "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/AssetImage",
+                    "children": {
+                      "Staging": {
+                        "id": "Staging",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/AssetImage/Staging",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.AssetStaging",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "Repository": {
+                        "id": "Repository",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/AssetImage/Repository",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ecr.RepositoryBase",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ecr_assets.DockerImageAsset",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "SecurityGroup": {
+                    "id": "SecurityGroup",
+                    "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/SecurityGroup",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/SecurityGroup/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::SecurityGroup",
+                          "aws:cdk:cloudformation:props": {
+                            "groupDescription": "Automatic security group for Lambda Function WfdmClamavStackwfdmClamscanServerlessClamscan83132138",
+                            "securityGroupEgress": [
+                              {
+                                "cidrIp": "0.0.0.0/0",
+                                "ipProtocol": "tcp",
+                                "fromPort": 443,
+                                "toPort": 443,
+                                "description": "Allow outbound HTTPS traffic for S3 access."
+                              }
+                            ],
+                            "vpcId": {
+                              "Ref": "wfdmClamscanScanVPC274279B8"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnSecurityGroup",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "to WfdmClamavStackwfdmClamscanScanFileSystemSecurityGroup1D29EBD5:2049": {
+                        "id": "to WfdmClamavStackwfdmClamscanScanFileSystemSecurityGroup1D29EBD5:2049",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/SecurityGroup/to WfdmClamavStackwfdmClamscanScanFileSystemSecurityGroup1D29EBD5:2049",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::EC2::SecurityGroupEgress",
+                          "aws:cdk:cloudformation:props": {
+                            "groupId": {
+                              "Fn::GetAtt": [
+                                "wfdmClamscanServerlessClamscanSecurityGroupAE057082",
+                                "GroupId"
+                              ]
+                            },
+                            "ipProtocol": "tcp",
+                            "description": "to WfdmClamavStackwfdmClamscanScanFileSystemSecurityGroup1D29EBD5:2049",
+                            "destinationSecurityGroupId": {
+                              "Fn::GetAtt": [
+                                "wfdmClamscanScanFileSystemSecurityGroupFFD6906F",
+                                "GroupId"
+                              ]
+                            },
+                            "fromPort": 2049,
+                            "toPort": 2049
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ec2.CfnSecurityGroupEgress",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ec2.SecurityGroup",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "imageUri": {
+                            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}:b10298b69dd7de76fed3250f41b0448ad46c2fdbea69f1c891e360f68aa5b741"
+                          }
+                        },
+                        "role": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD",
+                            "Arn"
+                          ]
+                        },
+                        "environment": {
+                          "variables": {
+                            "EFS_MOUNT_PATH": "/mnt/lambda",
+                            "EFS_DEF_PATH": "virus_database/",
+                            "DEFS_URL": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "https://",
+                                  {
+                                    "Fn::GetAtt": [
+                                      "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                      "RegionalDomainName"
+                                    ]
+                                  }
+                                ]
+                              ]
+                            },
+                            "POWERTOOLS_METRICS_NAMESPACE": "serverless-clamscan",
+                            "POWERTOOLS_SERVICE_NAME": "virus-scan"
+                          }
+                        },
+                        "fileSystemConfigs": [
+                          {
+                            "arn": {
+                              "Fn::Join": [
+                                "",
+                                [
+                                  "arn:",
+                                  {
+                                    "Ref": "AWS::Partition"
+                                  },
+                                  ":elasticfilesystem:",
+                                  {
+                                    "Ref": "AWS::Region"
+                                  },
+                                  ":",
+                                  {
+                                    "Ref": "AWS::AccountId"
+                                  },
+                                  ":access-point/",
+                                  {
+                                    "Ref": "wfdmClamscanScanFileSystemScanLambdaAP2A210B30"
+                                  }
+                                ]
+                              ]
+                            },
+                            "localMountPath": "/mnt/lambda"
+                          }
+                        ],
+                        "memorySize": 10240,
+                        "packageType": "Image",
+                        "timeout": 900,
+                        "vpcConfig": {
+                          "subnetIds": [
+                            {
+                              "Ref": "wfdmClamscanScanVPCIsolatedSubnet1Subnet7556D83D"
+                            },
+                            {
+                              "Ref": "wfdmClamscanScanVPCIsolatedSubnet2Subnet0DC705B8"
+                            }
+                          ],
+                          "securityGroupIds": [
+                            {
+                              "Fn::GetAtt": [
+                                "wfdmClamscanServerlessClamscanSecurityGroupAE057082",
+                                "GroupId"
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "EventInvokeConfig": {
+                    "id": "EventInvokeConfig",
+                    "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/EventInvokeConfig",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/ServerlessClamscan/EventInvokeConfig/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::Lambda::EventInvokeConfig",
+                          "aws:cdk:cloudformation:props": {
+                            "functionName": {
+                              "Ref": "wfdmClamscanServerlessClamscan04BE3FCD"
+                            },
+                            "qualifier": "$LATEST",
+                            "destinationConfig": {
+                              "onFailure": {
+                                "destination": {
+                                  "Fn::GetAtt": [
+                                    "wfdmClamscanQueue4193FD3B",
+                                    "Arn"
+                                  ]
+                                }
+                              },
+                              "onSuccess": {
+                                "destination": {
+                                  "Fn::GetAtt": [
+                                    "wfdmClamscanQueue4193FD3B",
+                                    "Arn"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_lambda.CfnEventInvokeConfig",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.EventInvokeConfig",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.DockerImageFunction",
+                  "version": "2.12.0"
+                }
+              },
+              "DownloadDefs": {
+                "id": "DownloadDefs",
+                "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "DefaultPolicy": {
+                        "id": "DefaultPolicy",
+                        "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/ServiceRole/DefaultPolicy",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/ServiceRole/DefaultPolicy/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                              "aws:cdk:cloudformation:props": {
+                                "policyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": [
+                                        "s3:GetObject*",
+                                        "s3:GetBucket*",
+                                        "s3:List*",
+                                        "s3:DeleteObject*",
+                                        "s3:PutObject",
+                                        "s3:PutObjectLegalHold",
+                                        "s3:PutObjectRetention",
+                                        "s3:PutObjectTagging",
+                                        "s3:PutObjectVersionTagging",
+                                        "s3:Abort*"
+                                      ],
+                                      "Effect": "Allow",
+                                      "Resource": [
+                                        {
+                                          "Fn::GetAtt": [
+                                            "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                            "Arn"
+                                          ]
+                                        },
+                                        {
+                                          "Fn::Join": [
+                                            "",
+                                            [
+                                              {
+                                                "Fn::GetAtt": [
+                                                  "wfdmClamscanVirusDefsBucketF9FCA9B6",
+                                                  "Arn"
+                                                ]
+                                              },
+                                              "/*"
+                                            ]
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "policyName": "wfdmClamscanDownloadDefsServiceRoleDefaultPolicy61023B5A",
+                                "roles": [
+                                  {
+                                    "Ref": "wfdmClamscanDownloadDefsServiceRole0AF60566"
+                                  }
+                                ]
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                              "version": "2.12.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.Policy",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Role",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "AssetImage": {
+                    "id": "AssetImage",
+                    "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/AssetImage",
+                    "children": {
+                      "Staging": {
+                        "id": "Staging",
+                        "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/AssetImage/Staging",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.AssetStaging",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "Repository": {
+                        "id": "Repository",
+                        "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/AssetImage/Repository",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_ecr.RepositoryBase",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_ecr_assets.DockerImageAsset",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/DownloadDefs/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "imageUri": {
+                            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.${AWS::URLSuffix}/cdk-hnb659fds-container-assets-${AWS::AccountId}-${AWS::Region}:3d3df8ef288aa1e2629876b81141ad355daa0f67e542a7da3bfe1370c0f58841"
+                          }
+                        },
+                        "role": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanDownloadDefsServiceRole0AF60566",
+                            "Arn"
+                          ]
+                        },
+                        "environment": {
+                          "variables": {
+                            "DEFS_BUCKET": {
+                              "Ref": "wfdmClamscanVirusDefsBucketF9FCA9B6"
+                            },
+                            "POWERTOOLS_SERVICE_NAME": "freshclam-update"
+                          }
+                        },
+                        "memorySize": 1024,
+                        "packageType": "Image",
+                        "timeout": 300
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.DockerImageFunction",
+                  "version": "2.12.0"
+                }
+              },
+              "VirusDefsUpdateRule": {
+                "id": "VirusDefsUpdateRule",
+                "path": "WfdmClamavStack/wfdmClamscan/VirusDefsUpdateRule",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsUpdateRule/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Events::Rule",
+                      "aws:cdk:cloudformation:props": {
+                        "scheduleExpression": "rate(12 hours)",
+                        "state": "ENABLED",
+                        "targets": [
+                          {
+                            "id": "Target0",
+                            "arn": {
+                              "Fn::GetAtt": [
+                                "wfdmClamscanDownloadDefsB814EDC8",
+                                "Arn"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_events.CfnRule",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "AllowEventRuleWfdmClamavStackwfdmClamscanDownloadDefsC262EED3": {
+                    "id": "AllowEventRuleWfdmClamavStackwfdmClamscanDownloadDefsC262EED3",
+                    "path": "WfdmClamavStack/wfdmClamscan/VirusDefsUpdateRule/AllowEventRuleWfdmClamavStackwfdmClamscanDownloadDefsC262EED3",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                      "aws:cdk:cloudformation:props": {
+                        "action": "lambda:InvokeFunction",
+                        "functionName": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanDownloadDefsB814EDC8",
+                            "Arn"
+                          ]
+                        },
+                        "principal": "events.amazonaws.com",
+                        "sourceArn": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanVirusDefsUpdateRuleB7616D88",
+                            "Arn"
+                          ]
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_events.Rule",
+                  "version": "2.12.0"
+                }
+              },
+              "InitDefs": {
+                "id": "InitDefs",
+                "path": "WfdmClamavStack/wfdmClamscan/InitDefs",
+                "children": {
+                  "ServiceRole": {
+                    "id": "ServiceRole",
+                    "path": "WfdmClamavStack/wfdmClamscan/InitDefs/ServiceRole",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/wfdmClamscan/InitDefs/ServiceRole/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                          "aws:cdk:cloudformation:props": {
+                            "assumeRolePolicyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "sts:AssumeRole",
+                                  "Effect": "Allow",
+                                  "Principal": {
+                                    "Service": "lambda.amazonaws.com"
+                                  }
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "managedPolicyArns": [
+                              {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    "arn:",
+                                    {
+                                      "Ref": "AWS::Partition"
+                                    },
+                                    ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                                  ]
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "DefaultPolicy": {
+                        "id": "DefaultPolicy",
+                        "path": "WfdmClamavStack/wfdmClamscan/InitDefs/ServiceRole/DefaultPolicy",
+                        "children": {
+                          "Resource": {
+                            "id": "Resource",
+                            "path": "WfdmClamavStack/wfdmClamscan/InitDefs/ServiceRole/DefaultPolicy/Resource",
+                            "attributes": {
+                              "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                              "aws:cdk:cloudformation:props": {
+                                "policyDocument": {
+                                  "Statement": [
+                                    {
+                                      "Action": "lambda:InvokeFunction",
+                                      "Effect": "Allow",
+                                      "Resource": {
+                                        "Fn::GetAtt": [
+                                          "wfdmClamscanDownloadDefsB814EDC8",
+                                          "Arn"
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                  "Version": "2012-10-17"
+                                },
+                                "policyName": "wfdmClamscanInitDefsServiceRoleDefaultPolicy7E584CD5",
+                                "roles": [
+                                  {
+                                    "Ref": "wfdmClamscanInitDefsServiceRole8D560CCE"
+                                  }
+                                ]
+                              }
+                            },
+                            "constructInfo": {
+                              "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                              "version": "2.12.0"
+                            }
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.Policy",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Role",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "Code": {
+                    "id": "Code",
+                    "path": "WfdmClamavStack/wfdmClamscan/InitDefs/Code",
+                    "children": {
+                      "Stage": {
+                        "id": "Stage",
+                        "path": "WfdmClamavStack/wfdmClamscan/InitDefs/Code/Stage",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.AssetStaging",
+                          "version": "2.12.0"
+                        }
+                      },
+                      "AssetBucket": {
+                        "id": "AssetBucket",
+                        "path": "WfdmClamavStack/wfdmClamscan/InitDefs/Code/AssetBucket",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_s3.BucketBase",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3_assets.Asset",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdmClamscan/InitDefs/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::Lambda::Function",
+                      "aws:cdk:cloudformation:props": {
+                        "code": {
+                          "s3Bucket": {
+                            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                          },
+                          "s3Key": "7d289f9862096a0365073560bf6f447a02ebc74681e6aa4baaaa3a61c8e53bac.zip"
+                        },
+                        "role": {
+                          "Fn::GetAtt": [
+                            "wfdmClamscanInitDefsServiceRole8D560CCE",
+                            "Arn"
+                          ]
+                        },
+                        "handler": "lambda.lambda_handler",
+                        "runtime": "python3.8",
+                        "timeout": 300
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_lambda.CfnFunction",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.Function",
+                  "version": "2.12.0"
+                }
+              },
+              "InitDefsCr": {
+                "id": "InitDefsCr",
+                "path": "WfdmClamavStack/wfdmClamscan/InitDefsCr",
+                "children": {
+                  "Default": {
+                    "id": "Default",
+                    "path": "WfdmClamavStack/wfdmClamscan/InitDefsCr/Default",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CustomResource",
+                  "version": "2.12.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "cdk-serverless-clamscan.ServerlessClamscan",
+              "version": "2.1.8"
+            }
+          },
+          "Custom::S3AutoDeleteObjectsCustomResourceProvider": {
+            "id": "Custom::S3AutoDeleteObjectsCustomResourceProvider",
+            "path": "WfdmClamavStack/Custom::S3AutoDeleteObjectsCustomResourceProvider",
+            "children": {
+              "Staging": {
+                "id": "Staging",
+                "path": "WfdmClamavStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Staging",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.AssetStaging",
+                  "version": "2.12.0"
+                }
+              },
+              "Role": {
+                "id": "Role",
+                "path": "WfdmClamavStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.12.0"
+                }
+              },
+              "Handler": {
+                "id": "Handler",
+                "path": "WfdmClamavStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.12.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CustomResourceProvider",
+              "version": "2.12.0"
+            }
+          },
+          "wfdm-clamav-bucket": {
+            "id": "wfdm-clamav-bucket",
+            "path": "WfdmClamavStack/wfdm-clamav-bucket",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "WfdmClamavStack/wfdm-clamav-bucket/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::S3::Bucket",
+                  "aws:cdk:cloudformation:props": {
+                    "tags": [
+                      {
+                        "key": "aws-cdk:auto-delete-objects",
+                        "value": "true"
+                      }
+                    ]
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.CfnBucket",
+                  "version": "2.12.0"
+                }
+              },
+              "Policy": {
+                "id": "Policy",
+                "path": "WfdmClamavStack/wfdm-clamav-bucket/Policy",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdm-clamav-bucket/Policy/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::S3::BucketPolicy",
+                      "aws:cdk:cloudformation:props": {
+                        "bucket": {
+                          "Ref": "wfdmclamavbucket78961613"
+                        },
+                        "policyDocument": {
+                          "Statement": [
+                            {
+                              "Action": [
+                                "s3:GetBucket*",
+                                "s3:List*",
+                                "s3:DeleteObject*"
+                              ],
+                              "Effect": "Allow",
+                              "Principal": {
+                                "AWS": {
+                                  "Fn::GetAtt": [
+                                    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+                                    "Arn"
+                                  ]
+                                }
+                              },
+                              "Resource": [
+                                {
+                                  "Fn::GetAtt": [
+                                    "wfdmclamavbucket78961613",
+                                    "Arn"
+                                  ]
+                                },
+                                {
+                                  "Fn::Join": [
+                                    "",
+                                    [
+                                      {
+                                        "Fn::GetAtt": [
+                                          "wfdmclamavbucket78961613",
+                                          "Arn"
+                                        ]
+                                      },
+                                      "/*"
+                                    ]
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "Action": "s3:GetObject",
+                              "Condition": {
+                                "StringEquals": {
+                                  "s3:ExistingObjectTag/scan-status": [
+                                    "IN PROGRESS",
+                                    "INFECTED",
+                                    "ERROR"
+                                  ]
+                                }
+                              },
+                              "Effect": "Deny",
+                              "NotPrincipal": {
+                                "AWS": [
+                                  {
+                                    "Fn::GetAtt": [
+                                      "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD",
+                                      "Arn"
+                                    ]
+                                  },
+                                  {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":sts::",
+                                        {
+                                          "Ref": "AWS::AccountId"
+                                        },
+                                        ":assumed-role/",
+                                        {
+                                          "Ref": "wfdmClamscanServerlessClamscanServiceRoleE8DCB3FD"
+                                        },
+                                        "/",
+                                        {
+                                          "Ref": "wfdmClamscanServerlessClamscan04BE3FCD"
+                                        }
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              },
+                              "Resource": {
+                                "Fn::Join": [
+                                  "",
+                                  [
+                                    {
+                                      "Fn::GetAtt": [
+                                        "wfdmclamavbucket78961613",
+                                        "Arn"
+                                      ]
+                                    },
+                                    "/*"
+                                  ]
+                                ]
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_s3.CfnBucketPolicy",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_s3.BucketPolicy",
+                  "version": "2.12.0"
+                }
+              },
+              "AutoDeleteObjectsCustomResource": {
+                "id": "AutoDeleteObjectsCustomResource",
+                "path": "WfdmClamavStack/wfdm-clamav-bucket/AutoDeleteObjectsCustomResource",
+                "children": {
+                  "Default": {
+                    "id": "Default",
+                    "path": "WfdmClamavStack/wfdm-clamav-bucket/AutoDeleteObjectsCustomResource/Default",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CustomResource",
+                  "version": "2.12.0"
+                }
+              },
+              "Notifications": {
+                "id": "Notifications",
+                "path": "WfdmClamavStack/wfdm-clamav-bucket/Notifications",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/wfdm-clamav-bucket/Notifications/Resource",
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.CfnResource",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "constructs.Construct",
+                  "version": "10.0.57"
+                }
+              },
+              "AllowBucketNotificationsToWfdmClamavStackwfdmClamscanServerlessClamscan83132138": {
+                "id": "AllowBucketNotificationsToWfdmClamavStackwfdmClamscanServerlessClamscan83132138",
+                "path": "WfdmClamavStack/wfdm-clamav-bucket/AllowBucketNotificationsToWfdmClamavStackwfdmClamscanServerlessClamscan83132138",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Lambda::Permission",
+                  "aws:cdk:cloudformation:props": {
+                    "action": "lambda:InvokeFunction",
+                    "functionName": {
+                      "Fn::GetAtt": [
+                        "wfdmClamscanServerlessClamscan04BE3FCD",
+                        "Arn"
+                      ]
+                    },
+                    "principal": "s3.amazonaws.com",
+                    "sourceAccount": {
+                      "Ref": "AWS::AccountId"
+                    },
+                    "sourceArn": {
+                      "Fn::GetAtt": [
+                        "wfdmclamavbucket78961613",
+                        "Arn"
+                      ]
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_lambda.CfnPermission",
+                  "version": "2.12.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_s3.Bucket",
+              "version": "2.12.0"
+            }
+          },
+          "BucketNotificationsHandler050a0587b7544547bf325f094a3db834": {
+            "id": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834",
+            "path": "WfdmClamavStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834",
+            "children": {
+              "Role": {
+                "id": "Role",
+                "path": "WfdmClamavStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role",
+                "children": {
+                  "Resource": {
+                    "id": "Resource",
+                    "path": "WfdmClamavStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource",
+                    "attributes": {
+                      "aws:cdk:cloudformation:type": "AWS::IAM::Role",
+                      "aws:cdk:cloudformation:props": {
+                        "assumeRolePolicyDocument": {
+                          "Statement": [
+                            {
+                              "Action": "sts:AssumeRole",
+                              "Effect": "Allow",
+                              "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                              }
+                            }
+                          ],
+                          "Version": "2012-10-17"
+                        },
+                        "managedPolicyArns": [
+                          {
+                            "Fn::Join": [
+                              "",
+                              [
+                                "arn:",
+                                {
+                                  "Ref": "AWS::Partition"
+                                },
+                                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.CfnRole",
+                      "version": "2.12.0"
+                    }
+                  },
+                  "DefaultPolicy": {
+                    "id": "DefaultPolicy",
+                    "path": "WfdmClamavStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy",
+                    "children": {
+                      "Resource": {
+                        "id": "Resource",
+                        "path": "WfdmClamavStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource",
+                        "attributes": {
+                          "aws:cdk:cloudformation:type": "AWS::IAM::Policy",
+                          "aws:cdk:cloudformation:props": {
+                            "policyDocument": {
+                              "Statement": [
+                                {
+                                  "Action": "s3:PutBucketNotification",
+                                  "Effect": "Allow",
+                                  "Resource": "*"
+                                }
+                              ],
+                              "Version": "2012-10-17"
+                            },
+                            "policyName": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+                            "roles": [
+                              {
+                                "Ref": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+                              }
+                            ]
+                          }
+                        },
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_iam.CfnPolicy",
+                          "version": "2.12.0"
+                        }
+                      }
+                    },
+                    "constructInfo": {
+                      "fqn": "aws-cdk-lib.aws_iam.Policy",
+                      "version": "2.12.0"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_iam.Role",
+                  "version": "2.12.0"
+                }
+              },
+              "Resource": {
+                "id": "Resource",
+                "path": "WfdmClamavStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.12.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.0.57"
+            }
+          },
+          "oBucketName": {
+            "id": "oBucketName",
+            "path": "WfdmClamavStack/oBucketName",
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.CfnOutput",
+              "version": "2.12.0"
+            }
+          },
+          "CDKMetadata": {
+            "id": "CDKMetadata",
+            "path": "WfdmClamavStack/CDKMetadata",
+            "children": {
+              "Default": {
+                "id": "Default",
+                "path": "WfdmClamavStack/CDKMetadata/Default",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnResource",
+                  "version": "2.12.0"
+                }
+              },
+              "Condition": {
+                "id": "Condition",
+                "path": "WfdmClamavStack/CDKMetadata/Condition",
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.CfnCondition",
+                  "version": "2.12.0"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "constructs.Construct",
+              "version": "10.0.57"
+            }
+          }
+        },
+        "constructInfo": {
+          "fqn": "aws-cdk-lib.Stack",
+          "version": "2.12.0"
+        }
+      }
+    },
+    "constructInfo": {
+      "fqn": "aws-cdk-lib.App",
+      "version": "2.12.0"
+    }
+  }
+}
