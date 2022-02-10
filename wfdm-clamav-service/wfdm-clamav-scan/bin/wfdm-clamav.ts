@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
-import { App } from '@aws-cdk/core';
+import { App } from 'aws-cdk-lib';
 import { WfdmClamavStack } from '../lib/wfdm-clamav-stack';
 
 const app = new App();
