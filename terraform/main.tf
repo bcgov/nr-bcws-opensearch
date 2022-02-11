@@ -397,7 +397,7 @@ resource "aws_sqs_queue" "queue" {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.opensearch_sqs_role.name}",
           "${data.aws_caller_identity.current.account_id}"
         ]
       },

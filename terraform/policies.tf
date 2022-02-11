@@ -95,15 +95,13 @@ resource "aws_iam_policy" "sqs-lambda-permission" {
 }
 
 resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
-  depends_on = [
-    aws_sqs_queue.queue
-  ]
   name   = "${var.application}-sqs-send-message-${var.env}"
   policy = <<EOF
-  {
+{
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
                 "sqs:DeleteMessage",
@@ -121,9 +119,10 @@ resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
                 "sqs:CreateQueue",
                 "sqs:SetQueueAttributes"
             ],
-            "Resource": "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${var.application}-sqs-queue-${var.env}"
+            "Resource": "${aws_sqs_queue.queue.arn}"
         },
         {
+            "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": "sqs:ListQueues",
             "Resource": "*"
