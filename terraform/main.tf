@@ -805,6 +805,10 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   node_to_node_encryption {
     enabled = true
   }
+  encrypt_at_rest {
+    enabled = true
+  }
+
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
     dedicated_master_enabled = var.master_node_usage
