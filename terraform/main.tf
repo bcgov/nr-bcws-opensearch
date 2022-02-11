@@ -381,38 +381,21 @@ resource "aws_sqs_queue" "queue" {
 
   policy = <<POLICY
 {
-  
   "Version": "2012-10-17",
   "Id": "Policy1640124887139",
   "Statement": [
     {
+      "Sid": "Stmt1640121864964",
       "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::460053263286:root"
-      },
-      "Action": "sqs:*",
-      "Resource": "arn:aws:sqs::*:*:${var.application}-sqs-queue-${var.env}"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": [
-          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.opensearch_sqs_role.name}",
-          "${data.aws_caller_identity.current.account_id}"
-        ]
-      },
+      "Principal": "*",
       "Action": [
         "sqs:ListDeadLetterSourceQueues",
         "sqs:ListQueueTags",
         "sqs:ListQueues",
         "sqs:ReceiveMessage",
-        "sqs:SendMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:DeleteMessage"
-
-
+        "sqs:SendMessage"
       ],
-      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
+      "Resource": "arn:aws:sqs:*:460053263286:${var.application}-sqs-queue-${var.env}"
     }
   ]
 }
