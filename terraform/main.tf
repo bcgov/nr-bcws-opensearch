@@ -325,7 +325,10 @@ resource "aws_iam_role" "opensearch_sqs_role" {
      {
        "Action": "sts:AssumeRole",
         "Principal": {
-          "Service": "opensearch.amazonaws.com"
+          "Service": [
+            "opensearch.amazonaws.com",
+            "elasticsearch.amazonaws.com"
+          ]
         },
         "Effect": "Allow",
         "Sid": ""
@@ -878,16 +881,38 @@ data "aws_route53_zone" "main_route53_zone" {
 resource "aws_iam_role" "api_gateway_integration_role" {
   name        = "${var.application}-sqs-api-gateway-role-${var.env}"
   description = "Role used for POST from api gateway to sqs queue"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "api-gateway.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
+  name        = "${var.application}-sqs-api-attachment-${var.env}"
   roles      = [aws_iam_role.api_gateway_integration_role]
   policy_arn = aws_iam_policy.wfdm-send-sqs-message-from-api.arn
 }
 
 resource "aws_iam_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
+  name        = "${var.application}-sqs-api-cloudwatch-push-attachment-${var.env}"
   roles      = [aws_iam_role.api_gateway_integration_role]
-  policy_arn = aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
+  policy_arn = data.aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
 }
 
 
@@ -937,7 +962,7 @@ resource "aws_api_gateway_integration" "api" {
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
   type                    = "AWS"
   integration_http_method = "POST"
-  credentials             = "arn:aws:iam::\*:user/\*"
+  credentials             = "arn:aws:iam::*:user/*"
   uri = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
 
   request_parameters = {
