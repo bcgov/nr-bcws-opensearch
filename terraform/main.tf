@@ -798,9 +798,9 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     custom_endpoint                 = "${var.opensearchDomainName}.${var.domain}"
     custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
     custom_endpoint_enabled         = true
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
   }
-
-
   elasticsearch_version = var.ElasticSearch_Version
 
   cluster_config {
