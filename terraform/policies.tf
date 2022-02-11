@@ -121,7 +121,7 @@ resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
                 "sqs:CreateQueue",
                 "sqs:SetQueueAttributes"
             ],
-            "Resource": "${aws_sqs_queue.queue.arn}"
+            "Resource": "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${var.application}-sqs-queue-${var.env}"
         },
         {
             "Effect": "Allow",
@@ -176,7 +176,7 @@ resource "aws_iam_policy" "sqs-iam-policy" {
           "sqs:CreateQueue",
           "sqs:SetQueueAttributes"
       ],
-      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
+      "Resource": "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:${var.application}-sqs-queue-${var.env}"
   },
   {
       "Sid": "VisualEditor1",
