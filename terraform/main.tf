@@ -903,15 +903,13 @@ resource "aws_iam_role" "api_gateway_integration_role" {
 EOF
 }
 
-resource "aws_iam_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
-  name        = "${var.application}-sqs-api-attachment-${var.env}"
-  roles      = [aws_iam_role.api_gateway_integration_role]
+resource "aws_iam_role_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
+  role      = aws_iam_role.api_gateway_integration_role.name
   policy_arn = aws_iam_policy.wfdm-send-sqs-message-from-api.arn
 }
 
-resource "aws_iam_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
-  name        = "${var.application}-sqs-api-cloudwatch-push-attachment-${var.env}"
-  roles      = [aws_iam_role.api_gateway_integration_role]
+resource "aws_iam_role_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
+  role     = aws_iam_role.api_gateway_integration_role.name
   policy_arn = data.aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
 }
 
