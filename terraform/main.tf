@@ -1024,7 +1024,7 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
 }
 
 resource "aws_api_gateway_base_path_mapping" "api_gateway_base_path_mapping" {
-  api_id      = aws_api_gateway_integration.api.id
+  api_id      = aws_api_gateway_rest_api.sqs-api-gateway.id
   stage_name  = aws_api_gateway_deployment.sqs-api-gateway-deployment.stage_name
   domain_name = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
 }
