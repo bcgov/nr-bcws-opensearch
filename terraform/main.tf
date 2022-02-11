@@ -325,7 +325,10 @@ resource "aws_iam_role" "opensearch_sqs_role" {
      {
        "Action": "sts:AssumeRole",
         "Principal": {
-          "Service": "opensearch.amazonaws.com"
+          "Service": [
+            "opensearch.amazonaws.com",
+            "apigateway.amazonaws.com"
+          ]
         },
         "Effect": "Allow",
         "Sid": ""
@@ -873,7 +876,7 @@ resource "aws_iam_role" "api_gateway_integration_role" {
      {
        "Action": "sts:AssumeRole",
         "Principal": {
-          "Service": "ops.apigateway.amazonaws.com"
+          "Service": "apigateway.amazonaws.com"
         },
         "Effect": "Allow",
         "Sid": ""
@@ -908,12 +911,6 @@ resource "aws_api_gateway_domain_name" "gateway_custom_domain" {
 
 }
 
-resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
-  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
-  path_part   = "{proxy+}"
-}
-
 resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
   name                        = "queryValidator"
   rest_api_id                 = aws_api_gateway_rest_api.sqs-api-gateway.id
@@ -923,20 +920,19 @@ resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
 
 resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id   = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method   = "POST"
   authorization = "NONE"
 
   request_parameters = {
     "method.request.path.proxy" = false
   }
-  request_validator_id = aws_api_gateway_request_validator.sqs-api-gateway-validator.id
 }
 
 
 resource "aws_api_gateway_integration" "api" {
   rest_api_id             = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id             = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id             = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
   credentials             = aws_iam_role.api_gateway_integration_role.arn
   type                    = "AWS"
@@ -973,14 +969,14 @@ EOF
 
 resource "aws_api_gateway_method_response" "http200" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method = aws_api_gateway_method.sqs-gateway-post-method.http_method
   status_code = 200
 }
 
 resource "aws_api_gateway_integration_response" "http200" {
   rest_api_id       = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id       = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id       = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method       = aws_api_gateway_method.sqs-gateway-post-method.http_method
   status_code       = aws_api_gateway_method_response.http200.status_code
   selection_pattern = "^2[0-9][0-9]" // regex pattern for any 200 message that comes back from SQS
