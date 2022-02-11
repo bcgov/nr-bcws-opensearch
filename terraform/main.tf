@@ -325,10 +325,7 @@ resource "aws_iam_role" "opensearch_sqs_role" {
      {
        "Action": "sts:AssumeRole",
         "Principal": {
-          "Service": [
-            "opensearch.amazonaws.com",
-            "elasticsearch.amazonaws.com"
-          ]
+          "Service": "opensearch.amazonaws.com"
         },
         "Effect": "Allow",
         "Sid": ""
@@ -893,7 +890,7 @@ resource "aws_iam_role" "api_gateway_integration_role" {
      {
        "Action": "sts:AssumeRole",
         "Principal": {
-          "Service": "api-gateway.amazonaws.com"
+          "Service": "ops.apigateway.amazonaws.com"
         },
         "Effect": "Allow",
         "Sid": ""
