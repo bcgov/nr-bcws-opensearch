@@ -667,12 +667,12 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime = "java8"
   layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  
+
   vpc_config {
-    subnet_ids = [data.aws_subnet.private_subnet.id]
+    subnet_ids         = [data.aws_subnet.private_subnet.id]
     security_group_ids = [data.aws_security_group.es.id]
   }
-  
+
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
     Application = var.application
@@ -798,13 +798,25 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     custom_endpoint                 = "${var.opensearchDomainName}.${var.domain}"
     custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
     custom_endpoint_enabled         = true
-    enforce_https = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    enforce_https                   = true
+    tls_security_policy             = "Policy-Min-TLS-1-2-2019-07"
   }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "opensearch-${var.env}"
+      master_user_password = var.opensearch_password
+    }
+  }
+
   elasticsearch_version = var.ElasticSearch_Version
+
   node_to_node_encryption {
     enabled = true
   }
+
   encrypt_at_rest {
     enabled = true
   }
@@ -831,14 +843,6 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     security_group_ids = [data.aws_security_group.es.id]
   }
 
-  advanced_security_options {
-    enabled = true
-    internal_user_database_enabled = true
-    master_user_options {
-      master_user_name = "opensearch-${var.env}"
-      master_user_password = var.opensearch_password
-    }
-  }
   advanced_options = {
     "rest.action.multi.allow_explicit_index" = "true"
   }
@@ -930,12 +934,12 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
-  role      = aws_iam_role.api_gateway_integration_role.name
+  role       = aws_iam_role.api_gateway_integration_role.name
   policy_arn = aws_iam_policy.wfdm-send-sqs-message-from-api.arn
 }
 
 resource "aws_iam_role_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
-  role     = aws_iam_role.api_gateway_integration_role.name
+  role       = aws_iam_role.api_gateway_integration_role.name
   policy_arn = data.aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
 }
 
@@ -980,7 +984,7 @@ resource "aws_api_gateway_integration" "api" {
   credentials             = aws_iam_role.api_gateway_integration_role.arn
   type                    = "AWS"
   integration_http_method = "ANY"
-  uri = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
+  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"

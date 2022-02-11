@@ -36,9 +36,9 @@ variable "region" {
 }
 
 variable "accountNum" {
-  type = string
+  type        = string
   description = "account number of AWS account running script"
-  default = null
+  default     = null
 }
 
 variable "custom_endpoint_url" {
@@ -107,32 +107,32 @@ variable "visibilityTimeoutSeconds" {
 
 #VPC-RELATED VARIABLES
 variable "vpc_id" {
-  type = string
+  type        = string
   description = "ID of existing VPC to be used"
-  default = null
+  default     = null
 }
 
 variable "public_subnet_id" {
-  type = string
+  type        = string
   description = "id of existing public subnet to be used"
-  default = null
+  default     = null
 }
 
 variable "private_subnet_id" {
-  type = string
+  type        = string
   description = "id of existing private subnet to be used"
-  default = null
+  default     = null
 }
 
 variable "internet_gateway_id" {
-  type = string
+  type        = string
   description = "ID of existing internet gateway to use"
-  default = null
+  default     = null
 }
 
 variable "security_group_id" {
-  type = string
-  default = null
+  type        = string
+  default     = null
   description = "id of existing security group to use"
 }
 
@@ -238,8 +238,8 @@ variable "ultrawarm_node_instance_type" {
 }
 
 variable "opensearch_password" {
-  type = string
-  default = null
+  type        = string
+  default     = null
   description = "The opensearch password. Received as a secret from github"
 }
 
