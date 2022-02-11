@@ -14,6 +14,7 @@ resource "aws_iam_policy" "clamav-s3-permission" {
   EOF
 }
 
+
 resource "aws_iam_policy" "elasticsearch-access" {
   name   = "${var.application}-es-permission-${var.env}"
   policy = <<EOF
@@ -94,6 +95,9 @@ resource "aws_iam_policy" "sqs-lambda-permission" {
 }
 
 resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
+  depends_on = [
+    aws_sqs_queue.queue
+  ]
   name   = "${var.application}-sqs-send-message-${var.env}"
   policy = <<EOF
   {
