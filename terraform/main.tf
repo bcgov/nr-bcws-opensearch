@@ -957,7 +957,6 @@ resource "aws_api_gateway_integration" "api" {
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
   type                    = "AWS"
   integration_http_method = "POST"
-  credentials             = "arn:aws:iam::*:user/*"
   uri = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
 
   request_parameters = {
