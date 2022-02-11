@@ -131,6 +131,7 @@ resource "aws_route_table_association" "public_association" {
 
 # Creating IAM role so that Lambda service to assume the role and access other  AWS services. 
 
+//MAIN ROLE USED BY OPENSEARCH-INDEXING-FUNCTION
 resource "aws_iam_role" "lambda_role" {
   name = "${var.application}-iam_role_lambda_index_searching-${var.env}"
   tags = {
@@ -154,6 +155,166 @@ resource "aws_iam_role" "lambda_role" {
 }
 EOF
 }
+
+# Policy Attachment on the roles.
+
+                                         //policy_attach_lambda_logging
+resource "aws_iam_role_policy_attachment" "policy_attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+                                         //policy_attach_s3_full_access
+resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_vpc_execution" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_es_write" {
+  role = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.elasticsearch-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_secret_manager" {
+  role = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.secretsmanager-readwrite.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_sqs_for_lambda" {
+  role = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.sqs-lambda-permission.arn
+}
+
+//ROLE USED BY OPENSEARCH-INDEXING-INITIALIZER
+resource "aws_iam_role" "lambda_initializer_role" {
+  name = "${var.application}-iam_role_lambda_index_initializer-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_logging" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_sns_publish" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.sns-publish.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_secret_manager" {
+  role = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.secretsmanager-readwrite.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_sqs" {
+  role = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.sqs-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_s3" {
+  role = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_vpc_execution" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_full" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.lambda-full-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_es" {
+  role = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.elasticsearch-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_sqs" {
+  role = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.sqs-full-access-policy.arn
+}
+
+
+//ROLE USED BY CLAMAV LAMBDA FUNCTION
+resource "aws_iam_role" "lambda_clamav_role" {
+  name = "${var.application}-iam_role_lambda_clamav-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_clamav_s3" {
+  role = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_logging" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_sns_publish" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.sns-publish.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_clamav_secret_manager" {
+  role = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.secretsmanager-readwrite.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_full" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.lambda-full-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_clamav_sqs" {
+  role = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.sqs-full-access-policy.arn
+}
+
 
 resource "aws_iam_role" "opensearch_sqs_role" {
   name = "${var.application}-iam-role-opensearch-sqs-${var.env}"
@@ -184,24 +345,6 @@ EOF
 resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
   role       = aws_iam_role.opensearch_sqs_role.name
   policy_arn = aws_iam_policy.sqs-iam-policy.arn
-}
-
-
-
-
-
-
-
-# Policy Attachment on the role.
-
-resource "aws_iam_role_policy_attachment" "policy_attach" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
-}
-
-resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_role_sqs_policy.arn
 }
 
 
@@ -544,7 +687,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   function_name    = "${var.application}-indexing-initializer-${var.env}"
   s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key = var.lambda_initializer_filename
-  role             = aws_iam_role.lambda_role.arn
+  role             = aws_iam_role.lambda_initializer_role.arn
   handler = var.indexing_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime          = "java8"
@@ -572,7 +715,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   function_name = "${var.application}-clamav-handler-${var.env}"
   s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key = var.lambda_clamav_filename
-  role = aws_iam_role.lambda_role.arn
+  role = aws_iam_role.lambda_clamav_role.arn
   handler = var.clamav_function_handler
   runtime = "java8"
   tags = {
@@ -863,6 +1006,11 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   }
 }
 
+resource "aws_api_gateway_base_bath_mapping" "api_gateway_base_path_mapping" {
+  api_id = aws_api_gateway_rest_api.api.id
+  stage_name = aws_api_gateway_deployment.sqs-api-gateway-deployment.stage_name
+  domain_name = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
+}
 
 resource "aws_route53_record" "sqs-invoke-api-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id

@@ -4,7 +4,7 @@ import { App } from 'aws-cdk-lib';
 import { WfdmClamavStack } from '../lib/wfdm-clamav-stack';
 
 const app = new App();
-new WfdmClamavStack(app, 'WfdmClamavStack', {
+new WfdmClamavStack(app, 'WfdmClamavStackInt', 'int', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

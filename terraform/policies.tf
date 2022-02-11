@@ -1,47 +1,164 @@
-resource "aws_iam_policy" "lambda_role_sqs_policy" {
-  name   = "${var.application}-all-sqs-role-policy-${var.env}"
+resource "aws_iam_policy" "clamav-s3-permission" {
+  name = "${var.application}-clamav-s3-permission-${var.env}"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "*"
+        }
+    ]
+}
+  POLICY
+}
+
+resource "aws_iam_policy" "elasticsearch-access" {
+  name = "${var.application}-es-permission-${var.env}"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "es:*",
+            "Resource": "*"
+        }
+    ]
+}
+  POLICY
+}
+
+resource "aws_iam_policy" "lambda_logging" {
+  name        = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
+  path        = "/"
+  description = "IAM policy for logging from a lambda"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
   policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Action": [
-        "sqs:*"
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
       ],
-      "Effect": "Allow",
-      "Resource": "*"
-    },
-    {
-      "Action": [
-        "opensearch:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "EC2:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "secretsmanager:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
+      "Resource": "arn:aws:logs:*:*:*",
+      "Effect": "Allow"
     }
   ]
 }
 EOF
+}
+
+resource "aws_iam_policy" "sns-publish" {
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "sns:DeleteTopic",
+                "sns:ListTopics",
+                "sns:Unsubscribe",
+                "sns:CreatePlatformEndpoint",
+                "sns:SetTopicAttributes",
+                "sns:OptInPhoneNumber",
+                "sns:CheckIfPhoneNumberIsOptedOut",
+                "sns:ListEndpointsByPlatformApplication",
+                "sns:SetEndpointAttributes",
+                "sns:Publish",
+                "sns:DeletePlatformApplication",
+                "sns:SetPlatformApplicationAttributes",
+                "sns:VerifySMSSandboxPhoneNumber",
+                "sns:Subscribe",
+                "sns:ConfirmSubscription",
+                "sns:ListTagsForResource",
+                "sns:DeleteSMSSandboxPhoneNumber",
+                "sns:ListSubscriptionsByTopic",
+                "sns:GetTopicAttributes",
+                "sns:ListSMSSandboxPhoneNumbers",
+                "sns:CreatePlatformApplication",
+                "sns:SetSMSAttributes",
+                "sns:CreateTopic",
+                "sns:GetPlatformApplicationAttributes",
+                "sns:GetSubscriptionAttributes",
+                "sns:ListSubscriptions",
+                "sns:ListOriginationNumbers",
+                "sns:DeleteEndpoint",
+                "sns:ListPhoneNumbersOptedOut",
+                "sns:GetEndpointAttributes",
+                "sns:SetSubscriptionAttributes",
+                "sns:GetSMSSandboxAccountStatus",
+                "sns:CreateSMSSandboxPhoneNumber",
+                "sns:ListPlatformApplications",
+                "sns:GetSMSAttributes"
+            ],
+            "Resource": "*"
+        }
+    ]
+  }
+}
+
+resource "aws_iam_policy" "sqs-lambda-permission" {
+  name = "${var.application}-sqs-lambda-permission-${var.env}"
+  policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "sqs:*",
+            "Resource": "*"
+        }
+    ]
+}
+  POLICY
+}
+
+resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
+  name = "${var.application}-sqs-send-message-${var.env}"
+  policy = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:DeleteMessage",
+                "sqs:GetQueueUrl",
+                "sqs:ChangeMessageVisibility",
+                "sqs:UntagQueue",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:ListQueueTags",
+                "sqs:TagQueue",
+                "sqs:ListDeadLetterSourceQueues",
+                "sqs:PurgeQueue",
+                "sqs:DeleteQueue",
+                "sqs:CreateQueue",
+                "sqs:SetQueueAttributes"
+            ],
+            "Resource": "${aws_sqs_queue.queue.arn}"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "sqs:ListQueues",
+            "Resource": "*"
+        }
+    ]
+}
+  POLICY
 }
 
 resource "aws_iam_policy" "sqs-iam-policy" {
@@ -103,77 +220,37 @@ EOF
 
 # IAM policy for logging from a lambda
 
-resource "aws_iam_policy" "lambda_logging" {
-  name        = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
-  path        = "/"
-  description = "IAM policy for logging from a lambda"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
 
-resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
-  name = "${var.application}-sqs-send-message-${var.env}"
-  policy = <<POLICY
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "sqs:DeleteMessage",
-                "sqs:GetQueueUrl",
-                "sqs:ChangeMessageVisibility",
-                "sqs:UntagQueue",
-                "sqs:ReceiveMessage",
-                "sqs:SendMessage",
-                "sqs:GetQueueAttributes",
-                "sqs:ListQueueTags",
-                "sqs:TagQueue",
-                "sqs:ListDeadLetterSourceQueues",
-                "sqs:PurgeQueue",
-                "sqs:DeleteQueue",
-                "sqs:CreateQueue",
-                "sqs:SetQueueAttributes"
-            ],
-            "Resource": "${aws_sqs_queue.queue.arn}"
-        },
-        {
-            "Effect": "Allow",
-            "Action": "sqs:ListQueues",
-            "Resource": "*"
-        }
-    ]
-}
-  POLICY
-}
 
 data "aws_iam_policy" "api-gateway-push-to-cloudwatch-policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+data "aws_iam_policy" "lambda-execution" {
+  arn = "arn:aws:iam::aws:policy/AWSLambdaExecute"
+}
+
+data "aws_iam_policy" "lambda-full-access" {
+  arn = "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+}
+
+data "aws_iam_policy" "lambda-role" {
+  arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaRole"
+}
+
+data "aws_iam_policy" "lambda-vpc-access-execution" {
+    arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
 data "aws_iam_policy" "s3-full-access-policy" {
     arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-data "aws_iam_policy" "lambda-vpc-access-execution-role" {
-    arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+data "aws_iam_policy" "sqs-full-access-policy" {
+  arn = "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
 }
+
+data "aws_iam_policy" "secretsmanager-readwrite" {
+  arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+}
+

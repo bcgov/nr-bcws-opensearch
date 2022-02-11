@@ -7,16 +7,16 @@ import {
 } from 'aws-cdk-lib/aws-lambda-destinations'
 
 export class WfdmClamavStack extends Stack {
-  constructor(scope: App, id: string, props?: StackProps) {
+  constructor(scope: App, id: string, env?: string, props?: StackProps) {
     super(scope, id, props)
 
-    const queue = new Queue(this, 'wfdmClamscanQueue')
-    const sc = new ServerlessClamscan(this, 'wfdmClamscan', {
+    const queue = new Queue(this, 'wfdmClamscanQueue'+env)
+    const sc = new ServerlessClamscan(this, 'wfdmClamscan'+env, {
       onResult: new SqsDestination(queue),
       onError: new SqsDestination(queue),
     })
 
-    const bucket = new Bucket(this, 'wfdm-clamav-bucket', {
+    const bucket = new Bucket(this, 'wfdm-clamav-bucket'+ ((env) ? "-"+env : ""), {
       autoDeleteObjects: true, 
       removalPolicy: RemovalPolicy.DESTROY
     })
