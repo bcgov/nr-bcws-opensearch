@@ -35,6 +35,12 @@ variable "region" {
   default     = "ca-central-1"
 }
 
+variable "accountNum" {
+  type = string
+  description = "account number of AWS account running script"
+  default = null
+}
+
 variable "custom_endpoint_url" {
   type        = string
   description = "URL matching custom endpoint cert"
@@ -100,15 +106,45 @@ variable "visibilityTimeoutSeconds" {
 }
 
 #VPC-RELATED VARIABLES
+variable "vpc_id" {
+  type = string
+  description = "ID of existing VPC to be used"
+  default = null
+}
+
+variable "public_subnet_id" {
+  type = string
+  description = "id of existing public subnet to be used"
+  default = null
+}
+
+variable "private_subnet_id" {
+  type = string
+  description = "id of existing private subnet to be used"
+  default = null
+}
+
+variable "internet_gateway_id" {
+  type = string
+  description = "ID of existing internet gateway to use"
+  default = null
+}
+
+variable "security_group_id" {
+  type = string
+  default = null
+  description = "id of existing security group to use"
+}
+
 variable "vpc_cidr_block" {
   type        = string
-  description = "CIDR block to be used by vpc"
+  description = "CIDR block to be used when creating vpc"
   default     = "10.0.0.0/16"
 }
 
 variable "public_subnet_block" {
   type        = string
-  description = "CIDR block of public subnet"
+  description = "CIDR block used when creating public subnet"
   default     = "10.0.0.0/24"
 }
 
@@ -199,6 +235,12 @@ variable "ultrawarm_node_instance_count" {
 variable "ultrawarm_node_instance_type" {
   type    = string
   default = "ultrawarm1.medium.elasticsearch"
+}
+
+variable "opensearch_password" {
+  type = string
+  default = null
+  description = "The opensearch password. Received as a secret from github"
 }
 
 /*

@@ -8,6 +8,31 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
+
+data "aws_vpc" "main_vpc" {
+  id = var.vpc_id
+}
+
+data "aws_subnet" "public_subnet" {
+  id = var.public_subnet_id
+}
+
+data "aws_subnet" "private_subnet" {
+  id = var.private_subnet_id
+}
+
+data "aws_internet_gateway" "main_internet_gateway" {
+  internet_gateway_id = var.internet_gateway_id
+}
+
+data "aws_security_group" "es" {
+  id = var.security_group_id
+}
+
+
+/* The following creates a new VPC with its own subnets.
+   Use it if you cannot use the existing VPC
+ 
 //CREATE THE VPC AND SUBNETS
 //Main VPC
 resource "aws_vpc" "main_vpc" {
@@ -128,6 +153,12 @@ resource "aws_route_table_association" "public_association" {
   subnet_id      = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.public_route_table.id
 }
+
+*/
+
+
+
+
 
 # Creating IAM role so that Lambda service to assume the role and access other  AWS services. 
 
@@ -636,12 +667,12 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime = "java8"
   layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  /*
+  
   vpc_config {
-    subnet_ids = [aws_subnet.private_subnet.id]
-    security_group_ids = [aws_vpc.main_vpc.default_security_group_id]
+    subnet_ids = [data.aws_subnet.private_subnet.id]
+    security_group_ids = [data.aws_security_group.es.id]
   }
-  */
+  
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
     Application = var.application
@@ -732,7 +763,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_security_group" "es" {
   name        = "${var.application_lowercase}-elasticsearch-security-group-${var.env}"
   description = "Managed by Terraform"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = data.aws_vpc.main_vpc.id
 
   ingress {
     from_port = 443
@@ -787,15 +818,21 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     volume_size = var.ebs_volume_size
   }
 
-  /*
   vpc_options {
     subnet_ids = [
-      aws_subnet.public_subnet.id
+      data.aws_subnet.public_subnet.id
     ]
-    security_group_ids = [aws_security_group.es.id]
+    security_group_ids = [data.aws_security_group.es.id]
   }
-*/
 
+  advanced_security_options {
+    enabled = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name = "opensearch-${var.env}"
+      master_user_password = var.opensearch_password
+    }
+  }
   advanced_options = {
     "rest.action.multi.allow_explicit_index" = "true"
   }
@@ -921,7 +958,7 @@ resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
 resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
-  http_method   = "POST"
+  http_method   = "ANY"
   authorization = "NONE"
 
   request_parameters = {
@@ -936,7 +973,7 @@ resource "aws_api_gateway_integration" "api" {
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
   credentials             = aws_iam_role.api_gateway_integration_role.arn
   type                    = "AWS"
-  integration_http_method = "POST"
+  integration_http_method = "ANY"
   uri = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
 
   request_parameters = {
