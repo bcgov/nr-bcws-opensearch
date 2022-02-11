@@ -6,9 +6,9 @@ variable "application" {
 }
 
 variable "application_lowercase" {
-  type = string
+  type        = string
   description = "application name in lowercase"
-  default = "wfdm"
+  default     = "wfdm"
 }
 
 variable "customer" {
@@ -48,15 +48,15 @@ variable "env" {
 }
 
 variable "env_lowercase" {
-  type = string
+  type        = string
   description = "env in lowercase"
-  default = null
+  default     = null
 }
 
 variable "env_full" {
-  type = string
+  type        = string
   description = "full name of environment (i.e. INTEGRATION)"
-  default = null
+  default     = null
 }
 
 variable "pr" {
@@ -80,9 +80,9 @@ variable "s3BucketName" {
 }
 
 variable "clamAVBucketName" {
-  type = string
+  type        = string
   description = "name of clamAV specific s3 bucket"
-  default = null
+  default     = null
 }
 
 #SQS-specific variables
@@ -211,9 +211,9 @@ variable "ultrawarm_node_volume_size" {
 #LAMBDA-RELATED VARIABLES
 
 variable "document_token_url" {
-  type = string
+  type        = string
   description = "govt-side token url"
-  default = null
+  default     = null
 }
 
 variable "lambda_function_handler" {
@@ -222,12 +222,12 @@ variable "lambda_function_handler" {
 }
 
 variable "indexing_function_handler" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "clamav_function_handler" {
-  type = string
+  type    = string
   default = null
 }
 
@@ -237,12 +237,12 @@ variable "lambda_payload_filename" {
 }
 
 variable "lambda_initializer_filename" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "lambda_clamav_filename" {
-  type = string
+  type    = string
   default = null
 }
 
@@ -267,27 +267,27 @@ variable "main_route53_zone" {
 }
 
 variable "document_api_url" {
-  type = string
+  type        = string
   description = "url of govt-side API"
-  default = null
+  default     = null
 }
 
 variable "document_index_account_name" {
-  type = string
+  type    = string
   default = "WFDM_DOCUMENTS_INDEX"
 }
 
 variable "documents_index_password" {
-  type = string
+  type    = string
   default = "Password"
 }
 
 variable "secret_manager" {
-  type = string
+  type    = string
   default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
 }
 
 variable "virus_alert" {
-  type = string
+  type    = string
   default = "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION"
 }

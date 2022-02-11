@@ -158,34 +158,34 @@ EOF
 
 # Policy Attachment on the roles.
 
-                                         //policy_attach_lambda_logging
+//policy_attach_lambda_logging
 resource "aws_iam_role_policy_attachment" "policy_attach" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
-                                         //policy_attach_s3_full_access
+//policy_attach_s3_full_access
 resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_vpc_execution" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_es_write" {
-  role = aws_iam_role.lambda_role.name
+  role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.elasticsearch-access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_secret_manager" {
-  role = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.secretsmanager-readwrite.arn
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.secretsmanager-readwrite.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_sqs_for_lambda" {
-  role = aws_iam_role.lambda_role.name
+  role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.sqs-lambda-permission.arn
 }
 
@@ -225,38 +225,33 @@ resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_sns_
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_initializer_secret_manager" {
-  role = aws_iam_role.lambda_initializer_role.name
-  policy_arn = aws_iam_policy.secretsmanager-readwrite.arn
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.secretsmanager-readwrite.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_initializer_sqs" {
-  role = aws_iam_role.lambda_initializer_role.name
-  policy_arn = aws_iam_policy.sqs-full-access-policy.arn
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_initializer_s3" {
-  role = aws_iam_role.lambda_initializer_role.name
-  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_vpc_execution" {
   role       = aws_iam_role.lambda_initializer_role.name
-  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_full" {
   role       = aws_iam_role.lambda_initializer_role.name
-  policy_arn = aws_iam_policy.lambda-full-access.arn
+  policy_arn = data.aws_iam_policy.lambda-full-access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_initializer_es" {
-  role = aws_iam_role.lambda_initializer_role.name
+  role       = aws_iam_role.lambda_initializer_role.name
   policy_arn = aws_iam_policy.elasticsearch-access.arn
-}
-
-resource "aws_iam_role_policy_attachment" "policy_attach_initializer_sqs" {
-  role = aws_iam_role.lambda_initializer_role.name
-  policy_arn = aws_iam_policy.sqs-full-access-policy.arn
 }
 
 
@@ -286,8 +281,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_clamav_s3" {
-  role = aws_iam_role.lambda_clamav_role.name
-  policy_arn = aws_iam_policy.s3-full-access-policy.arn
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_logging" {
@@ -301,18 +296,18 @@ resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_sns_publi
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_clamav_secret_manager" {
-  role = aws_iam_role.lambda_clamav_role.name
-  policy_arn = aws_iam_policy.secretsmanager-readwrite.arn
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.secretsmanager-readwrite.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_full" {
   role       = aws_iam_role.lambda_clamav_role.name
-  policy_arn = aws_iam_policy.lambda-full-access.arn
+  policy_arn = data.aws_iam_policy.lambda-full-access.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_clamav_sqs" {
-  role = aws_iam_role.lambda_clamav_role.name
-  policy_arn = aws_iam_policy.sqs-full-access-policy.arn
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
 }
 
 
@@ -353,8 +348,8 @@ resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
 
 resource "aws_sqs_queue" "deadletter" {
   name = "${var.application}-sqs-deadletter-${var.env}"
-  
-    tags = {
+
+  tags = {
     Application = var.application
     Customer    = var.customer
     Environment = var.env
@@ -362,11 +357,11 @@ resource "aws_sqs_queue" "deadletter" {
 }
 
 resource "aws_sqs_queue" "queue" {
-  depends_on = [aws_iam_role.opensearch_sqs_role]
+  depends_on                 = [aws_iam_role.opensearch_sqs_role]
   visibility_timeout_seconds = var.visibilityTimeoutSeconds
-  name       = "${var.application}-sqs-queue-${var.env}"
-  
-  
+  name                       = "${var.application}-sqs-queue-${var.env}"
+
+
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.deadletter.arn
@@ -440,7 +435,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 #Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
-  bucket = "${var.s3BucketName}"
+  bucket = var.s3BucketName
   acl    = "private"
   tags = {
     Application = var.application
@@ -450,8 +445,8 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
 }
 
 resource "aws_s3_bucket" "clamav-bucket" {
-  bucket = "${var.clamAVBucketName}"
-  acl = "private"
+  bucket = var.clamAVBucketName
+  acl    = "private"
   tags = {
     Application = var.application
     Customer    = var.customer
@@ -623,12 +618,12 @@ resource "aws_s3_bucket_object" "java_zip" {
 
 data "aws_s3_bucket_object" "java_zip" {
   bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  key = var.layer_file_name
+  key    = var.layer_file_name
 }
 
 data "aws_s3_bucket_object" "s3_lambda_payload_object" {
   bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  key = var.lambda_payload_filename
+  key    = var.lambda_payload_filename
 }
 
 
@@ -647,14 +642,14 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 
 #Lambda Function Handler
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
-  function_name    = "${var.application}-indexing-function-${var.env}"
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key = var.lambda_payload_filename
-  role             = aws_iam_role.lambda_role.arn
-  handler          = var.lambda_function_handler
+  function_name = "${var.application}-indexing-function-${var.env}"
+  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_payload_filename
+  role          = aws_iam_role.lambda_role.arn
+  handler       = var.lambda_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  runtime = "java8"
+  layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   /*
   vpc_config {
     subnet_ids = [aws_subnet.private_subnet.id]
@@ -669,29 +664,29 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   }
   environment {
     variables = {
-      ENVIRONMENT = "${var.env_full}"
-      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.bucket
-      WFDM_DOCUMENT_INDEX_ACCOUNT_NAME = var.document_index_account_name
-      WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD = var.documents_index_password
+      ENVIRONMENT                              = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL                    = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET            = aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_INDEX_ACCOUNT_NAME         = var.document_index_account_name
+      WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD     = var.documents_index_password
       WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
-      WFDM_DOCUMENT_OPENSEARCH_INDEXNAME = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
-      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
-      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
+      WFDM_DOCUMENT_OPENSEARCH_INDEXNAME       = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
+      WFDM_DOCUMENT_SECRET_MANAGER             = var.secret_manager
+      WFDM_DOCUMENT_TOKEN_URL                  = "${var.document_token_url}"
     }
   }
 }
 
 #Lambda File Indexing Initializer
 resource "aws_lambda_function" "terraform_indexing_initializer_function" {
-  function_name    = "${var.application}-indexing-initializer-${var.env}"
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key = var.lambda_initializer_filename
-  role             = aws_iam_role.lambda_initializer_role.arn
-  handler = var.indexing_function_handler
+  function_name = "${var.application}-indexing-initializer-${var.env}"
+  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_initializer_filename
+  role          = aws_iam_role.lambda_initializer_role.arn
+  handler       = var.indexing_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  runtime = "java8"
+  layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
@@ -700,12 +695,12 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   }
   environment {
     variables = {
-      ENVIRONMENT = "${var.env_full}"
-      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.bucket
-      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
-      WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
-      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
+      ENVIRONMENT                   = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL         = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET = aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_TOKEN_URL       = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME     = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_DOCUMENT_SECRET_MANAGER  = var.secret_manager
     }
   }
 }
@@ -713,32 +708,32 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
 #Lambda ClamAV handler
 resource "aws_lambda_function" "lambda_clamav_handler" {
   function_name = "${var.application}-clamav-handler-${var.env}"
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key = var.lambda_clamav_filename
-  role = aws_iam_role.lambda_clamav_role.arn
-  handler = var.clamav_function_handler
-  runtime = "java8"
+  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_clamav_filename
+  role          = aws_iam_role.lambda_clamav_role.arn
+  handler       = var.clamav_function_handler
+  runtime       = "java8"
   tags = {
     Name        = "${var.application}-clamav-handler-function-${var.env}"
     Application = var.application
     Customer    = var.customer
     Environment = var.env
   }
-  environment { 
+  environment {
     variables = {
-      ENVIRONMENT = "${var.env_full}"
-      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
+      ENVIRONMENT                  = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL        = "${var.document_api_url}"
       WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
-      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
-      WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
-      WFDM_SNS_VIRUS_ALERT = var.virus_alert
-      }
+      WFDM_DOCUMENT_TOKEN_URL      = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME    = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_SNS_VIRUS_ALERT         = var.virus_alert
+    }
   }
 }
 
 resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
   event_source_arn = aws_sqs_queue.queue.arn
-  function_name = aws_lambda_function.terraform_indexing_initializer_function.arn
+  function_name    = aws_lambda_function.terraform_indexing_initializer_function.arn
 }
 
 #Create OpenSearch and related resources
@@ -780,15 +775,15 @@ resource "aws_iam_service_linked_role" "es" {
 
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
-  domain_name           = "${var.opensearchDomainName}"
+  domain_name = var.opensearchDomainName
 
   domain_endpoint_options {
-    custom_endpoint = "${var.opensearchDomainName}.${var.domain}"
+    custom_endpoint                 = "${var.opensearchDomainName}.${var.domain}"
     custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
-    custom_endpoint_enabled = true
+    custom_endpoint_enabled         = true
   }
-  
-  
+
+
   elasticsearch_version = var.ElasticSearch_Version
 
   cluster_config {
@@ -806,7 +801,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     volume_size = var.ebs_volume_size
   }
 
-/*
+  /*
   vpc_options {
     subnet_ids = [
       aws_subnet.public_subnet.id
@@ -879,20 +874,22 @@ data "aws_route53_zone" "main_route53_zone" {
 //API GATEWAY RESOURCES
 
 //API Gateway Role
+/*
 resource "aws_iam_role" "api_gateway_integration_role" {
-  name = "${var.application}-sqs-api-gateway-role-${var.env}"
+  name        = "${var.application}-sqs-api-gateway-role-${var.env}"
   description = "Role used for POST from api gateway to sqs queue"
 }
 
 resource "aws_iam_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
-  roles = [aws_iam_role.api_gateway_integration_role]
+  roles      = [aws_iam_role.api_gateway_integration_role]
   policy_arn = aws_iam_policy.wfdm-send-sqs-message-from-api.arn
 }
 
 resource "aws_iam_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
-  roles = [aws_iam_role.api_gateway_integration_role]
+  roles      = [aws_iam_role.api_gateway_integration_role]
   policy_arn = aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
 }
+*/
 
 resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
   name        = "${var.application}-sqs-api-gateway-${var.env}"
@@ -900,7 +897,7 @@ resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
 }
 
 resource "aws_api_gateway_domain_name" "gateway_custom_domain" {
-  domain_name     = "wf1-${var.application_lowercase}-sqs-api-${var.env_lowercase}.${var.domain}"
+  domain_name              = "wf1-${var.application_lowercase}-sqs-api-${var.env_lowercase}.${var.domain}"
   regional_certificate_arn = var.custom_endpoint_certificate_arn
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -928,7 +925,7 @@ resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   authorization = "NONE"
 
   request_parameters = {
-    "method.request.path.proxy"        = false
+    "method.request.path.proxy" = false
   }
   request_validator_id = aws_api_gateway_request_validator.sqs-api-gateway-validator.id
 }
@@ -940,8 +937,8 @@ resource "aws_api_gateway_integration" "api" {
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
   type                    = "AWS"
   integration_http_method = "POST"
-  credentials             = aws_iam_role.api_gateway_integration_role.arn
-  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
+  //credentials             = aws_iam_role.api_gateway_integration_role.arn
+  uri = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
@@ -1006,9 +1003,9 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   }
 }
 
-resource "aws_api_gateway_base_bath_mapping" "api_gateway_base_path_mapping" {
-  api_id = aws_api_gateway_rest_api.api.id
-  stage_name = aws_api_gateway_deployment.sqs-api-gateway-deployment.stage_name
+resource "aws_api_gateway_base_path_mapping" "api_gateway_base_path_mapping" {
+  api_id      = aws_api_gateway_integration.api.id
+  stage_name  = aws_api_gateway_deployment.sqs-api-gateway-deployment.stage_name
   domain_name = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
 }
 
@@ -1025,16 +1022,16 @@ resource "aws_route53_record" "sqs-invoke-api-record" {
 
 resource "aws_route53_record" "sqs-url-correction-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
-  name = "sqs.${var.region}.${var.application}-sqs-${var.env}.${var.domain}"
-  type = "CNAME"
-  ttl = 300
+  name    = "sqs.${var.region}.${var.application}-sqs-${var.env}.${var.domain}"
+  type    = "CNAME"
+  ttl     = 300
   records = [
     "sqs.${var.region}.amazonaws.com"
   ]
 }
 
 resource "aws_sns_topic" "clamav_virus" {
-  name = "${var.application}-clamav-virus-topic-${var.env}"
+  name            = "${var.application}-clamav-virus-topic-${var.env}"
   delivery_policy = <<EOF
 {
   "http": {
@@ -1051,7 +1048,7 @@ resource "aws_sns_topic" "clamav_virus" {
   }
 }
   EOF
-  policy = <<EOF
+  policy          = <<EOF
   {
     "Version": "2008-10-17",
     "Id": "__default_policy_ID",
