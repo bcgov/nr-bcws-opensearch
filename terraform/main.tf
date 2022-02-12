@@ -804,11 +804,6 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
 
   advanced_security_options {
     enabled                        = true
-    internal_user_database_enabled = true
-    master_user_options {
-      master_user_name     = "opensearch-${var.env}"
-      master_user_password = "${var.OPENSEARCH_PASSWORD}"
-    }
   }
 
   elasticsearch_version = var.ElasticSearch_Version
