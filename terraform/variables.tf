@@ -237,7 +237,7 @@ variable "ultrawarm_node_instance_type" {
   default = "ultrawarm1.medium.elasticsearch"
 }
 
-variable "opensearch_password" {
+variable "OPENSEARCH_PASSWORD" {
   type        = string
   default     = null
   description = "The opensearch password. Received as a secret from github"
