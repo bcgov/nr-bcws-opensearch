@@ -47,6 +47,5 @@ generate "inputs" {
   env_full = "${local.env_full}"
   document_api_url = "${local.document_api_url}"
   document_token_url = "${local.document_token_url}"
-  opensearch_password = ${local.opensearch_password}
 EOF
 }
