@@ -22,6 +22,9 @@ jobs:
     environment:
       name: int
 
+    env: 
+      TF_VAR_OPENSEARCH_PASSWORD: ${{secrets.TF_VAR_OPENSEARCH_PASSWORD}}
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -44,6 +47,5 @@ jobs:
       - name: Terragrunt Apply
         working-directory: terragrunt/INT
         env:
-          TF_VAR_OPENSEARCH_PASSWORD: ${{secrets.TF_VAR_OPENSEARCH_PASSWORD}}
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
         run: terragrunt run-all apply --terragrunt-non-interactive
