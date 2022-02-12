@@ -44,6 +44,6 @@ jobs:
       - name: Terragrunt Apply
         working-directory: terragrunt/INT
         env:
-          TF_VAR_OPENSEARCH_PASSWOR: ${{secrets.TF_VAR_OPENSEARCH_PASSWORD}}
+          TF_VAR_OPENSEARCH_PASSWORD: ${{secrets.TF_VAR_OPENSEARCH_PASSWORD}}
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
         run: terragrunt run-all apply --terragrunt-non-interactive
