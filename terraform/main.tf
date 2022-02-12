@@ -804,6 +804,9 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
 
   advanced_security_options {
     enabled                        = true
+    master_user_options {
+      master_user_arn = data.aws_caller_identity.current.arn
+    }
   }
 
   elasticsearch_version = var.ElasticSearch_Version
