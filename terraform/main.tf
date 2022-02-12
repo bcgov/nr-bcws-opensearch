@@ -807,7 +807,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     internal_user_database_enabled = true
     master_user_options {
       master_user_name     = "opensearch-${var.env}"
-      master_user_password = var.opensearch_password
+      master_user_password = "${var.opensearch_password}"
     }
   }
 

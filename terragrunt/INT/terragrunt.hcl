@@ -10,6 +10,7 @@ locals {
   env_full = "INTEGRATION"
   document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
+  opensearch_password = get_env("TF_VAR_opensearch_password")
 
 }
 
@@ -46,5 +47,6 @@ generate "inputs" {
   env_full = "${local.env_full}"
   document_api_url = "${local.document_api_url}"
   document_token_url = "${local.document_token_url}"
+  opensearch_password = ${local.opensearch_password}
 EOF
 }
