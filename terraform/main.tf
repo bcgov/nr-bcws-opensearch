@@ -202,7 +202,7 @@ resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_vpc_execution" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
+  policy_arn = data.aws_iam_policy.lambda-vpc-access-execution.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_es_write" {
@@ -1012,19 +1012,13 @@ EOF
   ]
 }
 
-resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
-  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
-  path_part   = "mydemoresource"
-}
-
 resource "aws_api_gateway_method_response" "http200" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method = aws_api_gateway_method.sqs-gateway-post-method.http_method
   status_code = 200
 }
-/*
+
 resource "aws_api_gateway_integration_response" "http200" {
   rest_api_id       = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id       = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
@@ -1035,7 +1029,7 @@ resource "aws_api_gateway_integration_response" "http200" {
   depends_on = [
     aws_api_gateway_integration.api
   ]
-}*/
+}
 
 resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
