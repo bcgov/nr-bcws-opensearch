@@ -101,16 +101,18 @@ resource "aws_iam_policy" "kms-full-access-policy" {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "VisualEditor0",
             "Effect": "Allow",
-            "Action": "kms:*",
+            "Action": [
+              "kms:*"
+            ],
             "Resource": "*"
         },
         {
-            "Sid": "VisualEditor1",
-            "action": "secretsmanager:*",
-            "effect": "Allow",
-            "resource": "*"
+            "Effect": "Allow",
+            "Action": [
+              "secretsmanager:*"
+            ]
+            "Resource": "*"
         }
     ]
 }
