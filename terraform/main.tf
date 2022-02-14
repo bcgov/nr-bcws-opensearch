@@ -967,7 +967,7 @@ resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS IAM"
 
   request_parameters = {
     "method.request.path.proxy" = false
@@ -982,7 +982,7 @@ resource "aws_api_gateway_integration" "api" {
   credentials             = aws_iam_role.api_gateway_integration_role.arn
   type                    = "AWS"
   integration_http_method = "ANY"
-  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}:${aws_sqs_queue.queue.name}"
+  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}/${aws_sqs_queue.queue.name}"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
@@ -1010,6 +1010,25 @@ EOF
   depends_on = [
     aws_iam_role_policy_attachment.sqs-api-exec-role
   ]
+}
+
+resource "aws_api_gateway_rest_api_policy" "api-gateway-policy" {
+  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${data.aws_caller_identity.current.account_id}"
+            },
+            "Action": "execute-api:Invoke",
+            "Resource": "${aws_api_gateway_rest_api.sqs-api-gateway.execution_arn}"
+        }
+    ]
+}
+  EOF
 }
 
 resource "aws_api_gateway_method_response" "http200" {
