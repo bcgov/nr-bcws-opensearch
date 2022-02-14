@@ -111,7 +111,7 @@ resource "aws_iam_policy" "kms-full-access-policy" {
             "Effect": "Allow",
             "Action": [
               "secretsmanager:*"
-            ]
+            ],
             "Resource": "*"
         }
     ]
