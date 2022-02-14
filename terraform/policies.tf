@@ -94,6 +94,29 @@ resource "aws_iam_policy" "sqs-lambda-permission" {
   EOF
 }
 
+resource "aws_iam_policy" "kms-full-access-policy" {
+  name   = "${var.application}-kms-lambda-permission-${var.env}"
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "kms:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "action": "secretsmanager:*",
+            "effect": "Allow",
+            "resource": "*"
+        }
+    ]
+}
+  EOF
+}
+
 resource "aws_iam_policy" "wfdm-send-sqs-message-from-api" {
   name   = "${var.application}-sqs-send-message-${var.env}"
   policy = <<EOF

@@ -265,6 +265,11 @@ resource "aws_iam_role_policy_attachment" "policy_attach_initializer_sqs" {
   policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_kms" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.kms-full-access-policy.arn
+}
+
 resource "aws_iam_role_policy_attachment" "policy_attach_initializer_s3" {
   role       = aws_iam_role.lambda_initializer_role.name
   policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
@@ -272,7 +277,7 @@ resource "aws_iam_role_policy_attachment" "policy_attach_initializer_s3" {
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_vpc_execution" {
   role       = aws_iam_role.lambda_initializer_role.name
-  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
+  policy_arn = data.aws_iam_policy.lambda-vpc-access-execution.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_full" {
@@ -803,7 +808,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   }
 
   advanced_security_options {
-    enabled                        = true
+    enabled = true
     master_user_options {
       master_user_arn = data.aws_caller_identity.current.arn
     }
@@ -1014,7 +1019,7 @@ EOF
 
 resource "aws_api_gateway_rest_api_policy" "api-gateway-policy" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  policy = <<EOF
+  policy      = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
