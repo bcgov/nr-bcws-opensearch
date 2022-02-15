@@ -93,6 +93,11 @@ variable "clamAVBucketName" {
 
 #SQS-specific variables
 
+variable clamQueue {
+  type = string
+  default = null
+}
+
 variable "maxReceivedCount" {
   type        = number
   description = "How many messages can be placed into the deadletter queue"

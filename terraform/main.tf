@@ -466,88 +466,8 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
   }
 }
 
-resource "aws_s3_bucket" "clamav-bucket" {
+data "aws_s3_bucket" "clamav-bucket" {
   bucket = var.clamAVBucketName
-  acl    = "private"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-}
-
-resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.id
-  policy = data.aws_iam_policy_document.s3-bucket-policy.json
-}
-
-resource "aws_s3_bucket_policy" "terraform-clamav-bucket-policy" {
-  bucket = aws_s3_bucket.clamav-bucket.id
-  policy = data.aws_iam_policy_document.clamav-bucket-policy.json
-}
-
-data "aws_iam_policy_document" "s3-bucket-policy" {
-
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["${aws_iam_role.s3-bucket-add-remove-role.arn}"]
-    }
-    effect = "Allow"
-    actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:DeleteObject*",
-      "s3:Put*"
-    ]
-    resources = [
-      "${aws_s3_bucket.terraform-s3-bucket.arn}",
-      "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-    ]
-  }
-
-  statement {
-    effect = "Deny"
-    not_principals {
-      type        = "AWS"
-      identifiers = ["${aws_iam_role.s3-clamav-bucket-role.arn}"]
-    }
-    actions = ["s3:GetObject"]
-    resources = [
-      "${aws_s3_bucket.terraform-s3-bucket.arn}",
-      "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-    ]
-    condition {
-      test     = "StringEquals"
-      variable = "s3:ExistingObjectTag/scan-status"
-      values = [
-        "IN PROGRESS",
-        "INFECTED",
-        "ERROR"
-      ]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "clamav-bucket-policy" {
-
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["${aws_iam_role.s3-clamav-bucket-role.arn}"]
-    }
-    effect = "Allow"
-    actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:DeleteObject*",
-      "s3:Put*"
-    ]
-    resources = [
-      "${aws_s3_bucket.clamav-bucket.arn}",
-      "${aws_s3_bucket.clamav-bucket.arn}/*"
-    ]
-  }
 }
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
@@ -688,7 +608,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
     variables = {
       ENVIRONMENT                              = "${var.env_full}"
       WFDM_DOCUMENT_API_URL                    = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET            = aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET            = data.aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_INDEX_ACCOUNT_NAME         = var.document_index_account_name
       WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD     = var.documents_index_password
       WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
@@ -719,7 +639,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
     variables = {
       ENVIRONMENT                   = "${var.env_full}"
       WFDM_DOCUMENT_API_URL         = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET = aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET = data.aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_TOKEN_URL       = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME     = aws_lambda_function.terraform_wfdm_indexing_function.function_name
       WFDM_DOCUMENT_SECRET_MANAGER  = var.secret_manager
@@ -735,6 +655,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   role          = aws_iam_role.lambda_clamav_role.arn
   handler       = var.clamav_function_handler
   runtime       = "java8"
+  layers = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   tags = {
     Name        = "${var.application}-clamav-handler-function-${var.env}"
     Application = var.application
@@ -753,9 +674,18 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   }
 }
 
+data "aws_sqs_queue" "clamav_queue" {
+  name = "${var.clamQueue}"
+}
+
 resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
   event_source_arn = aws_sqs_queue.queue.arn
   function_name    = aws_lambda_function.terraform_indexing_initializer_function.arn
+}
+
+resource "aws_lambda_event_source_mapping" "clamAV_queue_mapping" {
+  event_source_arn = data.aws_sqs_queue.clamav_queue.arn
+  function_name = aws_lambda_function.lambda_clamav_handler.arn
 }
 
 #Create OpenSearch and related resources
