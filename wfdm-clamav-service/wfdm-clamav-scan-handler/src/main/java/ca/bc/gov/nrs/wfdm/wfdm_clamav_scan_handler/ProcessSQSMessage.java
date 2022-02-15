@@ -35,6 +35,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
+
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LambdaLogger logger = context.getLogger();
@@ -54,9 +55,17 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         logger.log("\nInfo: SQS Message Received: " + messageBody);
         JSONObject messageDetails = new JSONObject(messageBody);
         String inputKey = messageDetails.getJSONObject("responsePayload").getString("input_key");
+        String status = messageDetails.getJSONObject("responsePayload").getString("status");
+        //if status is infected send an email to SNS topic
+		if (status.equals("INFECTED")) {
+			SendSNSNotification.publicshMessagetoSNS(messageDetails);
+		}
+        
+        if(!inputKey.contains("-")) {
+        	logger.log("\nInfo: This is not a valid file name:" + inputKey+".\n Program might exit.");	
+        }
         String fileId = inputKey.split("-")[0];
         String versionNumber = inputKey.split("-")[1];
-        String status = messageDetails.getJSONObject("responsePayload").getString("status");
         String summary = messageDetails.getJSONObject("responsePayload").getString("message");
         logger.log("\nInfo: SQS Message Received: " + messageBody+summary);
 
