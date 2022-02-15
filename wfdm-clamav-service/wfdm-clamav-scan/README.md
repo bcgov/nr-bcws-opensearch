@@ -130,7 +130,13 @@ npm run build
 
 If you make any changes to the code, you'll have to run a build before you deploy.
 
-Once a build has completed successfully, run a synth if you just want to generate the cloudformation template, or a deploy if you want to create the cdk outputs and deploy them.
+If you've never run a `cdk deploy` before for this environment, you'll need to bootstrap first. Run the following command to initialize your cdk environment:
+
+```bash
+cdk bootstrap
+```
+
+Once a build has completed successfully and you've bootstrapped your environment, run a synth if you just want to generate the cloudformation template, or a deploy if you want to create the cdk outputs and deploy them.
 
 ```bash
 cdk synth
