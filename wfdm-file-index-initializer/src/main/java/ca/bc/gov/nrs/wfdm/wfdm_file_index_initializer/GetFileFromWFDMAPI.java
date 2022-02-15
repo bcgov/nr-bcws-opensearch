@@ -2,7 +2,6 @@ package ca.bc.gov.nrs.wfdm.wfdm_file_index_initializer;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.util.Properties;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,11 +15,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  * Static handler for WFDM API Access.
  */
 public class GetFileFromWFDMAPI {
-  // TODO:move to propeties file
-  private static final String BASE_URL = "<URL>";
-  private static final String WFDM_URL = "<URL>";
-
-  static Properties proFile;
+ 
 
   // Private constructor hides the implicit public constructor
   private GetFileFromWFDMAPI() { /* empty */ }
@@ -33,8 +28,8 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getAccessToken (String client, String password) throws UnirestException {
-    HttpResponse<JsonNode> httpResponse = Unirest.get(BASE_URL)
+  public static String getAccessToken (String client, String password) throws UnirestException { 
+	  HttpResponse<JsonNode> httpResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_TOKEN_URL").trim())
         .basicAuth(client, password)
         .asJson();
 
@@ -56,7 +51,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static String getFileInformation (String accessToken, String fileId) throws UnirestException {
-    HttpResponse<String> detailsResponse = Unirest.get(WFDM_URL + fileId)
+	  HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
 
@@ -86,7 +81,7 @@ public class GetFileFromWFDMAPI {
     metaArray.put(meta);
 
     // PUT the changes
-    HttpResponse<String> metaUpdateResponse = Unirest.put(WFDM_URL + fileId)
+    HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Content-Type", "application/json")
         .header("Authorization", "Bearer " + accessToken)
         .body(fileDetails.toString())
@@ -105,7 +100,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static BufferedInputStream getFileStream (String accessToken, String fileId, String versionNumber) throws UnirestException {
-    HttpResponse<InputStream> bytesResponse = Unirest.get(WFDM_URL + fileId + "/bytes?versionNumber=" + versionNumber)
+	  HttpResponse<InputStream> bytesResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId + "/bytes?versionNumber=" + versionNumber)
         .header("Accept", "*/*")
         .header("Authorization", "Bearer " + accessToken)
         .asBinary();
