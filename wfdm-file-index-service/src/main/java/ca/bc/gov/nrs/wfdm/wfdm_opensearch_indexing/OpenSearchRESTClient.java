@@ -56,6 +56,10 @@ public class OpenSearchRESTClient {
 	public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails, String scanStatus) throws IOException {
 		String indexName = System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME").trim();
 		restClient = searchClient(serviceName, region);
+		
+		if(restClient == null) {
+			System.out.println("rest client is null");
+		}
 		System.out.println("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
 
 		String type = "_doc";
@@ -70,13 +74,25 @@ public class OpenSearchRESTClient {
 		}
 
 		
-		document.put("lastModified", fileDetails.get("lastUpdatedTimestamp"));
+		if(!fileDetails.isNull("lastUpdatedTimestamp"))
+			document.put("lastModified", fileDetails.get("lastUpdatedTimestamp"));
+		else
+			document.put("lastModified", null);
 		
-		document.put("lastUpdatedBy", fileDetails.get("lastUpdatedBy"));
+		if(!fileDetails.isNull("lastUpdatedBy"))
+			document.put("lastUpdatedBy", fileDetails.get("lastUpdatedBy"));
+		else
+			document.put("lastUpdatedBy", null);
+		
+		
 		document.put("mimeType",fileDetails.get("mimeType"));
 		
 		document.put("fileName", fileName);
-		document.put("fileRetention", fileDetails.get("retention"));
+		
+		if(!fileDetails.isNull("retention"))
+			document.put("fileRetention", fileDetails.get("retention"));
+		else
+			document.put("fileRetention", null);
 		
 		JSONObject parent = fileDetails.getJSONObject("parent");
 		JSONArray parentLinkArray = parent.getJSONArray("links");
@@ -144,10 +160,11 @@ public class OpenSearchRESTClient {
 			securityScopeList.add(securityScopeKeyVal);
 		}
 				
-		document.put("securityScope", scopeArray.toString());
+		document.put("securityScope", securityScopeList);
 	
 		document.put("scanStatus", scanStatus);
 		String id = fileDetails.getString("fileId");
+		
 
 		String json;
 		ObjectMapper mapper = new ObjectMapper();
@@ -184,25 +201,25 @@ public class OpenSearchRESTClient {
 		updateRequest.upsert(indexRequest);
 
 		// Form the indexing request, send it, and print the response
+		System.out.println("adding data into index"+indexName);
 		IndexRequest createRequest = new IndexRequest(indexName, type, id).source(document);
+		System.out.println("createRequest");
+		System.out.println(createRequest.getDescription());
+
 
 		IndexResponse response = null;
 		try {
 			response = restClient.index(createRequest, RequestOptions.DEFAULT);
-			System.out.println("Response from OpenSearch:" + response.toString());
-
+			System.out.println("Response:"+response);
+		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-
-		// Close the rest connection
-		if (restClient != null) {
+		} finally {
 			try {
-				System.out.println("closing rest connection");
 				restClient.close();
-				restClient = null;
-			} catch (final IOException e) {
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -213,11 +230,13 @@ public class OpenSearchRESTClient {
 	// Adds the intercepter to the OpenSearch REST client
 	public RestHighLevelClient searchClient(String serviceName, String region) {
 		AWS4Signer signer = new AWS4Signer();
+		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
+		System.out.println(domainEndpoint);
 		signer.setServiceName(serviceName);
 		signer.setRegionName(region);
 		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
 				credentialsProvider);
-		RestClientBuilder builder = RestClient.builder(HttpHost.create(System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim()))
+		RestClientBuilder builder = RestClient.builder(HttpHost.create(domainEndpoint))
 				.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor));
 
 		restClient = new RestHighLevelClient(builder);
