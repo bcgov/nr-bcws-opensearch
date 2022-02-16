@@ -1,6 +1,6 @@
 # This workflow deploys the code tagged with 'deploy-dlv*'
 
-name: deploy_int
+name: deploy_dlv
 
 # Controls when the action will run.
 on:
