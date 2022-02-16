@@ -1024,7 +1024,7 @@ resource "aws_route53_record" "sqs-url-correction-record" {
 
 resource "aws_route53_record" "opensearch-custom-url-redirect" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
-  name    = aws_elasticsearch_domain.main_elasticsearch_domain.domain_endpoint_options["custom_endpoint"]
+  name    = "${var.opensearchDomainName}.${var.domain}"
   type    = "CNAME"
   ttl     = 300
   records = [
