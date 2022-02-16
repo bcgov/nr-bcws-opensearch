@@ -23,7 +23,7 @@ terraform {
   backend "remote" {
     organization = "vivid-solutions"
     workspaces {
-        name = "nr-bcws-opensearch"
+        name = "nr-bcws-opensearch-DLV"
     }
   }
 }
