@@ -8,6 +8,31 @@ terraform {
   required_version = ">= 1.1.0"
 }
 
+
+data "aws_vpc" "main_vpc" {
+  id = var.vpc_id
+}
+
+data "aws_subnet" "public_subnet" {
+  id = var.public_subnet_id
+}
+
+data "aws_subnet" "private_subnet" {
+  id = var.private_subnet_id
+}
+
+data "aws_internet_gateway" "main_internet_gateway" {
+  internet_gateway_id = var.internet_gateway_id
+}
+
+data "aws_security_group" "es" {
+  id = var.security_group_id
+}
+
+
+/* The following creates a new VPC with its own subnets.
+   Use it if you cannot use the existing VPC
+ 
 //CREATE THE VPC AND SUBNETS
 //Main VPC
 resource "aws_vpc" "main_vpc" {
@@ -129,8 +154,15 @@ resource "aws_route_table_association" "public_association" {
   route_table_id = aws_route_table.public_route_table.id
 }
 
+*/
+
+
+
+
+
 # Creating IAM role so that Lambda service to assume the role and access other  AWS services. 
 
+//MAIN ROLE USED BY OPENSEARCH-INDEXING-FUNCTION
 resource "aws_iam_role" "lambda_role" {
   name = "${var.application}-iam_role_lambda_index_searching-${var.env}"
   tags = {
@@ -155,44 +187,165 @@ resource "aws_iam_role" "lambda_role" {
 EOF
 }
 
-resource "aws_iam_policy" "lambda_role_sqs_policy" {
-  name   = "${var.application}-all-sqs-role-policy-${var.env}"
-  policy = <<EOF
+# Policy Attachment on the roles.
+
+//policy_attach_lambda_logging
+resource "aws_iam_role_policy_attachment" "policy_attach" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+//policy_attach_s3_full_access
+resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_vpc_execution" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.lambda-vpc-access-execution.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_es_write" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.elasticsearch-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_secret_manager" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = data.aws_iam_policy.secretsmanager-readwrite.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_sqs_for_lambda" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.sqs-lambda-permission.arn
+}
+
+//ROLE USED BY OPENSEARCH-INDEXING-INITIALIZER
+resource "aws_iam_role" "lambda_initializer_role" {
+  name = "${var.application}-iam_role_lambda_index_initializer-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Action": [
-        "sqs:*"
-      ],
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
       "Effect": "Allow",
-      "Resource": "*"
-    },
-    {
-      "Action": [
-        "opensearch:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "EC2:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
-    },
-    {
-      "Action": [
-        "secretsmanager:*"
-      ],
-      "Effect":"Allow",
-      "Resource":"*"
+      "Sid": ""
     }
   ]
 }
 EOF
 }
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_logging" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_sns_publish" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.sns-publish.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_secret_manager" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.secretsmanager-readwrite.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_sqs" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_kms" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.kms-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_s3" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_vpc_execution" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.lambda-vpc-access-execution.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_full" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = data.aws_iam_policy.lambda-full-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_initializer_es" {
+  role       = aws_iam_role.lambda_initializer_role.name
+  policy_arn = aws_iam_policy.elasticsearch-access.arn
+}
+
+
+//ROLE USED BY CLAMAV LAMBDA FUNCTION
+resource "aws_iam_role" "lambda_clamav_role" {
+  name = "${var.application}-iam_role_lambda_clamav-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_clamav_s3" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.s3-full-access-policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_logging" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_sns_publish" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = aws_iam_policy.sns-publish.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_clamav_secret_manager" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.secretsmanager-readwrite.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_full" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.lambda-full-access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_clamav_sqs" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
+}
+
 
 resource "aws_iam_role" "opensearch_sqs_role" {
   name = "${var.application}-iam-role-opensearch-sqs-${var.env}"
@@ -208,7 +361,10 @@ resource "aws_iam_role" "opensearch_sqs_role" {
      {
        "Action": "sts:AssumeRole",
         "Principal": {
-          "Service": "opensearch.amazonaws.com"
+          "Service": [
+            "opensearch.amazonaws.com",
+            "apigateway.amazonaws.com"
+          ]
         },
         "Effect": "Allow",
         "Sid": ""
@@ -218,138 +374,11 @@ resource "aws_iam_role" "opensearch_sqs_role" {
 EOF
 }
 
-resource "aws_iam_policy" "sqs-iam-policy" {
-  name = "${var.application}-log-and-sqs-${var.env}"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:DescribeLogGroups",
-          "logs:DescribeLogStreams",
-          "logs:PutLogEvents",
-          "logs:GetLogEvents",
-          "logs:FilterLogEvents"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "VisualEditor0",
-      "Effect": "Allow",
-      "Action": [
-          "sqs:DeleteMessage",
-          "sqs:GetQueueUrl",
-          "sqs:ChangeMessageVisibility",
-          "sqs:UntagQueue",
-          "sqs:ReceiveMessage",
-          "sqs:SendMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:ListQueueTags",
-          "sqs:TagQueue",
-          "sqs:ListDeadLetterSourceQueues",
-          "sqs:PurgeQueue",
-          "sqs:DeleteQueue",
-          "sqs:CreateQueue",
-          "sqs:SetQueueAttributes"
-      ],
-      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
-  },
-  {
-      "Sid": "VisualEditor1",
-      "Effect": "Allow",
-      "Action": "sqs:ListQueues",
-      "Resource": "*"
-  }
-  ]
-}
-EOF
 
-}
 
 resource "aws_iam_role_policy_attachment" "sqs-api-exec-role" {
   role       = aws_iam_role.opensearch_sqs_role.name
   policy_arn = aws_iam_policy.sqs-iam-policy.arn
-}
-
-
-# lambda policy
-resource "aws_iam_policy" "iam_policy_for_lambda" {
-  name = "${var.application}-lambda-invoke-policy-${var.env}"
-  path = "/"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Sid": "LambdaPolicy",
-        "Effect": "Allow",
-        "Action": [
-          "cloudwatch:PutMetricData",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource": "*"
-      }
-    ]
-  }
-EOF
-}
-
-
-# IAM policy for logging from a lambda
-
-resource "aws_iam_policy" "lambda_logging" {
-  name        = "${var.application}-iam_policy_lambda_logging_function-${var.env}"
-  path        = "/"
-  description = "IAM policy for logging from a lambda"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
-}
-
-# Policy Attachment on the role.
-
-resource "aws_iam_role_policy_attachment" "policy_attach" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
-}
-
-resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambda_role_sqs_policy.arn
 }
 
 
@@ -358,8 +387,8 @@ resource "aws_iam_role_policy_attachment" "policy_attach_sqs" {
 
 resource "aws_sqs_queue" "deadletter" {
   name = "${var.application}-sqs-deadletter-${var.env}"
-  
-    tags = {
+
+  tags = {
     Application = var.application
     Customer    = var.customer
     Environment = var.env
@@ -367,11 +396,11 @@ resource "aws_sqs_queue" "deadletter" {
 }
 
 resource "aws_sqs_queue" "queue" {
-  depends_on = [aws_iam_role.opensearch_sqs_role]
+  depends_on                 = [aws_iam_role.opensearch_sqs_role]
   visibility_timeout_seconds = var.visibilityTimeoutSeconds
-  name       = "${var.application}-sqs-queue-${var.env}"
-  
-  
+  name                       = "${var.application}-sqs-queue-${var.env}"
+
+
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.deadletter.arn
@@ -391,37 +420,21 @@ resource "aws_sqs_queue" "queue" {
 
   policy = <<POLICY
 {
-  
   "Version": "2012-10-17",
   "Id": "Policy1640124887139",
   "Statement": [
     {
       "Sid": "Stmt1640121864964",
       "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::460053263286:root"
-      },
-      "Action": "sqs:*",
-      "Resource": "arn:aws:sqs::*:*:${var.application}-sqs-queue-${var.env}"
-    },
-    {
-      "Sid": "Stmt1640124883525",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::460053263286:role/${aws_iam_role.opensearch_sqs_role.name}"
-      },
+      "Principal": "*",
       "Action": [
         "sqs:ListDeadLetterSourceQueues",
         "sqs:ListQueueTags",
         "sqs:ListQueues",
         "sqs:ReceiveMessage",
-        "sqs:SendMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:DeleteMessage"
-
-
+        "sqs:SendMessage"
       ],
-      "Resource": "arn:aws:sqs:ca-central-1:460053263286:${var.application}-sqs-queue-${var.env}"
+      "Resource": "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:${var.application}-sqs-queue-${var.env}"
     }
   ]
 }
@@ -444,7 +457,7 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 #Create s3 bucket and roles, policies needed
 resource "aws_s3_bucket" "terraform-s3-bucket" {
-  bucket = "${var.s3BucketName}"
+  bucket = var.s3BucketName
   acl    = "private"
   tags = {
     Application = var.application
@@ -453,88 +466,8 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
   }
 }
 
-resource "aws_s3_bucket" "clamav-bucket" {
-  bucket = "${var.clamAVBucketName}"
-  acl = "private"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
-}
-
-resource "aws_s3_bucket_policy" "terraform-s3-bucket-policy" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.id
-  policy = data.aws_iam_policy_document.s3-bucket-policy.json
-}
-
-resource "aws_s3_bucket_policy" "terraform-clamav-bucket-policy" {
-  bucket = aws_s3_bucket.clamav-bucket.id
-  policy = data.aws_iam_policy_document.clamav-bucket-policy.json
-}
-
-data "aws_iam_policy_document" "s3-bucket-policy" {
-
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["${aws_iam_role.s3-bucket-add-remove-role.arn}"]
-    }
-    effect = "Allow"
-    actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:DeleteObject*",
-      "s3:Put*"
-    ]
-    resources = [
-      "${aws_s3_bucket.terraform-s3-bucket.arn}",
-      "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-    ]
-  }
-
-  statement {
-    effect = "Deny"
-    not_principals {
-      type        = "AWS"
-      identifiers = ["${aws_iam_role.s3-clamav-bucket-role.arn}"]
-    }
-    actions = ["s3:GetObject"]
-    resources = [
-      "${aws_s3_bucket.terraform-s3-bucket.arn}",
-      "${aws_s3_bucket.terraform-s3-bucket.arn}/*"
-    ]
-    condition {
-      test     = "StringEquals"
-      variable = "s3:ExistingObjectTag/scan-status"
-      values = [
-        "IN PROGRESS",
-        "INFECTED",
-        "ERROR"
-      ]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "clamav-bucket-policy" {
-
-  statement {
-    principals {
-      type        = "AWS"
-      identifiers = ["${aws_iam_role.s3-clamav-bucket-role.arn}"]
-    }
-    effect = "Allow"
-    actions = [
-      "s3:Get*",
-      "s3:List*",
-      "s3:DeleteObject*",
-      "s3:Put*"
-    ]
-    resources = [
-      "${aws_s3_bucket.clamav-bucket.arn}",
-      "${aws_s3_bucket.clamav-bucket.arn}/*"
-    ]
-  }
+data "aws_s3_bucket" "clamav-bucket" {
+  bucket = var.clamAVBucketName
 }
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
@@ -585,6 +518,29 @@ resource "aws_iam_role" "s3-clamav-bucket-role" {
 EOF
 }
 
+resource "aws_iam_role" "lambda-clamav-role" {
+  name = "${var.application}-lambda-clamav-role-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+   ]
+}
+EOF
+}
 
 #Upload java.zip to s3bucket
 /*
@@ -604,12 +560,12 @@ resource "aws_s3_bucket_object" "java_zip" {
 
 data "aws_s3_bucket_object" "java_zip" {
   bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  key = var.layer_file_name
+  key    = var.layer_file_name
 }
 
 data "aws_s3_bucket_object" "s3_lambda_payload_object" {
   bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  key = var.lambda_payload_filename
+  key    = var.lambda_payload_filename
 }
 
 
@@ -628,20 +584,17 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 
 #Lambda Function Handler
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
-  function_name    = "${var.application}-indexing-function-${var.env}"
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key = var.lambda_payload_filename
-  role             = aws_iam_role.lambda_role.arn
-  handler          = var.lambda_function_handler
+  function_name = "${var.application}-indexing-function-${var.env}"
+  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_payload_filename
+  role          = aws_iam_role.lambda_role.arn
+  handler       = var.lambda_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  /*
-  vpc_config {
-    subnet_ids = [aws_subnet.private_subnet.id]
-    security_group_ids = [aws_vpc.main_vpc.default_security_group_id]
-  }
-  */
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout     = var.timeout_length
+
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
     Application = var.application
@@ -650,26 +603,31 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   }
   environment {
     variables = {
-      ENVIRONMENT = "${var.env_full}"
-      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
+      ENVIRONMENT                              = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL                    = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET            = data.aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_INDEX_ACCOUNT_NAME         = var.document_index_account_name
+      WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD     = var.documents_index_password
       WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
-      WFDM_DOCUMENT_OPENSEARCH_INDEXNAME = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
-      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
+      WFDM_DOCUMENT_OPENSEARCH_INDEXNAME       = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
+      WFDM_DOCUMENT_SECRET_MANAGER             = var.secret_manager
+      WFDM_DOCUMENT_TOKEN_URL                  = "${var.document_token_url}"
     }
   }
 }
 
 #Lambda File Indexing Initializer
 resource "aws_lambda_function" "terraform_indexing_initializer_function" {
-  function_name    = "${var.application}-indexing-initializer-${var.env}"
-  s3_bucket = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key = var.lambda_initializer_filename
-  role             = aws_iam_role.lambda_role.arn
-  handler = var.indexing_function_handler
+  function_name = "${var.application}-indexing-initializer-${var.env}"
+  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_initializer_filename
+  role          = aws_iam_role.lambda_initializer_role.arn
+  handler       = var.indexing_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout     = var.timeout_length
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
@@ -678,18 +636,57 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   }
   environment {
     variables = {
-      ENVIRONMENT = "${var.env_full}"
-      WFDM_DOCUMENT_API_URL = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET	= aws_s3_bucket.clamav-bucket.arn
-      WFDM_DOCUMENT_TOKEN_URL = "${var.document_token_url}"
-      WFDM_INDEXING_LAMBDA_NAME = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      ENVIRONMENT                   = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL         = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET = data.aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_TOKEN_URL       = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME     = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_DOCUMENT_SECRET_MANAGER  = var.secret_manager
     }
   }
 }
 
+#Lambda ClamAV handler
+resource "aws_lambda_function" "lambda_clamav_handler" {
+  function_name = "${var.application}-clamav-handler-${var.env}"
+  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_clamav_filename
+  role          = aws_iam_role.lambda_clamav_role.arn
+  handler       = var.clamav_function_handler
+  runtime       = "java8"
+  layers        = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size   = var.memory_size
+  timeout       = var.timeout_length
+  tags = {
+    Name        = "${var.application}-clamav-handler-function-${var.env}"
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  environment {
+    variables = {
+      ENVIRONMENT                  = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL        = "${var.document_api_url}"
+      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
+      WFDM_DOCUMENT_TOKEN_URL      = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME    = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_SNS_VIRUS_ALERT         = var.virus_alert
+    }
+  }
+}
+
+data "aws_sqs_queue" "clamav_queue" {
+  name = var.clamQueue
+}
+
 resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
   event_source_arn = aws_sqs_queue.queue.arn
-  function_name = aws_lambda_function.terraform_indexing_initializer_function.arn
+  function_name    = aws_lambda_function.terraform_indexing_initializer_function.arn
+}
+
+resource "aws_lambda_event_source_mapping" "clamAV_queue_mapping" {
+  event_source_arn = data.aws_sqs_queue.clamav_queue.arn
+  function_name    = aws_lambda_function.lambda_clamav_handler.arn
 }
 
 #Create OpenSearch and related resources
@@ -702,7 +699,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_security_group" "es" {
   name        = "${var.application_lowercase}-elasticsearch-security-group-${var.env}"
   description = "Managed by Terraform"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = data.aws_vpc.main_vpc.id
 
   ingress {
     from_port = 443
@@ -731,9 +728,32 @@ resource "aws_iam_service_linked_role" "es" {
 
 
 resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
-  domain_name           = "${var.opensearchDomainName}"
+  domain_name = var.opensearchDomainName
+
+  domain_endpoint_options {
+    custom_endpoint                 = "${var.opensearchDomainName}.${var.domain}"
+    custom_endpoint_certificate_arn = var.custom_endpoint_certificate_arn
+    custom_endpoint_enabled         = true
+    enforce_https                   = true
+    tls_security_policy             = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  advanced_security_options {
+    enabled = true
+    master_user_options {
+      master_user_arn = data.aws_caller_identity.current.arn
+    }
+  }
 
   elasticsearch_version = var.ElasticSearch_Version
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
 
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
@@ -750,15 +770,6 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     volume_size = var.ebs_volume_size
   }
 
-/*
-  vpc_options {
-    subnet_ids = [
-      aws_subnet.public_subnet.id
-    ]
-    security_group_ids = [aws_security_group.es.id]
-  }
-*/
-
   advanced_options = {
     "rest.action.multi.allow_explicit_index" = "true"
   }
@@ -771,17 +782,17 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
 
   access_policies = <<CONFIG
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "es:*",
-            "Principal": {
-              "AWS": ["${data.aws_caller_identity.current.arn}"]
-            },
-            "Effect": "Allow",
-            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_caller_identity.current.account_id}"
+      },
+      "Action": "es:ESHttp*",
+      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
+    }
+  ]
 }
 CONFIG
 }
@@ -810,15 +821,68 @@ data "aws_route53_zone" "main_route53_zone" {
   name = var.main_route53_zone
 }
 
+
+
+
+
+
+
+
+
+
+
+//API GATEWAY RESOURCES
+
+//API Gateway Role
+
+resource "aws_iam_role" "api_gateway_integration_role" {
+  name        = "${var.application}-sqs-api-gateway-role-${var.env}"
+  description = "Role used for POST from api gateway to sqs queue"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+     {
+       "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "apigateway.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+     }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "api-gateway-role-sqs-policy-attachment" {
+  role       = aws_iam_role.api_gateway_integration_role.name
+  policy_arn = aws_iam_policy.wfdm-send-sqs-message-from-api.arn
+}
+
+resource "aws_iam_role_policy_attachment" "api-gateway-role-cloudwatch-push-attachement" {
+  role       = aws_iam_role.api_gateway_integration_role.name
+  policy_arn = data.aws_iam_policy.api-gateway-push-to-cloudwatch-policy.arn
+}
+
+
 resource "aws_api_gateway_rest_api" "sqs-api-gateway" {
   name        = "${var.application}-sqs-api-gateway-${var.env}"
   description = "POST records to SQS queue"
 }
 
-resource "aws_api_gateway_resource" "sqs-api-gateway-resource" {
-  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  parent_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
-  path_part   = "{proxy+}"
+resource "aws_api_gateway_domain_name" "gateway_custom_domain" {
+  domain_name              = "wf1-${var.application_lowercase}-sqs-api-${var.env_lowercase}.${var.domain}"
+  regional_certificate_arn = var.custom_endpoint_certificate_arn
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
 }
 
 resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
@@ -830,26 +894,24 @@ resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
 
 resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id   = aws_api_gateway_resource.sqs-api-gateway-resource.id
-  http_method   = "POST"
-  authorization = "NONE"
+  resource_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
+  http_method   = "ANY"
+  authorization = "AWS_IAM"
 
   request_parameters = {
-    "method.request.path.proxy"        = false
-    "method.request.querystring.unity" = true
+    "method.request.path.proxy" = false
   }
-  request_validator_id = aws_api_gateway_request_validator.sqs-api-gateway-validator.id
 }
 
 
 resource "aws_api_gateway_integration" "api" {
   rest_api_id             = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id             = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id             = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method             = aws_api_gateway_method.sqs-gateway-post-method.http_method
+  credentials             = aws_iam_role.api_gateway_integration_role.arn
   type                    = "AWS"
-  integration_http_method = "POST"
-  credentials             = aws_iam_role.opensearch_sqs_role.arn
-  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${aws_sqs_queue.queue.name}"
+  integration_http_method = "ANY"
+  uri                     = "arn:aws:apigateway:${var.region}:sqs:path/${data.aws_caller_identity.current.account_id}/${aws_sqs_queue.queue.name}"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
@@ -879,16 +941,35 @@ EOF
   ]
 }
 
+resource "aws_api_gateway_rest_api_policy" "api-gateway-policy" {
+  rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+  policy      = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "${data.aws_caller_identity.current.account_id}"
+            },
+            "Action": "execute-api:Invoke",
+            "Resource": "${aws_api_gateway_rest_api.sqs-api-gateway.execution_arn}"
+        }
+    ]
+}
+  EOF
+}
+
 resource "aws_api_gateway_method_response" "http200" {
   rest_api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method = aws_api_gateway_method.sqs-gateway-post-method.http_method
   status_code = 200
 }
 
 resource "aws_api_gateway_integration_response" "http200" {
   rest_api_id       = aws_api_gateway_rest_api.sqs-api-gateway.id
-  resource_id       = aws_api_gateway_resource.sqs-api-gateway-resource.id
+  resource_id       = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method       = aws_api_gateway_method.sqs-gateway-post-method.http_method
   status_code       = aws_api_gateway_method_response.http200.status_code
   selection_pattern = "^2[0-9][0-9]" // regex pattern for any 200 message that comes back from SQS
@@ -914,15 +995,95 @@ resource "aws_api_gateway_deployment" "sqs-api-gateway-deployment" {
   }
 }
 
-/*
-resource "aws_route53_record" "sqs-route53-record" {
+resource "aws_api_gateway_base_path_mapping" "api_gateway_base_path_mapping" {
+  api_id      = aws_api_gateway_rest_api.sqs-api-gateway.id
+  stage_name  = aws_api_gateway_deployment.sqs-api-gateway-deployment.stage_name
+  domain_name = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
+}
+
+resource "aws_route53_record" "sqs-invoke-api-record" {
   zone_id = data.aws_route53_zone.main_route53_zone.id
-  name    = "${var.application}-sqs-${var.env}.${var.domain}"
+  name    = aws_api_gateway_domain_name.gateway_custom_domain.domain_name
   type    = "A"
+  alias {
+    evaluate_target_health = true
+    name                   = aws_api_gateway_domain_name.gateway_custom_domain.regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.gateway_custom_domain.regional_zone_id
+  }
+}
+
+resource "aws_route53_record" "sqs-url-correction-record" {
+  zone_id = data.aws_route53_zone.main_route53_zone.id
+  name    = "sqs.${var.region}.${var.application}-sqs-${var.env}.${var.domain}"
+  type    = "CNAME"
   ttl     = 300
   records = [
-    "${aws_api_gateway_deployment.sqs-api-gateway-deployment.invoke_url}"
+    "sqs.${var.region}.amazonaws.com"
   ]
 }
-*/
 
+resource "aws_route53_record" "opensearch-custom-url-redirect" {
+  zone_id = data.aws_route53_zone.main_route53_zone.id
+  name    = aws_elasticsearch_domain.main_elasticsearch_domain.domain_endpoint_options["custom_endpoint"]
+  type    = "CNAME"
+  ttl     = 300
+  records = [
+    aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
+  ]
+}
+
+resource "aws_sns_topic" "clamav_virus" {
+  name = "${var.application}-clamav-virus-topic-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
+  delivery_policy = <<EOF
+{
+  "http": {
+    "defaultHealthyRetryPolicy": {
+      "minDelayTarget": 20,
+      "maxDelayTarget": 20,
+      "numRetries": 3,
+      "numMaxDelayRetries": 0,
+      "numNoDelayRetries": 0,
+      "numMinDelayRetries": 0,
+      "backoffFunction": "linear"
+    },
+    "disableSubscriptionOverrides": false
+  }
+}
+  EOF
+  policy          = <<EOF
+  {
+    "Version": "2008-10-17",
+    "Id": "__default_policy_ID",
+    "Statement": [
+      {
+        "Sid": "__default_statement_ID",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "*"
+        },
+        "Action": [
+          "SNS:GetTopicAttributes",
+          "SNS:SetTopicAttributes",
+          "SNS:AddPermission",
+          "SNS:RemovePermission",
+          "SNS:DeleteTopic",
+          "SNS:Subscribe",
+          "SNS:ListSubscriptionsByTopic",
+          "SNS:Publish"
+        ],
+        "Resource": "arn:aws:sns:ca-central-1:${data.aws_caller_identity.current.account_id}:WFDM_CLAMAV_EMAIL_NOTIFICATION",
+        "Condition": {
+          "StringEquals": {
+            "AWS:SourceOwner": "${data.aws_caller_identity.current.account_id}"
+          }
+        }
+      }
+    ]
+  }
+  EOF
+}

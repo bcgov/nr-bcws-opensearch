@@ -5,13 +5,13 @@ terraform {
 locals {
   application = "WF1-WFDM"
   application_lowercase = "wfdm"
-  target_env = "INT"
-  env_lowercase = "int"
-  env_full = "INTEGRATION"
+  target_env = "DLV"
+  env_lowercase = "dlv"
+  env_full = "DELIVERY"
   document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
-  clamAVBucketName = "wfdmclamavstackint-wfdmclamavbucketint04784c62-11udj1twfqiy3"
-  clamstackQueue = "WfdmClamavStackINT-wfdmClamscanQueueintC7DDA541-4i0O18IjJgs0"
+  clamAVBucketName = "wfdmclamavstackdlv-wfdmclamavbucketdlv13b93ae9-tdd5wowgitv8"
+  clamstackQueue = "WfdmClamavStackDLV-wfdmClamscanQueuedlv5DE047B8-TZEbNnvtOmmi"
 
 }
 

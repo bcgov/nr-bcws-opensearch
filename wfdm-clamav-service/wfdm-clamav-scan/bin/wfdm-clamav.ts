@@ -4,6 +4,7 @@ import { App } from 'aws-cdk-lib';
 import { WfdmClamavStack } from '../lib/wfdm-clamav-stack';
 
 const app = new App();
+
 new WfdmClamavStack(app, 'WfdmClamavStackTST', 'tst', 
 {
   env: {

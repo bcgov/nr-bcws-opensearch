@@ -1,7 +1,9 @@
 import { Bucket } from 'aws-cdk-lib/aws-s3'
 import { App, Stack, StackProps, RemovalPolicy, CfnOutput } from 'aws-cdk-lib'
+
 import { ServerlessClamscan } from '../cdk-serverless-clamscan/cdk-serverless-clamscan'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
+
 import {
   SqsDestination
 } from 'aws-cdk-lib/aws-lambda-destinations'

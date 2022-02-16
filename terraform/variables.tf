@@ -6,9 +6,9 @@ variable "application" {
 }
 
 variable "application_lowercase" {
-  type = string
+  type        = string
   description = "application name in lowercase"
-  default = "wfdm"
+  default     = "wfdm"
 }
 
 variable "customer" {
@@ -35,6 +35,12 @@ variable "region" {
   default     = "ca-central-1"
 }
 
+variable "accountNum" {
+  type        = string
+  description = "account number of AWS account running script"
+  default     = null
+}
+
 variable "custom_endpoint_url" {
   type        = string
   description = "URL matching custom endpoint cert"
@@ -48,15 +54,15 @@ variable "env" {
 }
 
 variable "env_lowercase" {
-  type = string
+  type        = string
   description = "env in lowercase"
-  default = null
+  default     = null
 }
 
 variable "env_full" {
-  type = string
+  type        = string
   description = "full name of environment (i.e. INTEGRATION)"
-  default = null
+  default     = null
 }
 
 variable "pr" {
@@ -80,12 +86,17 @@ variable "s3BucketName" {
 }
 
 variable "clamAVBucketName" {
-  type = string
+  type        = string
   description = "name of clamAV specific s3 bucket"
-  default = null
+  default     = null
 }
 
 #SQS-specific variables
+
+variable "clamQueue" {
+  type    = string
+  default = null
+}
 
 variable "maxReceivedCount" {
   type        = number
@@ -100,15 +111,45 @@ variable "visibilityTimeoutSeconds" {
 }
 
 #VPC-RELATED VARIABLES
+variable "vpc_id" {
+  type        = string
+  description = "ID of existing VPC to be used"
+  default     = null
+}
+
+variable "public_subnet_id" {
+  type        = string
+  description = "id of existing public subnet to be used"
+  default     = null
+}
+
+variable "private_subnet_id" {
+  type        = string
+  description = "id of existing private subnet to be used"
+  default     = null
+}
+
+variable "internet_gateway_id" {
+  type        = string
+  description = "ID of existing internet gateway to use"
+  default     = null
+}
+
+variable "security_group_id" {
+  type        = string
+  default     = null
+  description = "id of existing security group to use"
+}
+
 variable "vpc_cidr_block" {
   type        = string
-  description = "CIDR block to be used by vpc"
+  description = "CIDR block to be used when creating vpc"
   default     = "10.0.0.0/16"
 }
 
 variable "public_subnet_block" {
   type        = string
-  description = "CIDR block of public subnet"
+  description = "CIDR block used when creating public subnet"
   default     = "10.0.0.0/24"
 }
 
@@ -201,6 +242,12 @@ variable "ultrawarm_node_instance_type" {
   default = "ultrawarm1.medium.elasticsearch"
 }
 
+variable "OPENSEARCH_PASSWORD" {
+  type        = string
+  default     = null
+  description = "The opensearch password. Received as a secret from github"
+}
+
 /*
 variable "ultrawarm_node_volume_size" {
   type = number
@@ -211,9 +258,9 @@ variable "ultrawarm_node_volume_size" {
 #LAMBDA-RELATED VARIABLES
 
 variable "document_token_url" {
-  type = string
+  type        = string
   description = "govt-side token url"
-  default = null
+  default     = null
 }
 
 variable "lambda_function_handler" {
@@ -222,7 +269,12 @@ variable "lambda_function_handler" {
 }
 
 variable "indexing_function_handler" {
-  type = string
+  type    = string
+  default = null
+}
+
+variable "clamav_function_handler" {
+  type    = string
   default = null
 }
 
@@ -232,7 +284,12 @@ variable "lambda_payload_filename" {
 }
 
 variable "lambda_initializer_filename" {
-  type = string
+  type    = string
+  default = null
+}
+
+variable "lambda_clamav_filename" {
+  type    = string
   default = null
 }
 
@@ -257,7 +314,37 @@ variable "main_route53_zone" {
 }
 
 variable "document_api_url" {
-  type = string
+  type        = string
   description = "url of govt-side API"
-  default = null
+  default     = null
+}
+
+variable "document_index_account_name" {
+  type    = string
+  default = "WFDM_DOCUMENTS_INDEX"
+}
+
+variable "documents_index_password" {
+  type    = string
+  default = "Password"
+}
+
+variable "secret_manager" {
+  type    = string
+  default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
+}
+
+variable "virus_alert" {
+  type    = string
+  default = "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION"
+}
+
+variable "memory_size" {
+  type    = number
+  default = 1028
+}
+
+variable "timeout_length" {
+  type    = number
+  default = 45
 }
