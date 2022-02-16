@@ -621,7 +621,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       WFDM_DOCUMENT_CLAMAV_S3BUCKET            = data.aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_INDEX_ACCOUNT_NAME         = var.document_index_account_name
       WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD     = var.documents_index_password
-      WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = "${var.opensearchDomainName}.${var.domain}"
+      WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = "https://${var.opensearchDomainName}.${var.domain}"
       WFDM_DOCUMENT_OPENSEARCH_INDEXNAME       = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
       WFDM_DOCUMENT_SECRET_MANAGER             = var.secret_manager
       WFDM_DOCUMENT_TOKEN_URL                  = "${var.document_token_url}"
