@@ -434,7 +434,7 @@ resource "aws_sqs_queue" "queue" {
         "sqs:ReceiveMessage",
         "sqs:SendMessage"
       ],
-      "Resource": "arn:aws:sqs:*:460053263286:${var.application}-sqs-queue-${var.env}"
+      "Resource": "arn:aws:sqs:*:${data.aws_caller_identity.current.account_id}:${var.application}-sqs-queue-${var.env}"
     }
   ]
 }
@@ -590,10 +590,10 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   role          = aws_iam_role.lambda_role.arn
   handler       = var.lambda_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime = "java8"
-  layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
-  timeout = var.timeout_length
+  timeout     = var.timeout_length
 
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
@@ -624,10 +624,10 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   role          = aws_iam_role.lambda_initializer_role.arn
   handler       = var.indexing_function_handler
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime = "java8"
-  layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
-  timeout = var.timeout_length
+  timeout     = var.timeout_length
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
@@ -654,9 +654,9 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   role          = aws_iam_role.lambda_clamav_role.arn
   handler       = var.clamav_function_handler
   runtime       = "java8"
-  layers = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size = var.memory_size
-  timeout = var.timeout_length
+  layers        = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size   = var.memory_size
+  timeout       = var.timeout_length
   tags = {
     Name        = "${var.application}-clamav-handler-function-${var.env}"
     Application = var.application
@@ -676,7 +676,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
 }
 
 data "aws_sqs_queue" "clamav_queue" {
-  name = "${var.clamQueue}"
+  name = var.clamQueue
 }
 
 resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
@@ -686,7 +686,7 @@ resource "aws_lambda_event_source_mapping" "index_initializer_mapping" {
 
 resource "aws_lambda_event_source_mapping" "clamAV_queue_mapping" {
   event_source_arn = data.aws_sqs_queue.clamav_queue.arn
-  function_name = aws_lambda_function.lambda_clamav_handler.arn
+  function_name    = aws_lambda_function.lambda_clamav_handler.arn
 }
 
 #Create OpenSearch and related resources
@@ -782,17 +782,17 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
 
   access_policies = <<CONFIG
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "es:*",
-            "Principal": {
-              "AWS": ["${data.aws_caller_identity.current.account_id}"]
-            },
-            "Effect": "Allow",
-            "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${data.aws_caller_identity.current.account_id}"
+      },
+      "Action": "es:ESHttp*",
+      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
+    }
+  ]
 }
 CONFIG
 }
@@ -1022,8 +1022,23 @@ resource "aws_route53_record" "sqs-url-correction-record" {
   ]
 }
 
+resource "aws_route53_record" "opensearch-custom-url-redirect" {
+  zone_id = data.aws_route53_zone.main_route53_zone.id
+  name    = aws_elasticsearch_domain.main_elasticsearch_domain.domain_endpoint_options["custom_endpoint"]
+  type    = "CNAME"
+  ttl     = 300
+  records = [
+    aws_elasticsearch_domain.main_elasticsearch_domain.endpoint
+  ]
+}
+
 resource "aws_sns_topic" "clamav_virus" {
-  name            = "${var.application}-clamav-virus-topic-${var.env}"
+  name = "${var.application}-clamav-virus-topic-${var.env}"
+  tags = {
+    Application = var.application
+    Customer    = var.customer
+    Environment = var.env
+  }
   delivery_policy = <<EOF
 {
   "http": {
@@ -1061,10 +1076,10 @@ resource "aws_sns_topic" "clamav_virus" {
           "SNS:ListSubscriptionsByTopic",
           "SNS:Publish"
         ],
-        "Resource": "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION",
+        "Resource": "arn:aws:sns:ca-central-1:${data.aws_caller_identity.current.account_id}:WFDM_CLAMAV_EMAIL_NOTIFICATION",
         "Condition": {
           "StringEquals": {
-            "AWS:SourceOwner": "460053263286"
+            "AWS:SourceOwner": "${data.aws_caller_identity.current.account_id}"
           }
         }
       }

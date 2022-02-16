@@ -93,8 +93,8 @@ variable "clamAVBucketName" {
 
 #SQS-specific variables
 
-variable clamQueue {
-  type = string
+variable "clamQueue" {
+  type    = string
   default = null
 }
 
@@ -340,11 +340,11 @@ variable "virus_alert" {
 }
 
 variable "memory_size" {
-  type = number
+  type    = number
   default = 1028
 }
 
 variable "timeout_length" {
-  type = number
+  type    = number
   default = 45
 }
