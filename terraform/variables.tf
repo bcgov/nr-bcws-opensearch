@@ -338,3 +338,13 @@ variable "virus_alert" {
   type    = string
   default = "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION"
 }
+
+variable "memory_size" {
+  type = number
+  default = 1028
+}
+
+variable "timeout_length" {
+  type = number
+  default = 45
+}

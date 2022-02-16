@@ -592,11 +592,8 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime = "java8"
   layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-
-  vpc_config {
-    subnet_ids         = [data.aws_subnet.private_subnet.id]
-    security_group_ids = [data.aws_security_group.es.id]
-  }
+  memory_size = var.memory_size
+  timeout = var.timeout_length
 
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
@@ -629,6 +626,8 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
   runtime = "java8"
   layers  = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout = var.timeout_length
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
@@ -656,6 +655,8 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   handler       = var.clamav_function_handler
   runtime       = "java8"
   layers = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout = var.timeout_length
   tags = {
     Name        = "${var.application}-clamav-handler-function-${var.env}"
     Application = var.application
@@ -767,13 +768,6 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   ebs_options {
     ebs_enabled = "true"
     volume_size = var.ebs_volume_size
-  }
-
-  vpc_options {
-    subnet_ids = [
-      data.aws_subnet.public_subnet.id
-    ]
-    security_group_ids = [data.aws_security_group.es.id]
   }
 
   advanced_options = {
