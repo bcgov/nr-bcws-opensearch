@@ -250,3 +250,10 @@ data "aws_iam_policy" "secretsmanager-readwrite" {
   arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
 
+data "aws_iam_policy" "lambdaFullAccess" {
+  arn = "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
+}
+
+data "aws_iam_policy" "opensearchFullAccess" {
+  arn = "arn:aws:iam::aws:policy/AmazonOpenSearchServiceFullAccess"
+}

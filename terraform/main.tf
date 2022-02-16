@@ -177,7 +177,10 @@ resource "aws_iam_role" "lambda_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": [
+                    "apigateway.amazonaws.com",
+                    "opensearch.amazonaws.com"
+                ]
       },
       "Effect": "Allow",
       "Sid": ""
@@ -218,6 +221,16 @@ resource "aws_iam_role_policy_attachment" "policy_attach_secret_manager" {
 resource "aws_iam_role_policy_attachment" "policy_attach_sqs_for_lambda" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.sqs-lambda-permission.arn
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_full_lambda" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambdaFullAccess
+}
+
+resource "aws_iam_role_policy_attachment" "policy_attach_full_lambda" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.opensearchFullAccess
 }
 
 //ROLE USED BY OPENSEARCH-INDEXING-INITIALIZER
