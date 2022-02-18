@@ -350,6 +350,11 @@ variable "timeout_length" {
 }
 
 variable "sns_email_receivers" {
-  type = list
+  type    = list(any)
   default = []
+}
+
+variable "clamAVStackName" {
+  type    = string
+  default = null
 }

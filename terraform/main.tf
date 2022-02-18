@@ -479,9 +479,16 @@ resource "aws_s3_bucket" "terraform-s3-bucket" {
   }
 }
 
-data "aws_s3_bucket" "clamav-bucket" {
-  bucket = var.clamAVBucketName
+
+data "aws_cloudformation_stack" "cdk_stack" {
+  name = var.clamAVStackName
 }
+
+
+data "aws_s3_bucket" "clamav-bucket" {
+  bucket = data.aws_cloudformation_stack.cdk_stack.outputs["oBucketName"]
+}
+
 
 resource "aws_iam_role" "s3-bucket-add-remove-role" {
   name = "${var.application}-s3-bucket-add-remove-role-${var.env}"
@@ -606,16 +613,16 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 
 #Lambda Function Handler
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
-  function_name = "${var.application}-indexing-function-${var.env}"
-  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key        = var.lambda_payload_filename
-  role          = aws_iam_role.lambda_role.arn
-  handler       = var.lambda_function_handler
+  function_name    = "${var.application}-indexing-function-${var.env}"
+  s3_bucket        = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key           = var.lambda_payload_filename
+  role             = aws_iam_role.lambda_role.arn
+  handler          = var.lambda_function_handler
   source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_payload_object)
-  runtime     = "java8"
-  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size = var.memory_size
-  timeout     = var.timeout_length
+  runtime          = "java8"
+  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size      = var.memory_size
+  timeout          = var.timeout_length
 
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
@@ -640,16 +647,16 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
 
 #Lambda File Indexing Initializer
 resource "aws_lambda_function" "terraform_indexing_initializer_function" {
-  function_name = "${var.application}-indexing-initializer-${var.env}"
-  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key        = var.lambda_initializer_filename
-  role          = aws_iam_role.lambda_initializer_role.arn
-  handler       = var.indexing_function_handler
+  function_name    = "${var.application}-indexing-initializer-${var.env}"
+  s3_bucket        = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key           = var.lambda_initializer_filename
+  role             = aws_iam_role.lambda_initializer_role.arn
+  handler          = var.indexing_function_handler
   source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_initializer_object)
-  runtime     = "java8"
-  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size = var.memory_size
-  timeout     = var.timeout_length
+  runtime          = "java8"
+  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size      = var.memory_size
+  timeout          = var.timeout_length
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
@@ -670,16 +677,16 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
 
 #Lambda ClamAV handler
 resource "aws_lambda_function" "lambda_clamav_handler" {
-  function_name = "${var.application}-clamav-handler-${var.env}"
-  s3_bucket     = aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key        = var.lambda_clamav_filename
-  role          = aws_iam_role.lambda_clamav_role.arn
-  handler       = var.clamav_function_handler
+  function_name    = "${var.application}-clamav-handler-${var.env}"
+  s3_bucket        = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key           = var.lambda_clamav_filename
+  role             = aws_iam_role.lambda_clamav_role.arn
+  handler          = var.clamav_function_handler
   source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_clamav_object)
-  runtime       = "java8"
-  layers        = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size   = var.memory_size
-  timeout       = 30
+  runtime          = "java8"
+  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size      = var.memory_size
+  timeout          = 30
   tags = {
     Name        = "${var.application}-clamav-handler-function-${var.env}"
     Application = var.application
