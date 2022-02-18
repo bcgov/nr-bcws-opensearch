@@ -59,7 +59,7 @@ CDK
 Before creating a new environment, the CDK script for that environment must be run in
 order to create and get the name for the relevant ClamAV stack and queue.
 
-The name of the stack to be used should be like WfdmClamavStack{Env}
+The name of the stack to be used should be like WfdmClamavStack{ENV}
 
 The correct queue to be used will be named starting with:
 	wfdmclamavstack{env}-...
