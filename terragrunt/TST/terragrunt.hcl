@@ -21,7 +21,7 @@ generate "backend" {
   contents = <<EOF
 terraform {
   backend "remote" {
-    organization = "vivid-solutions"
+    organization = "wf1-wfdm-opensearch"
     workspaces {
         name = "nr-bcws-opensearch-tst"
     }

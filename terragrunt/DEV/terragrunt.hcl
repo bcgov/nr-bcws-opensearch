@@ -10,8 +10,8 @@ locals {
   env_full = "DEVELOPMENT"
   document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
-  clamAVBucketName = "wfdmclamavstack-wfdmclamavbucket78961613-4r53u9f2ef2v"
-  clamstackQueue = "WfdmClamavStack-wfdmClamscanQueue4193FD3B-1BE9TLTYNVHUY"
+  clamAVBucketName = ""
+  clamstackQueue = ""
 
 }
 
@@ -21,7 +21,7 @@ generate "backend" {
   contents = <<EOF
 terraform {
   backend "remote" {
-    organization = "vivid-solutions"
+    organization = "wf1-wfdm-opensearch"
     workspaces {
         name = "nr-bcws-opensearch-DEV"
     }
