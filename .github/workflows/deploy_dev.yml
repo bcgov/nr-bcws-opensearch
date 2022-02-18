@@ -1,12 +1,12 @@
-# This workflow deploys the code tagged with 'deploy-int*'
+# This workflow deploys the code tagged with 'deploy-dev*'
 
-name: deploy_int
+name: deploy_dev
 
 # Controls when the action will run.
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    tags: [deploy-int*]
+    tags: [deploy-dev*]
 
 env:
   TF_VERSION: 1.1.0
@@ -20,7 +20,7 @@ jobs:
 
     # Production GitHub repo environment
     environment:
-      name: int
+      name: dev
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -42,7 +42,7 @@ jobs:
 
             # Apply changes
       - name: Terragrunt Apply
-        working-directory: terragrunt/INT
+        working-directory: terragrunt/DEV
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
         run: terragrunt run-all apply --terragrunt-non-interactive
