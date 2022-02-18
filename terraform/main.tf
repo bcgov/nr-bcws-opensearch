@@ -225,12 +225,12 @@ resource "aws_iam_role_policy_attachment" "policy_attach_sqs_for_lambda" {
 
 resource "aws_iam_role_policy_attachment" "policy_attach_full_lambda" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = data.aws_iam_policy.lambdaFullAccess
+  policy_arn = data.aws_iam_policy.lambdaFullAccess.arn
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attach_full_opensearch" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = data.aws_iam_policy.opensearchFullAccess
+  policy_arn = data.aws_iam_policy.opensearchFullAccess.arn
 }
 
 //ROLE USED BY OPENSEARCH-INDEXING-INITIALIZER
