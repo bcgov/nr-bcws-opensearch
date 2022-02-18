@@ -22,9 +22,6 @@ jobs:
     environment:
       name: tst
 
-    env: 
-      TF_VAR_OPENSEARCH_PASSWORD: ${{ secrets.TF_VAR_OPENSEARCH_PASSWORD }}
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it

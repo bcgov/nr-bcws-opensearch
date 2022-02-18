@@ -348,3 +348,8 @@ variable "timeout_length" {
   type    = number
   default = 45
 }
+
+variable "sns_email_receivers" {
+  type = list
+  default = []
+}
