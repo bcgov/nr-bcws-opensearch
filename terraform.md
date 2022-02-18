@@ -1,6 +1,6 @@
 
-====		MODIFYING THE TERRAFORM SCRIPTS			====
-
+MODIFYING THE TERRAFORM SCRIPTS			
+============================================
 
 The deployment process is reliant on the files in the terraform and terragrunt
 directories.
@@ -24,8 +24,8 @@ Documentation on how resources are specified can be found at:
 
 
 
-====		CONFIGURATION OF GIT AND TERRAFORM		====
-
+CONFIGURATION OF GIT AND TERRAFORM
+============================================
 
 In order to run the terragrunt scripts, you must first configure your git repo and 
 terraform repository.
@@ -51,8 +51,8 @@ To configure the git repo:
 
 
 
-====		CREATING A NEW ENVIRONMENT		====
-
+CREATING A NEW ENVIRONMENT
+============================================
 
 Before creating a new environment, the CDK script for that environment must be run in
 order to create and get the names for the relevant ClamAV queue and bucket.
@@ -90,8 +90,8 @@ Once that is done, the steps are as follows:
 
 
 
-================================================================
-====		EXECUTING A DEPLOYMENT WITH GITHUB ACTIONS		====
+
+EXECUTING A DEPLOYMENT WITH GITHUB ACTIONS
 ================================================================
 
 In GitHUB, go to the Actions tab.
@@ -107,7 +107,8 @@ state of the deployment.
 
 
 
-====		CONFIGURATION OF OPENSEARCH AFTER DEPLOYMENT		====
+CONFIGURATION OF OPENSEARCH AFTER DEPLOYMENT
+============================================
 
 
 When newly deployed or updated, the opensearch domain will default to using AWS IAM
