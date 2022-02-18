@@ -10,7 +10,7 @@ locals {
   env_full = "DEVELOPMENT"
   document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
-  clamAVStackName = "WfdmClamavStackDev"
+  clamAVStackName = "WfdmClamavStackDEV"
   clamstackQueue = "WfdmClamavStackDEV-wfdmClamscanQueuedev996064D1-S0cXn3C4pJK4"
 
 }
