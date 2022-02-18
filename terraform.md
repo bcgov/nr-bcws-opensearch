@@ -54,11 +54,22 @@ To configure the git repo:
 CREATING A NEW ENVIRONMENT
 ============================================
 
+CDK
+------------------------------
 Before creating a new environment, the CDK script for that environment must be run in
-order to create and get the names for the relevant ClamAV queue and bucket.
+order to create and get the name for the relevant ClamAV stack and queue.
 
-The correct bucket to be used will be named starting with:
-	wfdmclamavstack{env}-wfdmclamavbucket{env}...
+The name of the stack to be used should be like WfdmClamavStack{Env}
+
+The correct queue to be used will be named starting with:
+	wfdmclamavstack{env}-...
+
+
+S3
+-------------------------------
+Create a copy of one of the 'wfdm-s3-bucket-{env}' buckets, which contain the source code to be used.
+
+
 
 Once that is done, the steps are as follows:
 
@@ -81,12 +92,12 @@ Once that is done, the steps are as follows:
 		   target_env
 		   env_lowercase
 		   env_full
-		   clamAVBucketName 
+		   clamAVStackName 
 		   clamstackQueue
 
-	   You must also update the workspace name specified in 	generate "backend" { ... }
-	   Failure to do so will result in the new environment overwriting the existing environment
-	   instead of deploying seperately from it.
+	   You must also update the workspace name specified in the 	generate "backend" { ... }
+	   statement. Failure to do so will result in the new environment overwriting the existing 
+	   environment instead of deploying seperately from it.
 
 
 
