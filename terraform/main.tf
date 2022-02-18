@@ -588,7 +588,7 @@ data "aws_s3_bucket_object" "s3_lambda_initializer_object" {
 }
 
 data "aws_s3_bucket_object" "s3_lambda_clamav_object" {
-  bucket = data.aws_s3_bucket.terraform-s3-bucket
+  bucket = data.aws_s3_bucket.terraform-s3-bucket.bucket
   key    = var.lambda_clamav_filename
 }
 
