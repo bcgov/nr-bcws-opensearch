@@ -42,7 +42,7 @@ generate "inputs" {
   env = "${local.target_env}"
   opensearchDomainName = "wf1-${local.application_lowercase}-opensearch-${local.env_lowercase}"
   s3BucketName = "${local.application_lowercase}-s3-bucket-${local.env_lowercase}"
-  clamAVBucketName =  "${local.clamAVBucketName}"
+  clamAVStackName =  "${local.clamAVBucketName}"
   env_lowercase = "${local.env_lowercase}"
   application_lowercase = "${local.application_lowercase}"
   env_full = "${local.env_full}"
