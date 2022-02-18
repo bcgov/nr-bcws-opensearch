@@ -618,7 +618,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   s3_key           = var.lambda_payload_filename
   role             = aws_iam_role.lambda_role.arn
   handler          = var.lambda_function_handler
-  //source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_payload_object.key)
+  source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_payload_object.key)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size      = var.memory_size
@@ -652,7 +652,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   s3_key           = var.lambda_initializer_filename
   role             = aws_iam_role.lambda_initializer_role.arn
   handler          = var.indexing_function_handler
-  //source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_initializer_object.key)
+  source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_initializer_object.key)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size      = var.memory_size
@@ -682,7 +682,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   s3_key           = var.lambda_clamav_filename
   role             = aws_iam_role.lambda_clamav_role.arn
   handler          = var.clamav_function_handler
-  //source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_clamav_object.key)
+  source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_clamav_object.key)
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size      = var.memory_size
