@@ -469,14 +469,8 @@ resource "aws_lambda_event_source_mapping" "event_source_mapping" {
 
 
 #Create s3 bucket and roles, policies needed
-resource "aws_s3_bucket" "terraform-s3-bucket" {
+data "aws_s3_bucket" "terraform-s3-bucket" {
   bucket = var.s3BucketName
-  acl    = "private"
-  tags = {
-    Application = var.application
-    Customer    = var.customer
-    Environment = var.env
-  }
 }
 
 
@@ -565,7 +559,7 @@ EOF
 #Upload java.zip to s3bucket
 /*
 resource "aws_s3_bucket_object" "java_zip" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.id
+  bucket = data.aws_s3_bucket.terraform-s3-bucket.id
   key    = var.layer_file_name
   acl    = "private"
   source = "aws-lambda-layer-base/java.zip"
@@ -579,29 +573,29 @@ resource "aws_s3_bucket_object" "java_zip" {
 */
 
 data "aws_s3_bucket_object" "java_zip" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  bucket = data.aws_s3_bucket.terraform-s3-bucket.bucket
   key    = var.layer_file_name
 }
 
 data "aws_s3_bucket_object" "s3_lambda_payload_object" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  bucket = data.aws_s3_bucket.terraform-s3-bucket.bucket
   key    = var.lambda_payload_filename
 }
 
 data "aws_s3_bucket_object" "s3_lambda_initializer_object" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  bucket = data.aws_s3_bucket.terraform-s3-bucket.bucket
   key    = var.lambda_initializer_filename
 }
 
 data "aws_s3_bucket_object" "s3_lambda_clamav_object" {
-  bucket = aws_s3_bucket.terraform-s3-bucket.bucket
+  bucket = data.aws_s3_bucket.terraform-s3-bucket
   key    = var.lambda_clamav_filename
 }
 
 
 resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   layer_name          = "${var.application}-${var.java_layer_name}-${var.env}"
-  s3_bucket           = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_bucket           = data.aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key              = var.layer_file_name
   description         = "Common layer with java jars files"
   compatible_runtimes = ["java8"]
@@ -614,7 +608,7 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 #Lambda Function Handler
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   function_name    = "${var.application}-indexing-function-${var.env}"
-  s3_bucket        = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_bucket        = data.aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key           = var.lambda_payload_filename
   role             = aws_iam_role.lambda_role.arn
   handler          = var.lambda_function_handler
@@ -648,7 +642,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
 #Lambda File Indexing Initializer
 resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   function_name    = "${var.application}-indexing-initializer-${var.env}"
-  s3_bucket        = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_bucket        = data.aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key           = var.lambda_initializer_filename
   role             = aws_iam_role.lambda_initializer_role.arn
   handler          = var.indexing_function_handler
@@ -678,7 +672,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
 #Lambda ClamAV handler
 resource "aws_lambda_function" "lambda_clamav_handler" {
   function_name    = "${var.application}-clamav-handler-${var.env}"
-  s3_bucket        = aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_bucket        = data.aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key           = var.lambda_clamav_filename
   role             = aws_iam_role.lambda_clamav_role.arn
   handler          = var.clamav_function_handler
