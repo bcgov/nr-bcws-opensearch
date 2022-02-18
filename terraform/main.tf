@@ -225,12 +225,12 @@ resource "aws_iam_role_policy_attachment" "policy_attach_sqs_for_lambda" {
 
 resource "aws_iam_role_policy_attachment" "policy_attach_full_lambda" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.lambdaFullAccess
+  policy_arn = data.aws_iam_policy.lambdaFullAccess
 }
 
-resource "aws_iam_role_policy_attachment" "policy_attach_full_lambda" {
+resource "aws_iam_role_policy_attachment" "policy_attach_full_opensearch" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.opensearchFullAccess
+  policy_arn = data.aws_iam_policy.opensearchFullAccess
 }
 
 //ROLE USED BY OPENSEARCH-INDEXING-INITIALIZER
@@ -611,7 +611,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   s3_key        = var.lambda_payload_filename
   role          = aws_iam_role.lambda_role.arn
   handler       = var.lambda_function_handler
-  //source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_payload_object)
+  source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_payload_object)
   runtime     = "java8"
   layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
@@ -645,7 +645,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   s3_key        = var.lambda_initializer_filename
   role          = aws_iam_role.lambda_initializer_role.arn
   handler       = var.indexing_function_handler
-  source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_initializer_object)
+  source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_initializer_object)
   runtime     = "java8"
   layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
@@ -675,7 +675,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   s3_key        = var.lambda_clamav_filename
   role          = aws_iam_role.lambda_clamav_role.arn
   handler       = var.clamav_function_handler
-  source_code_hash = filebase64sha256(aws_s3_bucket_object.s3_lambda_clamav_object)
+  source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_clamav_object)
   runtime       = "java8"
   layers        = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size   = var.memory_size
