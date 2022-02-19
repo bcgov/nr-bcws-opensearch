@@ -167,16 +167,8 @@ make the following changes:
 
 5. Decline / close any prompts that appear on login
 	
-5. In the Kibana dashboard, open the menu by clicking the "hamburger" menu icon in the top left. Go to Security and make the following changes:
-
-	1)	Create a role named **user_access_role**
-			
-		1) Grant it read write, search and index_all permissions on the cluster
-
-		2) Grant it read, write, search and index_all permissions on the *, data, and admin indices 
-
-	2)	Go to security > users > opensearch-{env} and add the arns for the API user and the indexing lambda function role 
-	as Backend Roles to the user
+5. In the Kibana dashboard, open the menu by clicking the "hamburger" menu icon in the top left. Go to security > users > **opensearch-{env}** and add the arns for the API user 
+and the indexing lambda function role as Backend Roles to the user
 
 		- The ARNs can be found by viewing the user / role in the amazon IAM console
 
