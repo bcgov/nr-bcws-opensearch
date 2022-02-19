@@ -87,9 +87,13 @@ Once that is done, the steps are as follows:
 	
 2. Replace references to the previous environment with references to the new one. Values that
 should be updated are:
+
 **name:**
+
 on: workflow_dispatch: **tags:**
+
 jobs: environment: **name:**
+
 jobs: steps: **working-directory:**
 		   
 	NOTE: failure to replace values may cause conflicts and naming collisions on run
