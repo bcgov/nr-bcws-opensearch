@@ -11,7 +11,7 @@ locals {
   document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackTST"
-  clamstackQueue = ""
+  clamstackQueue = "WfdmClamavStackTST-wfdmClamscanQueuetstAF294E61-P6JScScVrkzs"
 
 }
 
