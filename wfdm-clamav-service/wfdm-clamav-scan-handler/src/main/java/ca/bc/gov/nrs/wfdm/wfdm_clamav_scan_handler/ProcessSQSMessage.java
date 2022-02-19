@@ -115,7 +115,6 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           fileDetailsJson.put("status", status);
           fileDetailsJson.put("message", summary);
           logger.log("\n Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" Lambda. "+fileDetailsJson.toString());
-
           InvokeRequest request = new InvokeRequest();
           request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
           InvokeResult invoke = client.invoke(request);
