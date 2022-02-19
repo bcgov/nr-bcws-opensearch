@@ -9,10 +9,14 @@ All .tf files in the terraform folder are used to generate or obtain resources o
 Each .tf file is scanned on run, and any resources it describes are created or updated.
 
 Key files are as follows:
+
 	main.tf					- Specifies the resources used by the application
+
 	policies.tf				- Contains policy documents referenced by resources in main.tf
+
 	variables.tf			- Variable declarations - note that all terraform variables must be 
 							  declared before usage
+
 	variables.auto.tfvars	- A collection of parameters that are common among all environments
 	
 The .hcl files in the terragrunt folder are used to specify paramenters which differ between
@@ -73,7 +77,7 @@ Create a copy of one of the 'wfdm-s3-bucket-{env}' buckets, which contain the so
 
 Once that is done, the steps are as follows:
 
-	1. Copy of of the deploy_{env}.yml files in .github\workflows, and rename it appropriately.
+	1. Copy one of the deploy_{env}.yml files in .github\workflows, and rename it appropriately.
 	
 	2. Replace references to the previous environment with references to the new one. Values that
 	   should be updated are:
@@ -148,3 +152,112 @@ make the following changes:
 		2)	Go to security > roles > Read-Write-Only and map the arns for the 
 			WF1-WFDM-{env}-Document-API user and the indexing lambda function role as 
 			kibana users AND backend roles
+
+	6. Either through Postman or the Kibana Dev Tools, create an index using the following POST request:
+	PUT /wf1-wfdm-opensearch-{env}
+{
+   "mappings":{
+      "properties":{
+         "key":{
+            "type":"text"
+         },
+         "absoluteFilePath":{
+            "type":"text"
+         },
+         "fileContent":{
+            "type":"text"
+         },
+         "lastModified":{
+           "type": "date"
+         },
+         "lastUpdatedBy":{
+            "type":"text"
+         },
+         "mimeType":{
+            "type":"text"
+         },
+         "fileName":{
+            "type":"text"
+         },
+          "fileRetention":{
+            "type":"text"
+         },
+         "fileLink":{
+            "type":"text"
+         },
+         "fileSize":{
+            "type":"text"
+         },
+        "scanStatus":{
+            "type":"text"
+         },
+         "metadata":{
+            "type":"nested",
+            "properties":{
+               "metadataValue":{
+                  "type":"keyword"
+               },
+               "metadataName":{
+                  "type":"keyword"
+               }
+            }
+         },
+         "security":{
+            "type":"nested",
+            "properties":{
+               "displayLabel":{
+                  "type":"keyword"
+               },
+               "securityKey":{
+                  "type":"keyword"
+               }
+            }
+         },
+         "securityScope":{
+            "type":"nested",
+            "properties":{
+               "displayLabel":{
+                  "type":"keyword"
+               },
+               "canReadorWrite":{
+                  "type":"keyword"
+               }
+            }
+         },
+		
+         "filePath": {
+        "type": "text",
+        "fields": {
+          "tree": {
+            "type": "text",
+            "analyzer": "custom_path_tree"
+          }
+        }
+      }
+		
+      }
+   },
+   "settings": {
+    "analysis": {
+      "analyzer": {
+        "custom_path_tree": {
+          "tokenizer": "custom_hierarchy"
+        },
+        "custom_path_tree_reversed": {
+          "tokenizer": "custom_hierarchy_reversed"
+        }
+      },
+      "tokenizer": {
+        "custom_hierarchy": {
+          "type": "path_hierarchy",
+          "delimiter": "/"
+        },
+        "custom_hierarchy_reversed": {
+          "type": "path_hierarchy",
+          "delimiter": "/",
+          "reverse": "true"
+        }
+      }
+    }
+  }
+} 
