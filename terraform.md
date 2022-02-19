@@ -175,8 +175,8 @@ make the following changes:
 
 		2) Grant it read, write, search and index_all permissions on the *, data, and admin indices 
 
-	2)	Go to security > roles > Read-Write-Only and map the arns for the API user and the indexing lambda function role 
-	as BOTH kibana users AND backend roles
+	2)	Go to security > users > opensearch-{env} and add the arns for the API user and the indexing lambda function role 
+	as Backend Roles to the user
 
 		- The ARNs can be found by viewing the user / role in the amazon IAM console
 
