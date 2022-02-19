@@ -38,17 +38,24 @@ The terraform repository must be configured once per environment. Git only needs
 configured once per fork.
 
 To configure the terraform repository for a new environment:
+
 	1. Go to https://app.terraform.io/session and log in or create an account
+
 	2. Create a new workspace with a unique name, selecting "API-driven workflow" when 
 	   asked to choose workflow type.
+
 	3. In your workspace, go to the "Variables" tab, and create two new sensitive 
 	   environment variables: AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+
 	4. Copy in the relevant access key id and secret access key for an AWS user
 	   with appropriate permissions to create, modify, and delete resources
 
 To configure the git repo:
+
 	1. Go to https://app.terraform.io/app/settings/tokens and create an api token
+
 	2. Store the value of the API token in a secure location
+	
 	3. Copy that value into a new GitHub Secret (Settings -> Secrets -> Create New Secret)
 	   with the name TF_API_TOKEN
 
@@ -137,6 +144,7 @@ make the following changes:
 	2. Select the wf1-wfdm-opensearch-{env} domain and begin editing the security configuration
 	
 	3. Make the following changes:
+
 	    1)  Under fine-grained access control, check "Enable fine-grained access control"
 			and create master user with appropriate name and passwords
 			
@@ -146,6 +154,7 @@ make the following changes:
 	4. Go to the dashboard url for your opensearch domain and login with the master user
 	
 	5. In the kibana dashboard, go to Security and make the following changes:
+
 		1)	Create a role named Read-Write-Only, with read write and index 
 			permissions on *, data, and admin
 
@@ -154,110 +163,110 @@ make the following changes:
 			kibana users AND backend roles
 
 	6. Either through Postman or the Kibana Dev Tools, create an index using the following POST request:
+
+
 	PUT /wf1-wfdm-opensearch-{env}
 {
    "mappings":{
-      "properties":{
-         "key":{
-            "type":"text"
-         },
-         "absoluteFilePath":{
-            "type":"text"
-         },
-         "fileContent":{
-            "type":"text"
-         },
-         "lastModified":{
-           "type": "date"
-         },
-         "lastUpdatedBy":{
-            "type":"text"
-         },
-         "mimeType":{
-            "type":"text"
-         },
-         "fileName":{
-            "type":"text"
-         },
-          "fileRetention":{
-            "type":"text"
-         },
-         "fileLink":{
-            "type":"text"
-         },
-         "fileSize":{
-            "type":"text"
-         },
-        "scanStatus":{
-            "type":"text"
-         },
-         "metadata":{
-            "type":"nested",
-            "properties":{
-               "metadataValue":{
-                  "type":"keyword"
-               },
-               "metadataName":{
-                  "type":"keyword"
-               }
-            }
-         },
-         "security":{
-            "type":"nested",
-            "properties":{
-               "displayLabel":{
-                  "type":"keyword"
-               },
-               "securityKey":{
-                  "type":"keyword"
-               }
-            }
-         },
-         "securityScope":{
-            "type":"nested",
-            "properties":{
-               "displayLabel":{
-                  "type":"keyword"
-               },
-               "canReadorWrite":{
-                  "type":"keyword"
-               }
-            }
-         },
-		
-         "filePath": {
-        "type": "text",
-        "fields": {
-          "tree": {
-            "type": "text",
-            "analyzer": "custom_path_tree"
-          }
-        }
-      }
-		
-      }
-   },
-   "settings": {
-    "analysis": {
-      "analyzer": {
-        "custom_path_tree": {
-          "tokenizer": "custom_hierarchy"
-        },
-        "custom_path_tree_reversed": {
-          "tokenizer": "custom_hierarchy_reversed"
-        }
-      },
-      "tokenizer": {
-        "custom_hierarchy": {
-          "type": "path_hierarchy",
-          "delimiter": "/"
-        },
-        "custom_hierarchy_reversed": {
-          "type": "path_hierarchy",
-          "delimiter": "/",
-          "reverse": "true"
-        }
-      }
-    }
-  }
+		"properties":{
+			"key":{
+				"type":"text"
+			},
+			"absoluteFilePath":{
+				"type":"text"
+			},
+			"fileContent":{
+				"type":"text"
+			},
+			"lastModified":{
+				"type": "date"
+			},
+			"lastUpdatedBy":{
+				"type":"text"
+			},
+			"mimeType":{
+				"type":"text"
+			},
+			"fileName":{
+				"type":"text"
+			},
+			"fileRetention":{
+				"type":"text"
+			},
+			"fileLink":{
+				"type":"text"
+			},
+			"fileSize":{
+				"type":"text"
+			},
+			"scanStatus":{
+				"type":"text"
+			},
+			"metadata":{
+				"type":"nested",
+				"properties":{
+					"metadataValue":{
+						"type":"keyword"
+					},
+					"metadataName":{
+						"type":"keyword"
+					}
+				}
+			},
+			"security":{
+				"type":"nested",
+				"properties":{
+					"displayLabel":{
+						"type":"keyword"
+					},
+					"securityKey":{
+						"type":"keyword"
+					}
+				}
+			},
+			"securityScope":{
+				"type":"nested",
+				"properties":{
+					"displayLabel":{
+						"type":"keyword"
+					},
+					"canReadorWrite":{
+						"type":"keyword"
+					}
+				}
+			},
+		 	"filePath": {
+        		"type": "text",
+        		"fields": {
+          			"tree": {
+            		"type": "text",
+            		"analyzer": "custom_path_tree"
+          			}
+        		}
+    		}		
+		}
+   	},
+	"settings": {
+		"analysis": {
+			"analyzer": {
+				"custom_path_tree": {
+					"tokenizer": "custom_hierarchy"
+				},
+				"custom_path_tree_reversed": {
+					"tokenizer": "custom_hierarchy_reversed"
+				}
+			},
+			"tokenizer": {
+				"custom_hierarchy": {
+					"type": "path_hierarchy",
+					"delimiter": "/"
+				},
+				"custom_hierarchy_reversed": {
+					"type": "path_hierarchy",
+					"delimiter": "/",
+					"reverse": "true"
+				}
+			}
+		}
+	}
 } 
