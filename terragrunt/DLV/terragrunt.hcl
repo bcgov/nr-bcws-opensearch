@@ -8,8 +8,8 @@ locals {
   target_env = "DLV"
   env_lowercase = "dlv"
   env_full = "DELIVERY"
-  document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
-  document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
+  document_api_url = "https://d1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
+  document_token_url = "https://dlvrapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamstackQueue = "WfdmClamavStackDLV-wfdmClamscanQueuedlv5DE047B8-c6JlOxiRlig7"
   clamAVStackName = "WfdmClamavStackDLV"
 
