@@ -329,10 +329,13 @@ variable "documents_index_password" {
   default = "Password"
 }
 
+//secret manager is parameterized
+//because each ENV. use different password
+/*
 variable "secret_manager" {
   type    = string
   default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
-}
+}*/
 
 variable "virus_alert" {
   type    = string
@@ -357,4 +360,10 @@ variable "sns_email_receivers" {
 variable "clamAVStackName" {
   type    = string
   default = null
+}
+
+variable "secret_manager_name" {
+  type        = string
+  description = "The AWS Secret Manager secret name"
+  default     = null
 }

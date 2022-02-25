@@ -634,7 +634,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       WFDM_DOCUMENT_INDEX_ACCOUNT_PASSWORD     = var.documents_index_password
       WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT = "https://${var.opensearchDomainName}.${var.domain}"
       WFDM_DOCUMENT_OPENSEARCH_INDEXNAME       = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
-      WFDM_DOCUMENT_SECRET_MANAGER             = var.secret_manager
+      WFDM_DOCUMENT_SECRET_MANAGER             = "${var.secret_manager_name}"
       WFDM_DOCUMENT_TOKEN_URL                  = "${var.document_token_url}"
     }
   }
@@ -665,7 +665,8 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
       WFDM_DOCUMENT_CLAMAV_S3BUCKET = data.aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_TOKEN_URL       = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME     = aws_lambda_function.terraform_wfdm_indexing_function.function_name
-      WFDM_DOCUMENT_SECRET_MANAGER  = var.secret_manager
+      WFDM_DOCUMENT_SECRET_MANAGER  = "${var.secret_manager_name}"
+
     }
   }
 }
@@ -692,10 +693,10 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
     variables = {
       ENVIRONMENT                  = "${var.env_full}"
       WFDM_DOCUMENT_API_URL        = "${var.document_api_url}"
-      WFDM_DOCUMENT_SECRET_MANAGER = var.secret_manager
       WFDM_DOCUMENT_TOKEN_URL      = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME    = aws_lambda_function.terraform_wfdm_indexing_function.function_name
       WFDM_SNS_VIRUS_ALERT         = var.virus_alert
+      WFDM_DOCUMENT_SECRET_MANAGER  = "${var.secret_manager_name}"
     }
   }
 }
