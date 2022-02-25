@@ -12,7 +12,7 @@ locals {
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackINT"
   clamstackQueue = "WfdmClamavStackINT-wfdmClamscanQueueintC7DDA541-4i0O18IjJgs0"
-
+  secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_INT"
 }
 
 generate "backend" {

@@ -329,10 +329,13 @@ variable "documents_index_password" {
   default = "Password"
 }
 
+//secret manager is parameterized
+//because each ENV. use different password
+/*
 variable "secret_manager" {
   type    = string
   default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
-}
+}*/
 
 variable "virus_alert" {
   type    = string

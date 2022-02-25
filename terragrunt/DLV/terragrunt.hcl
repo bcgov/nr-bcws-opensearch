@@ -12,7 +12,7 @@ locals {
   document_token_url = "https://dlvrapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamstackQueue = "WfdmClamavStackDLV-wfdmClamscanQueuedlv5DE047B8-c6JlOxiRlig7"
   clamAVStackName = "WfdmClamavStackDLV"
-
+  secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_DLV"
 }
 
 generate "backend" {
