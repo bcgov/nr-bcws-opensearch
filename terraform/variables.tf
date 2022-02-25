@@ -358,3 +358,9 @@ variable "clamAVStackName" {
   type    = string
   default = null
 }
+
+variable "secret_manager_name" {
+  type        = string
+  description = "The AWS Secret Manager secret name"
+  default     = null
+}
