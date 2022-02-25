@@ -12,8 +12,6 @@ locals {
   document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackDEV"
   clamstackQueue = "WfdmClamavStackDEV-wfdmClamscanQueuedev996064D1-S0cXn3C4pJK4"
-  secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_DEV"
-
 }
 
 generate "backend" {
@@ -50,5 +48,6 @@ generate "inputs" {
   document_api_url = "${local.document_api_url}"
   document_token_url = "${local.document_token_url}"
   clamQueue = "${local.clamstackQueue}"
+  secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
 EOF
 }

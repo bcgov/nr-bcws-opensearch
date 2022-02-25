@@ -329,11 +329,6 @@ variable "documents_index_password" {
   default = "Password"
 }
 
-variable "secret_manager" {
-  type    = string
-  default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
-}
-
 variable "virus_alert" {
   type    = string
   default = "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION"
