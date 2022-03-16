@@ -167,7 +167,9 @@ make the following changes:
 
 5. Decline / close any prompts that appear on login
 	
-5. In the Kibana dashboard, open the menu by clicking the "hamburger" menu icon in the top left. Go to security > users > **opensearch-{env}** and add the arns for the API user 
+5. In the Kibana dashboard, open the menu by clicking the "hamburger" menu icon in the top left. Go to security > users and create a user named "opensearch-add-index-lambda-user." Then, add it to the all_access role in security > roles > all_access > manage mapping
+
+6.	Go to security > users > **opensearch-{env}** and add the arns for the API user 
 and the indexing lambda function role as Backend Roles to the user
 
 		- The ARNs can be found by viewing the user / role in the amazon IAM console
@@ -176,7 +178,7 @@ and the indexing lambda function role as Backend Roles to the user
 
 		- The Lambda function role will be named like **WF1-WFDM-iam_role_lambda_index_searching-{env}**
 
-6. Either through Postman or the Kibana Dev Tools, create an index using the following POST request:
+7. Either through Postman or the Kibana Dev Tools, create an index using the following POST request:
 
 	PUT /wf1-wfdm-opensearch-{env} {
 		"mappings":{
