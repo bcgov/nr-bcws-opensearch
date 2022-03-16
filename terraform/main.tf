@@ -651,7 +651,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   runtime          = "java8"
   layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size      = var.memory_size
-  timeout          = var.timeout_length
+  timeout          = var.timeout_length_large
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
