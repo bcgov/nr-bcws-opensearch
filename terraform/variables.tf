@@ -346,7 +346,7 @@ variable "timeout_length" {
 
 variable "timeout_length_large" {
   type    = number
-  default = 180
+  default = 900
 }
 
 variable "sns_email_receivers" {
@@ -363,4 +363,21 @@ variable "secret_manager_name" {
   type        = string
   description = "The AWS Secret Manager secret name"
   default     = null
+}
+
+variable "file_scan_size_limit" {
+  type        = string
+  description = "maximum filesize on which the virus scan will run"
+  default     = "250 MB"
+}
+
+variable "supported_mime_types" {
+  type        = list(any)
+  description = "list of supported filetypes"
+  default = [
+    "text/plain",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/pdf"
+  ]
 }

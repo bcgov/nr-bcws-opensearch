@@ -608,16 +608,16 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
 
 #Lambda Function Handler
 resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
-  function_name    = "${var.application}-indexing-function-${var.env}"
-  s3_bucket        = data.aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key           = var.lambda_payload_filename
-  role             = aws_iam_role.lambda_role.arn
-  handler          = var.lambda_function_handler
+  function_name = "${var.application}-indexing-function-${var.env}"
+  s3_bucket     = data.aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_payload_filename
+  role          = aws_iam_role.lambda_role.arn
+  handler       = var.lambda_function_handler
   //source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_payload_object.key)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size      = var.memory_size
-  timeout          = var.timeout_length
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout     = var.timeout_length
 
   tags = {
     Name        = "${var.application}-indexing-function-${var.env}"
@@ -636,22 +636,23 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       WFDM_DOCUMENT_OPENSEARCH_INDEXNAME       = aws_elasticsearch_domain.main_elasticsearch_domain.domain_name
       WFDM_DOCUMENT_SECRET_MANAGER             = "${var.secret_manager_name}"
       WFDM_DOCUMENT_TOKEN_URL                  = "${var.document_token_url}"
+      WFDM_DOCUMENT_SUPPORTED_MIME_TYPES       = join(",",var.supported_mime_types)
     }
   }
 }
 
 #Lambda File Indexing Initializer
 resource "aws_lambda_function" "terraform_indexing_initializer_function" {
-  function_name    = "${var.application}-indexing-initializer-${var.env}"
-  s3_bucket        = data.aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key           = var.lambda_initializer_filename
-  role             = aws_iam_role.lambda_initializer_role.arn
-  handler          = var.indexing_function_handler
+  function_name = "${var.application}-indexing-initializer-${var.env}"
+  s3_bucket     = data.aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_initializer_filename
+  role          = aws_iam_role.lambda_initializer_role.arn
+  handler       = var.indexing_function_handler
   //source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_initializer_object.key)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size      = var.memory_size
-  timeout          = var.timeout_length_large
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout     = var.timeout_length_large
   tags = {
     Name        = "${var.application}-indexing-initializer-function-${var.env}"
     Application = var.application
@@ -660,12 +661,13 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   }
   environment {
     variables = {
-      ENVIRONMENT                   = "${var.env_full}"
-      WFDM_DOCUMENT_API_URL         = "${var.document_api_url}"
-      WFDM_DOCUMENT_CLAMAV_S3BUCKET = data.aws_s3_bucket.clamav-bucket.bucket
-      WFDM_DOCUMENT_TOKEN_URL       = "${var.document_token_url}"
-      WFDM_INDEXING_LAMBDA_NAME     = aws_lambda_function.terraform_wfdm_indexing_function.function_name
-      WFDM_DOCUMENT_SECRET_MANAGER  = "${var.secret_manager_name}"
+      ENVIRONMENT                        = "${var.env_full}"
+      WFDM_DOCUMENT_API_URL              = "${var.document_api_url}"
+      WFDM_DOCUMENT_CLAMAV_S3BUCKET      = data.aws_s3_bucket.clamav-bucket.bucket
+      WFDM_DOCUMENT_TOKEN_URL            = "${var.document_token_url}"
+      WFDM_INDEXING_LAMBDA_NAME          = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_DOCUMENT_SECRET_MANAGER       = "${var.secret_manager_name}"
+      WFDM_DOCUMENT_FILE_SIZE_SCAN_LIMIT = "${var.file_scan_size_limit}"
 
     }
   }
@@ -673,16 +675,16 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
 
 #Lambda ClamAV handler
 resource "aws_lambda_function" "lambda_clamav_handler" {
-  function_name    = "${var.application}-clamav-handler-${var.env}"
-  s3_bucket        = data.aws_s3_bucket.terraform-s3-bucket.bucket
-  s3_key           = var.lambda_clamav_filename
-  role             = aws_iam_role.lambda_clamav_role.arn
-  handler          = var.clamav_function_handler
+  function_name = "${var.application}-clamav-handler-${var.env}"
+  s3_bucket     = data.aws_s3_bucket.terraform-s3-bucket.bucket
+  s3_key        = var.lambda_clamav_filename
+  role          = aws_iam_role.lambda_clamav_role.arn
+  handler       = var.clamav_function_handler
   //source_code_hash = filebase64sha256(data.aws_s3_bucket_object.s3_lambda_clamav_object.key)
-  runtime          = "java8"
-  layers           = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
-  memory_size      = var.memory_size
-  timeout          = 30
+  runtime     = "java8"
+  layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
+  memory_size = var.memory_size
+  timeout     = 30
   tags = {
     Name        = "${var.application}-clamav-handler-function-${var.env}"
     Application = var.application
@@ -696,7 +698,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
       WFDM_DOCUMENT_TOKEN_URL      = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME    = aws_lambda_function.terraform_wfdm_indexing_function.function_name
       WFDM_SNS_VIRUS_ALERT         = var.virus_alert
-      WFDM_DOCUMENT_SECRET_MANAGER  = "${var.secret_manager_name}"
+      WFDM_DOCUMENT_SECRET_MANAGER = "${var.secret_manager_name}"
     }
   }
 }
