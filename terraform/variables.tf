@@ -368,7 +368,7 @@ variable "secret_manager_name" {
 variable "file_scan_size_limit" {
   type        = string
   description = "maximum filesize on which the virus scan will run"
-  default     = "250 MB"
+  default     = "2 GB"
 }
 
 variable "supported_mime_types" {

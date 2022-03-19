@@ -637,6 +637,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       WFDM_DOCUMENT_SECRET_MANAGER             = "${var.secret_manager_name}"
       WFDM_DOCUMENT_TOKEN_URL                  = "${var.document_token_url}"
       WFDM_DOCUMENT_SUPPORTED_MIME_TYPES       = join(",",var.supported_mime_types)
+      WFDM_DOCUMENT_FILE_SIZE_SCAN_LIMIT       = "${var.file_scan_size_limit}"
     }
   }
 }
