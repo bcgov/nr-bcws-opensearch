@@ -49,5 +49,6 @@ generate "inputs" {
   document_token_url = "${local.document_token_url}"
   clamQueue = "${local.clamstackQueue}"
   clamAVStackName = "${local.clamAVStackName}"
+  secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
 EOF
 }

@@ -5,13 +5,14 @@ terraform {
 locals {
   application = "WF1-WFDM"
   application_lowercase = "wfdm"
-  target_env = "DEV"
-  env_lowercase = "dev"
-  env_full = "DEVELOPMENT"
-  document_api_url = "https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
-  document_token_url = "https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
-  clamAVStackName = "WfdmClamavStackDEV"
-  clamstackQueue = "WfdmClamavStackDEV-wfdmClamscanQueuedev996064D1-S0cXn3C4pJK4"
+  target_env = "PRD"
+  env_lowercase = "prd"
+  env_full = "PRODUCTION"
+  document_api_url = "https://t1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
+  document_token_url = "https://testapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
+  clamAVStackName = "WfdmClamavStackPRD"
+  clamstackQueue = "WfdmClamavStackPRD-{FILL IN ONCE CDK IS RUN}"
+
 }
 
 generate "backend" {
@@ -22,7 +23,7 @@ terraform {
   backend "remote" {
     organization = "wf1-wfdm-opensearch"
     workspaces {
-        name = "nr-bcws-opensearch-DEV"
+        name = "nr-bcws-opensearch-prd"
     }
   }
 }

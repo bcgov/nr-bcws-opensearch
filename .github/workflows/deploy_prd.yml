@@ -1,12 +1,12 @@
-# This workflow deploys the code tagged with 'deploy-dlv*'
+# This workflow deploys the code tagged with 'deploy-prd*'
 
-name: deploy_dlv
+name: deploy_prd
 
 # Controls when the action will run.
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    tags: [deploy-dlv*]
+    tags: [deploy-prd*]
 
 env:
   TF_VERSION: 1.1.0
@@ -20,7 +20,7 @@ jobs:
 
     # Production GitHub repo environment
     environment:
-      name: dlv
+      name: prd
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -42,7 +42,7 @@ jobs:
 
             # Apply changes
       - name: Terragrunt Apply
-        working-directory: terragrunt/DLV
+        working-directory: terragrunt/prd
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
         run: terragrunt run-all apply --terragrunt-non-interactive

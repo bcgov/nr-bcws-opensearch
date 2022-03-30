@@ -329,11 +329,6 @@ variable "documents_index_password" {
   default = "Password"
 }
 
-variable "secret_manager" {
-  type    = string
-  default = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD"
-}
-
 variable "virus_alert" {
   type    = string
   default = "arn:aws:sns:ca-central-1:460053263286:WFDM_CLAMAV_EMAIL_NOTIFICATION"
@@ -349,6 +344,11 @@ variable "timeout_length" {
   default = 45
 }
 
+variable "timeout_length_large" {
+  type    = number
+  default = 900
+}
+
 variable "sns_email_receivers" {
   type    = list(any)
   default = []
@@ -357,4 +357,32 @@ variable "sns_email_receivers" {
 variable "clamAVStackName" {
   type    = string
   default = null
+}
+
+variable "secret_manager_name" {
+  type        = string
+  description = "The AWS Secret Manager secret name"
+  default     = null
+}
+
+variable "file_scan_size_limit" {
+  type        = string
+  description = "maximum filesize on which the virus scan will run"
+  default     = "2 GB"
+}
+
+variable "supported_mime_types" {
+  type        = list(any)
+  description = "list of supported filetypes"
+  default = [
+    "text/plain",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/pdf",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.openxmlformats-officedocument.presentationml.slideshow"
+  ]
 }
