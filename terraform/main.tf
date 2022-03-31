@@ -411,7 +411,7 @@ resource "aws_sqs_queue" "deadletter" {
 
 resource "aws_sqs_queue" "queue" {
   depends_on                 = [aws_iam_role.opensearch_sqs_role]
-  visibility_timeout_seconds = var.visibilityTimeoutSeconds
+  visibility_timeout_seconds = var.timeout_length_large
   name                       = "${var.application}-sqs-queue-${var.env}"
 
 
