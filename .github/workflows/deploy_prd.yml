@@ -42,7 +42,7 @@ jobs:
 
             # Apply changes
       - name: Terragrunt Apply
-        working-directory: terragrunt/prd
+        working-directory: terragrunt/PRD
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
         run: terragrunt run-all apply --terragrunt-non-interactive
