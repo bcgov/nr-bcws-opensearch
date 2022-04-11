@@ -75,4 +75,4 @@ You will need a terraform cloud team token, and have it setup in `~/terraform.d/
   - Automatically apply approved changes to the desired state
   - Ensure correctness and alert on divergence with software agents
 
-[![Lifecycle:Experimental](https://img.shields.io/badge/Lifecycle-Experimental-339999)](<Redirect-URL>)
+[![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)](<Redirect-URL>)
