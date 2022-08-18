@@ -220,10 +220,10 @@ and the indexing lambda function role as Backend Roles to the user
 					"type":"nested",
 					"properties":{
 						"metadataValue":{
-							"type":"keyword"
+							"type":"text"
 						},
 						"metadataName":{
-							"type":"keyword"
+							"type":"text"
 						}
 					}
 				},
