@@ -74,28 +74,32 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         // Where will we receive the event type? Message Body or attributes?
         String eventType = messageDetails.getString("eventType");
         System.out.println("file id and event Type: "+fileId+" "+eventType);
+
+        String versionNumber = messageDetails.getString("fileVersionNumber");
+
+        String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
+        String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
+        String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+        String CLIENT_ID = secretCD[0];
+        String PASSWORD = secretCD[1];
+
+        String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
+        if (wfdmToken == null)
+          throw new Exception("Could not authorize access for WFDM");
+
+        String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+
+        if (fileInfo == null) {
+          throw new Exception("File not found!");
+        } else {
+
+
+        JSONObject fileDetailsJson = new JSONObject(fileInfo);
+        String mimeType = fileDetailsJson.get("mimeType").toString();
+
         // Check the event type. If this is a BYTES event, write the bytes
         // otherwise, handle meta only and skip clam scan.
         if (eventType.equalsIgnoreCase("bytes")) {
-          String versionNumber = messageDetails.getString("fileVersionNumber");
-
-          String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
-          String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
-    	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
-    	  String CLIENT_ID = secretCD[0];
-    	  String PASSWORD = secretCD[1];
-
-          String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
-          if (wfdmToken == null)
-            throw new Exception("Could not authorize access for WFDM");
-
-          String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
-
-          if (fileInfo == null) {
-            throw new Exception("File not found!");
-          } else {
-            JSONObject fileDetailsJson = new JSONObject(fileInfo);
-            String mimeType = fileDetailsJson.get("mimeType").toString();
 
             logger.log("\nInfo: File found on WFDM: " + fileInfo);
             // Update Virus scan metadata
@@ -134,6 +138,13 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             System.out.println("putting into s3 bucket");
             s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
+          //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
+          else if (eventType.equalsIgnoreCase("meta")  &&  (fileDetailsJson.get("mimeType").toString() == "null")  )  { 
+            AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+            InvokeRequest request = new InvokeRequest();
+            request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
+            InvokeResult invoke = client.invoke(request);
+
         } else {
           // Meta only update, so fire a message to the Indexer Lambda
           System.out.println("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
@@ -141,6 +152,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           InvokeRequest request = new InvokeRequest();
           request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);
           InvokeResult invoke = client.invoke(request);
+        }
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
         logger.log("\nError: Failure to recieve file from WFDM: " + e.getLocalizedMessage());
