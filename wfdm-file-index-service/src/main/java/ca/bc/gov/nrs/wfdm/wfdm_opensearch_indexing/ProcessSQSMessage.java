@@ -54,10 +54,15 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
       System.out.println("fileDetailsJson"+fileDetailsJson.getString("fileId"));
-     // String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
-	 // JSONObject jsonObject = new JSONObject(jsonArray);
+
       String fileId = fileDetailsJson.getString("fileId");
       String versionNumber = fileDetailsJson.getString("fileVersionNumber");
+
+      if (versionNumber.equals("null")){
+        logger.log("\nInfo:  Version Number is: " + versionNumber);
+        versionNumber = "1";
+      } 
+
       //TODO:Update to correct event type from WFDM-API
       String eventType = fileDetailsJson.getString("eventType");
       String scanStatus;
@@ -87,6 +92,9 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
       String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+
+      logger.log("\nInfo: fileInfo is: " + fileInfo);
+
 
       if (fileInfo == null) {
         throw new Exception("File not found!");
@@ -136,7 +144,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
               mimeType.equalsIgnoreCase("application/msword") ||
               mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")||
               mimeType.equalsIgnoreCase("application/pdf")  ||
-              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")) {
+              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")  ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ){
             content = TikaParseDocument.parseStream(stream);
             logger.log("\nInfo: content after parsing "+content);
           } else {
