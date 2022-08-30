@@ -68,12 +68,6 @@ public class OpenSearchRESTClient {
 		document.put("key", fileName);
 		document.put("absoluteFilePath",fileDetails.getString("filePath"));
 		
-		if (content != null && !content.isEmpty()) {
-			JSONObject jsonObj = new JSONObject(content);
-			document.put("fileContent", jsonObj.getString("Text"));
-		}
-
-		
 		if(!fileDetails.isNull("lastUpdatedTimestamp"))
 			document.put("lastModified", fileDetails.get("lastUpdatedTimestamp"));
 		else
@@ -93,6 +87,11 @@ public class OpenSearchRESTClient {
 			document.put("fileRetention", fileDetails.get("retention"));
 		else
 			document.put("fileRetention", null);
+
+		if (content != null && !content.isEmpty()) {
+				JSONObject jsonObj = new JSONObject(content);
+				document.put("fileContent", jsonObj.getString("Text"));
+		}
 		
 		JSONObject parent = fileDetails.getJSONObject("parent");
 		JSONArray parentLinkArray = parent.getJSONArray("links");
