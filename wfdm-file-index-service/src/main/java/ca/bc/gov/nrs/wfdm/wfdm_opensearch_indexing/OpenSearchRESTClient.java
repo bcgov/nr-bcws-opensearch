@@ -80,7 +80,7 @@ public class OpenSearchRESTClient {
 		
 		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
 		if (fileDetails.get("mimeType").toString() == "null") {
-			document.put("mimeType", "");
+			document.put("mimeType", "DIRECTORY");
 		} else {
 			document.put("mimeType",fileDetails.get("mimeType"));
 		}

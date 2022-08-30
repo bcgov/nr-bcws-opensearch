@@ -97,6 +97,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         JSONObject fileDetailsJson = new JSONObject(fileInfo);
         String mimeType = fileDetailsJson.get("mimeType").toString();
 
+        if (mimeType.equals("null")) { mimeType = "DIRECTORY";}
+
         // Check the event type. If this is a BYTES event, write the bytes
         // otherwise, handle meta only and skip clam scan.
         if (eventType.equalsIgnoreCase("bytes")) {
