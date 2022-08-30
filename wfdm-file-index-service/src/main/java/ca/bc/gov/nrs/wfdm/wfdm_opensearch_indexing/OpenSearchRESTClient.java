@@ -82,11 +82,11 @@ public class OpenSearchRESTClient {
 		if (fileDetails.get("mimeType") == "null") {
 			document.put("mimeType", "DIRECTORY");
 		} else {
-			document.put("mimeType", fileDetails.get("mimeType") );
+			document.put("mimeType", fileDetails.get("mimeType").toString() );
 		}
 		
 		if (fileDetails.get("fileType") != "null"  ){
-			document.put("fileType", fileDetails.get("fileType"));
+			document.put("fileType", fileDetails.get("fileType").toString());
 		}
 
 		document.put("fileName", fileName);
