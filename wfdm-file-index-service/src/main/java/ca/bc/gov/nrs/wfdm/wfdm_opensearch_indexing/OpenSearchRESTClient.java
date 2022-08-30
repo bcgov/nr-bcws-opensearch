@@ -79,14 +79,19 @@ public class OpenSearchRESTClient {
 			document.put("lastUpdatedBy", null);
 		
 		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
-		if (fileDetails.get("mimeType").toString() == "null") {
+		if (fileDetails.get("mimeType") == "null") {
 			document.put("mimeType", "DIRECTORY");
 		} else {
-			document.put("mimeType",fileDetails.get("mimeType"));
+			document.put("mimeType", fileDetails.get("mimeType") );
+		}
+		
+		if (fileDetails.get("fileType") != "null"  ){
+			document.put("fileType", fileDetails.get("fileType"));
 		}
 
 		document.put("fileName", fileName);
-		
+
+
 		if(!fileDetails.isNull("retention"))
 			document.put("fileRetention", fileDetails.get("retention"));
 		else
