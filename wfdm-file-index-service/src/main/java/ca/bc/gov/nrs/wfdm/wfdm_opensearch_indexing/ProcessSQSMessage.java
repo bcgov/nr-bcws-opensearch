@@ -68,7 +68,14 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         versionNumber = "1";
       }
       //TODO:Update to correct event type from WFDM-API
-      String eventType = fileDetailsJson.getString("eventType");
+      String eventType;
+      if (fileDetailsJson.has("eventType")) {
+        eventType = fileDetailsJson.getString("eventType");
+      } else {
+        eventType = "meta";
+        logger.log("\nInfo: eventType key/value was not found, setting eventType to: " + eventType);
+      }
+
       String scanStatus;
       if(fileDetailsJson.has("message") && !fileDetailsJson.isNull("message") )
     	  scanStatus = fileDetailsJson.getString("message");
