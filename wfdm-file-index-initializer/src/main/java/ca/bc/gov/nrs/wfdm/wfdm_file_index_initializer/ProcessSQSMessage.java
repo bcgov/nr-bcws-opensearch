@@ -70,12 +70,16 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         	return null;
         }
 
-        
         // Where will we receive the event type? Message Body or attributes?
-        String eventType = messageDetails.getString("eventType");
+        String eventType;
+        if (messageDetails.has("eventType")){
+          eventType = messageDetails.getString("eventType");
+        } else {
+          eventType = "meta";
+        }
         System.out.println("file id and event Type: "+fileId+" "+eventType);
 
-        String versionNumber = messageDetails.getString("fileVersionNumber");
+        
 
         String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
         String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
@@ -102,7 +106,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         // Check the event type. If this is a BYTES event, write the bytes
         // otherwise, handle meta only and skip clam scan.
         if (eventType.equalsIgnoreCase("bytes")) {
-
+            String versionNumber = messageDetails.getString("fileVersionNumber");
             logger.log("\nInfo: File found on WFDM: " + fileInfo);
             // Update Virus scan metadata
             // Note, current user likely lacks access to update metadata so we'll need to update webade
