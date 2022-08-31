@@ -54,12 +54,28 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
       System.out.println("fileDetailsJson"+fileDetailsJson.getString("fileId"));
-     // String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
-	 // JSONObject jsonObject = new JSONObject(jsonArray);
+
       String fileId = fileDetailsJson.getString("fileId");
-      String versionNumber = fileDetailsJson.getString("fileVersionNumber");
+
+      String versionNumber;
+      if (fileDetailsJson.has("fileVersionNumber")) {
+        if (fileDetailsJson.getString("fileVersionNumber").equals("null")){
+          versionNumber = "1";
+        } else {
+          versionNumber = fileDetailsJson.getString("fileVersionNumber");
+        }
+      }  else {
+        versionNumber = "1";
+      }
       //TODO:Update to correct event type from WFDM-API
-      String eventType = fileDetailsJson.getString("eventType");
+      String eventType;
+      if (fileDetailsJson.has("eventType")) {
+        eventType = fileDetailsJson.getString("eventType");
+      } else {
+        eventType = "meta";
+        logger.log("\nInfo: eventType key/value was not found, setting eventType to: " + eventType);
+      }
+
       String scanStatus;
       if(fileDetailsJson.has("message") && !fileDetailsJson.isNull("message") )
     	  scanStatus = fileDetailsJson.getString("message");
@@ -87,6 +103,9 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
       String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+
+      logger.log("\nInfo: fileInfo is: " + fileInfo);
+
 
       if (fileInfo == null) {
         throw new Exception("File not found!");
@@ -136,7 +155,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
               mimeType.equalsIgnoreCase("application/msword") ||
               mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")||
               mimeType.equalsIgnoreCase("application/pdf")  ||
-              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")) {
+              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")  ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ){
             content = TikaParseDocument.parseStream(stream);
             logger.log("\nInfo: content after parsing "+content);
           } else {

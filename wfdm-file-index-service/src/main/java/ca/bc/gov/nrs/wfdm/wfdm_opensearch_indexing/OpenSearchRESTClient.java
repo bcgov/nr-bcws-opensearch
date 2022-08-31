@@ -78,11 +78,20 @@ public class OpenSearchRESTClient {
 		else
 			document.put("lastUpdatedBy", null);
 		
+		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
+		if (fileDetails.get("mimeType") == "null") {
+			document.put("mimeType", "DIRECTORY");
+		} else {
+			document.put("mimeType", fileDetails.get("mimeType").toString() );
+		}
 		
-		document.put("mimeType",fileDetails.get("mimeType"));
-		
+		if (fileDetails.get("fileType") != "null"  ){
+			document.put("fileType", fileDetails.get("fileType").toString());
+		}
+
 		document.put("fileName", fileName);
-		
+
+
 		if(!fileDetails.isNull("retention"))
 			document.put("fileRetention", fileDetails.get("retention"));
 		else
@@ -99,10 +108,13 @@ public class OpenSearchRESTClient {
 		document.put("fileLink", parentLinkObj.get("href"));
 		document.put("filePath", parent.getString("filePath"));
 		
-		Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
-	    String fileSize =  humanReadableByteCountBin(fileSizeLong);
-	    document.put("fileSize", fileSize);
-		
+		if (!fileDetails.isNull("fileSize")) {
+			Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
+			String fileSize =  humanReadableByteCountBin(fileSizeLong);
+			document.put("fileSize", fileSize);
+		} else {
+			document.put("fileSize", 0);
+		}
 
 	    JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
