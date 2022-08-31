@@ -56,13 +56,17 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       System.out.println("fileDetailsJson"+fileDetailsJson.getString("fileId"));
 
       String fileId = fileDetailsJson.getString("fileId");
-      String versionNumber = fileDetailsJson.getString("fileVersionNumber");
 
-      if (versionNumber.equals("null")){
-        logger.log("\nInfo:  Version Number is: " + versionNumber);
+      String versionNumber;
+      if (fileDetailsJson.has("fileVersionNumber")) {
+        if (fileDetailsJson.getString("fileVersionNumber").equals("null")){
+          versionNumber = "1";
+        } else {
+          versionNumber = fileDetailsJson.getString("fileVersionNumber");
+        }
+      }  else {
         versionNumber = "1";
-      } 
-
+      }
       //TODO:Update to correct event type from WFDM-API
       String eventType = fileDetailsJson.getString("eventType");
       String scanStatus;
