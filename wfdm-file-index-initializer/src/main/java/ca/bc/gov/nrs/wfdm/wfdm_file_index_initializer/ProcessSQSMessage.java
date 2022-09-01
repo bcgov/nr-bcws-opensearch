@@ -77,9 +77,9 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         } else {
           eventType = "meta";
         }
-        System.out.println("file id and event Type: "+fileId+" "+eventType);
+        logger.log("file id and event Type: "+fileId+" "+eventType);
 
-        
+        String versionNumber = messageDetails.getString("fileVersionNumber");
 
         String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
         String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
@@ -87,11 +87,15 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         String CLIENT_ID = secretCD[0];
         String PASSWORD = secretCD[1];
 
+        logger.log("retrieved secret and client_ID and PASSWORD");
+
         String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
         if (wfdmToken == null)
           throw new Exception("Could not authorize access for WFDM");
 
         String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+
+        
 
         if (fileInfo == null) {
           throw new Exception("File not found!");
@@ -99,14 +103,17 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
 
         JSONObject fileDetailsJson = new JSONObject(fileInfo);
-        String mimeType = fileDetailsJson.get("mimeType").toString();
 
-        if (mimeType.equals("null")) { mimeType = "DIRECTORY";}
+        String mimeType;
+        if (fileDetailsJson.has("mimeType") ){
+          mimeType = fileDetailsJson.get("mimeType").toString();
+        } else {
+          mimeType = ""; 
+        }
 
         // Check the event type. If this is a BYTES event, write the bytes
         // otherwise, handle meta only and skip clam scan.
         if (eventType.equalsIgnoreCase("bytes")) {
-            String versionNumber = messageDetails.getString("fileVersionNumber");
             logger.log("\nInfo: File found on WFDM: " + fileInfo);
             // Update Virus scan metadata
             // Note, current user likely lacks access to update metadata so we'll need to update webade
@@ -141,7 +148,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             meta.setContentType(mimeType);
             meta.setContentLength(Long.parseLong(fileDetailsJson.get("fileSize").toString()));
             meta.addUserMetadata("title", fileId + "-" + versionNumber);
-            System.out.println("putting into s3 bucket");
+            logger.log("putting into s3 bucket");
             s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
           //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
@@ -153,7 +160,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         } else {
           // Meta only update, so fire a message to the Indexer Lambda
-          System.out.println("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
+          logger.log("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
           AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
           InvokeRequest request = new InvokeRequest();
           request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);
@@ -161,6 +168,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         }
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
+        logger.log("logged exception" + e);
         logger.log("\nError: Failure to recieve file from WFDM: " + e.getLocalizedMessage());
         batchItemFailures.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
       } catch (Exception ex) {
@@ -171,7 +179,6 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         logger.log("\nInfo: Finalizing processing...");
       }
     }
-
     logger.log("\nInfo: Close SQS batch");
     return new SQSBatchResponse(batchItemFailures);
   }
