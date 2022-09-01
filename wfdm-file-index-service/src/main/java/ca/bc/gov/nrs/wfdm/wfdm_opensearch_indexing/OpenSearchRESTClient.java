@@ -29,6 +29,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
 
 /**
  * OpenSeachRESTClient provides access to the OpenSearch Restful API. This is
@@ -58,9 +59,9 @@ public class OpenSearchRESTClient {
 		restClient = searchClient(serviceName, region);
 		
 		if(restClient == null) {
-			System.out.println("rest client is null");
+			logger.log("rest client is null");
 		}
-		System.out.println("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
+		logger.log("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
 
 		String type = "_doc";
 
@@ -183,7 +184,7 @@ public class OpenSearchRESTClient {
 		try {
 			json = mapper.writeValueAsString(document);
 		} catch (JsonProcessingException e) {
-			System.out.println("json mapper failed :" +  e);
+			logger.log("json mapper failed :" +  e);
 			throw new ElasticsearchException("JSON?????", e);
 		}
 
@@ -212,16 +213,16 @@ public class OpenSearchRESTClient {
 		updateRequest.upsert(indexRequest);
 
 		// Form the indexing request, send it, and print the response
-		System.out.println("adding data into index"+indexName);
+		logger.log("adding data into index"+indexName);
 		IndexRequest createRequest = new IndexRequest(indexName, type, id).source(document);
-		System.out.println("createRequest");
-		System.out.println(createRequest.getDescription());
+		logger.log("createRequest");
+		logger.log(createRequest.getDescription());
 
 
 		IndexResponse response = null;
 		try {
 			response = restClient.index(createRequest, RequestOptions.DEFAULT);
-			System.out.println("Response:"+response);
+			logger.log("Response:"+response);
 		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -242,7 +243,7 @@ public class OpenSearchRESTClient {
 	public RestHighLevelClient searchClient(String serviceName, String region) {
 		AWS4Signer signer = new AWS4Signer();
 		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
-		System.out.println(domainEndpoint);
+		logger.log(domainEndpoint);
 		signer.setServiceName(serviceName);
 		signer.setRegionName(region);
 		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,

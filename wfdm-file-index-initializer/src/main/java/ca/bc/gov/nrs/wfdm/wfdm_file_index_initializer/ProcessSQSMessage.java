@@ -77,7 +77,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         } else {
           eventType = "meta";
         }
-        System.out.println("file id and event Type: "+fileId+" "+eventType);
+        logger.log("file id and event Type: "+fileId+" "+eventType);
 
         String versionNumber = messageDetails.getString("fileVersionNumber");
 
@@ -87,7 +87,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         String CLIENT_ID = secretCD[0];
         String PASSWORD = secretCD[1];
 
-        System.out.println("retrieved secret and client_ID and PASSWORD");
+        logger.log("retrieved secret and client_ID and PASSWORD");
 
         String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
         if (wfdmToken == null)
@@ -148,7 +148,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             meta.setContentType(mimeType);
             meta.setContentLength(Long.parseLong(fileDetailsJson.get("fileSize").toString()));
             meta.addUserMetadata("title", fileId + "-" + versionNumber);
-            System.out.println("putting into s3 bucket");
+            logger.log("putting into s3 bucket");
             s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
           //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
@@ -160,7 +160,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         } else {
           // Meta only update, so fire a message to the Indexer Lambda
-          System.out.println("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
+          logger.log("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
           AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
           InvokeRequest request = new InvokeRequest();
           request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);

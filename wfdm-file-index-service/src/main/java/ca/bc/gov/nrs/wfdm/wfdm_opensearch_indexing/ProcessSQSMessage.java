@@ -53,7 +53,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
-      System.out.println("fileDetailsJson"+fileDetailsJson.getString("fileId"));
+      logger.log("fileDetailsJson"+fileDetailsJson.getString("fileId"));
 
       String fileId = fileDetailsJson.getString("fileId");
 
@@ -83,21 +83,21 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     	  scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
-      System.out.println(eventType);
+      logger.log(eventType);
       String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
       String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
 	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
 	  String CLIENT_ID = secretCD[0];
 	  String PASSWORD = secretCD[1];
 
-	  //System.out.println("message"+fileDetailsJson.getString("message"));
+	  //logger.log("message"+fileDetailsJson.getString("message"));
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
       // aren't in a cache slowly getting stale. Could be replaced by a check token
       // and
       // a cached token
       String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
-      System.out.println("wfdmToken :"+wfdmToken);
+      logger.log("wfdmToken :"+wfdmToken);
       if (wfdmToken == null)
         throw new Exception("Could not authorize access for WFDM");
 
