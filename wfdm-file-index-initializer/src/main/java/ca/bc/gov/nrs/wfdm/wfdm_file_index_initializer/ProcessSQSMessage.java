@@ -79,7 +79,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         }
         System.out.println("file id and event Type: "+fileId+" "+eventType);
 
-        
+        String versionNumber = messageDetails.getString("fileVersionNumber");
 
         String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
         String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
@@ -87,11 +87,15 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         String CLIENT_ID = secretCD[0];
         String PASSWORD = secretCD[1];
 
+        System.out.println("retrieved secret and client_ID and PASSWORD");
+
         String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
         if (wfdmToken == null)
           throw new Exception("Could not authorize access for WFDM");
 
         String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+
+        
 
         if (fileInfo == null) {
           throw new Exception("File not found!");
@@ -99,14 +103,17 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
 
         JSONObject fileDetailsJson = new JSONObject(fileInfo);
-        String mimeType = fileDetailsJson.get("mimeType").toString();
 
-        if (mimeType.equals("null")) { mimeType = "DIRECTORY";}
+        String mimeType;
+        if (fileDetailsJson.has("mimeType") ){
+          mimeType = fileDetailsJson.get("mimeType").toString();
+        } else {
+          mimeType = ""; 
+        }
 
         // Check the event type. If this is a BYTES event, write the bytes
         // otherwise, handle meta only and skip clam scan.
         if (eventType.equalsIgnoreCase("bytes")) {
-            String versionNumber = messageDetails.getString("fileVersionNumber");
             logger.log("\nInfo: File found on WFDM: " + fileInfo);
             // Update Virus scan metadata
             // Note, current user likely lacks access to update metadata so we'll need to update webade
@@ -161,6 +168,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         }
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
+        logger.log("logged exception" + e);
         logger.log("\nError: Failure to recieve file from WFDM: " + e.getLocalizedMessage());
         batchItemFailures.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
       } catch (Exception ex) {
@@ -171,7 +179,6 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         logger.log("\nInfo: Finalizing processing...");
       }
     }
-
     logger.log("\nInfo: Close SQS batch");
     return new SQSBatchResponse(batchItemFailures);
   }
