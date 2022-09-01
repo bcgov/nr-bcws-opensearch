@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.xml.transform.TransformerConfigurationException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.exception.TikaException;
 import org.json.JSONObject;
 import org.xml.sax.SAXException;
