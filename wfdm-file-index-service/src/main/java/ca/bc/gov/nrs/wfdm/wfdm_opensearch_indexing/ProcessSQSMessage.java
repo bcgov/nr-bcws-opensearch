@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.xml.transform.TransformerConfigurationException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.exception.TikaException;
 import org.json.JSONObject;
 import org.xml.sax.SAXException;
@@ -53,13 +53,29 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
-      System.out.println("fileDetailsJson"+fileDetailsJson.getString("fileId"));
-     // String jsonArray = fileDetailsJson.getJSONArray("Records").getJSONObject(0).getString("body");
-	 // JSONObject jsonObject = new JSONObject(jsonArray);
+      logger.log("fileDetailsJson"+fileDetailsJson.getString("fileId"));
+
       String fileId = fileDetailsJson.getString("fileId");
-      String versionNumber = fileDetailsJson.getString("fileVersionNumber");
+
+      String versionNumber;
+      if (fileDetailsJson.has("fileVersionNumber")) {
+        if (fileDetailsJson.getString("fileVersionNumber").equals("null")){
+          versionNumber = "1";
+        } else {
+          versionNumber = fileDetailsJson.getString("fileVersionNumber");
+        }
+      }  else {
+        versionNumber = "1";
+      }
       //TODO:Update to correct event type from WFDM-API
-      String eventType = fileDetailsJson.getString("eventType");
+      String eventType;
+      if (fileDetailsJson.has("eventType")) {
+        eventType = fileDetailsJson.getString("eventType");
+      } else {
+        eventType = "meta";
+        logger.log("\nInfo: eventType key/value was not found, setting eventType to: " + eventType);
+      }
+
       String scanStatus;
       if(fileDetailsJson.has("message") && !fileDetailsJson.isNull("message") )
     	  scanStatus = fileDetailsJson.getString("message");
@@ -67,26 +83,29 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     	  scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
-      System.out.println(eventType);
+      logger.log(eventType);
       String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
       String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
 	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
 	  String CLIENT_ID = secretCD[0];
 	  String PASSWORD = secretCD[1];
 
-	  //System.out.println("message"+fileDetailsJson.getString("message"));
+	  //logger.log("message"+fileDetailsJson.getString("message"));
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
       // aren't in a cache slowly getting stale. Could be replaced by a check token
       // and
       // a cached token
       String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
-      System.out.println("wfdmToken :"+wfdmToken);
+      logger.log("wfdmToken :"+wfdmToken);
       if (wfdmToken == null)
         throw new Exception("Could not authorize access for WFDM");
 
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
       String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+
+      logger.log("\nInfo: fileInfo is: " + fileInfo);
+
 
       if (fileInfo == null) {
         throw new Exception("File not found!");
@@ -136,7 +155,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
               mimeType.equalsIgnoreCase("application/msword") ||
               mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")||
               mimeType.equalsIgnoreCase("application/pdf")  ||
-              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")) {
+              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")  ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ){
             content = TikaParseDocument.parseStream(stream);
             logger.log("\nInfo: content after parsing "+content);
           } else {

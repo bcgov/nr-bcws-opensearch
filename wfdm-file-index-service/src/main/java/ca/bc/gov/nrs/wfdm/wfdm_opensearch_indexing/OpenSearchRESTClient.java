@@ -29,6 +29,9 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * OpenSeachRESTClient provides access to the OpenSearch Restful API. This is
@@ -36,6 +39,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * metadata into the OpenSearch/Elastic service for searching
  */
 public class OpenSearchRESTClient {
+	
+	private static final Logger logger = LoggerFactory.getLogger(OpenSearchRESTClient.class);
+	
 	// should likely be moved into a config file...
 	private static String serviceName = "es";
 	private static String region = "ca-central-1";
@@ -58,9 +64,9 @@ public class OpenSearchRESTClient {
 		restClient = searchClient(serviceName, region);
 		
 		if(restClient == null) {
-			System.out.println("rest client is null");
+			logger.info("rest client is null");
 		}
-		System.out.println("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
+		logger.info("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
 
 		String type = "_doc";
 
@@ -78,11 +84,20 @@ public class OpenSearchRESTClient {
 		else
 			document.put("lastUpdatedBy", null);
 		
+		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
+		if (fileDetails.get("mimeType") == "null") {
+			document.put("mimeType", "DIRECTORY");
+		} else {
+			document.put("mimeType", fileDetails.get("mimeType").toString() );
+		}
 		
-		document.put("mimeType",fileDetails.get("mimeType"));
-		
+		if (fileDetails.get("fileType") != "null"  ){
+			document.put("fileType", fileDetails.get("fileType").toString());
+		}
+
 		document.put("fileName", fileName);
-		
+
+
 		if(!fileDetails.isNull("retention"))
 			document.put("fileRetention", fileDetails.get("retention"));
 		else
@@ -99,10 +114,13 @@ public class OpenSearchRESTClient {
 		document.put("fileLink", parentLinkObj.get("href"));
 		document.put("filePath", parent.getString("filePath"));
 		
-		Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
-	    String fileSize =  humanReadableByteCountBin(fileSizeLong);
-	    document.put("fileSize", fileSize);
-		
+		if (!fileDetails.isNull("fileSize")) {
+			Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
+			String fileSize =  humanReadableByteCountBin(fileSizeLong);
+			document.put("fileSize", fileSize);
+		} else {
+			document.put("fileSize", 0);
+		}
 
 	    JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
@@ -171,7 +189,7 @@ public class OpenSearchRESTClient {
 		try {
 			json = mapper.writeValueAsString(document);
 		} catch (JsonProcessingException e) {
-			System.out.println("json mapper failed :" +  e);
+			logger.error("json mapper failed :" +  e);
 			throw new ElasticsearchException("JSON?????", e);
 		}
 
@@ -200,16 +218,16 @@ public class OpenSearchRESTClient {
 		updateRequest.upsert(indexRequest);
 
 		// Form the indexing request, send it, and print the response
-		System.out.println("adding data into index"+indexName);
+		logger.info("adding data into index"+indexName);
 		IndexRequest createRequest = new IndexRequest(indexName, type, id).source(document);
-		System.out.println("createRequest");
-		System.out.println(createRequest.getDescription());
+		logger.info("createRequest");
+		logger.info(createRequest.getDescription());
 
 
 		IndexResponse response = null;
 		try {
 			response = restClient.index(createRequest, RequestOptions.DEFAULT);
-			System.out.println("Response:"+response);
+			logger.info("Response:"+response);
 		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -230,7 +248,7 @@ public class OpenSearchRESTClient {
 	public RestHighLevelClient searchClient(String serviceName, String region) {
 		AWS4Signer signer = new AWS4Signer();
 		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
-		System.out.println(domainEndpoint);
+		logger.info(domainEndpoint);
 		signer.setServiceName(serviceName);
 		signer.setRegionName(region);
 		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
