@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.xml.transform.TransformerConfigurationException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.xml.sax.SAXException;
 

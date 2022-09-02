@@ -7,9 +7,15 @@ wfdm-file-index-service/.settings
 wfdm-file-index-service/.settings
 wfdm-clamav-service/wfdm-clamav-scan-handler/target/*/
 wfdm-file-index-initializer/target/*/
+wfdm-clamav-service/wfdm-clamav-scan-handler/target/
+wfdm-file-index-initializer/target/
+wfdm-file-index-service/target/
 main_work.tf
 main_work
 /.terraform
 .terraform
 .terraform.lock.hcl
 /cdk.out/*/
+# IntelliJ
+.idea
+*.iml
