@@ -8,6 +8,9 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 /**
  * Static handler for WFDM API Access.
  */
@@ -70,6 +73,10 @@ public class GetFileFromWFDMAPI {
         metaArray.remove(i);
         break;
       }
+      if (metadataName.equalsIgnoreCase("wfdm-system-indexDate-" + versionNumber)) {
+        metaArray.remove(i);
+        break;
+      }
     }
 
     // inject scan meta
@@ -78,6 +85,13 @@ public class GetFileFromWFDMAPI {
     meta.put("metadataName", "wfdm-indexed-v" + versionNumber);
     meta.put("metadataValue", "true");
     metaArray.put(meta);
+
+    JSONObject meta2 = new JSONObject();
+    meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+    meta2.put("metadataName", "wfdm-system-indexDate-" + versionNumber);
+    Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    meta2.put("metadataValue", formatter.format(new Date().getTime()));
+    metaArray.put(meta2);
 
     // PUT the changes
     String wfdmAPIUrl = PropertyLoader.getProperty("wfdm.document.api.url").trim();

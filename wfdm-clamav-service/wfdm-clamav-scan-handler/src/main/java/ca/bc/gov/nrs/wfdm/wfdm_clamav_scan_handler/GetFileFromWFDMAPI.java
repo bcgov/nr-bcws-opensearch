@@ -3,6 +3,10 @@ package ca.bc.gov.nrs.wfdm.wfdm_clamav_scan_handler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -69,6 +73,10 @@ public class GetFileFromWFDMAPI {
         metaArray.remove(i);
         break;
       }
+      if (metadataName.equalsIgnoreCase("wfdm-system-scanDate-" + versionNumber)) {
+        metaArray.remove(i);
+        break;
+      }
     }
 
     // inject scan meta
@@ -77,6 +85,13 @@ public class GetFileFromWFDMAPI {
     meta.put("metadataName", "wfdm-system-scanStatus-" + versionNumber);
     meta.put("metadataValue", status);
     metaArray.put(meta);
+
+    JSONObject meta2 = new JSONObject();
+    meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+    meta2.put("metadataName", "wfdm-system-scanDate-" + versionNumber);
+    Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    meta2.put("metadataValue",formatter.format( new Date().getTime()));
+    metaArray.put(meta2);
 
     // PUT the changes
     HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
