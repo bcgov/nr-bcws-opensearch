@@ -44,9 +44,7 @@ def update_metadata(document_id, page, row_count):
   del wfdm_docs_response
 
   print('Found ' + str(len(wfdm_docs['collection'])) + ' documents, page ' + str(page) + ' of ' + str(wfdm_docs['totalPageCount']))
-  # Time to start looping through the documents here and re-indexing.
-  # If the document is a DIRECTORY, then we don't actually index or scan, we just kick off
-  # another call to reindex_wfdm. Remember to set the page back to 1
+  # Time to start looping through the documents and updating their meta types
   for document in wfdm_docs['collection']:
     # Reload the document so we know we have a valid etag and meta records
     print('Fetching Document ' + document['fileId'] + '...')
