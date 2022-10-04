@@ -11,17 +11,17 @@ client_name = os.getenv('CLIENT')
 client_secret = os.getenv('CLIENT_SECRET')
 # WFDM API endpoints
 wfdm_api = os.getenv('WFDM_API_URL')
-doc_endpoint = wfdm_api + 'document' # can we take a moment to recognize that this is a poor API naming scheme
+doc_endpoint = wfdm_api + 'document'
 docs_endpoint = wfdm_api + 'documents'
 wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # AWS Client
 # Create SQS client
-#session = boto3.Session(
-#    aws_access_key_id=settings.AWS_SERVER_PUBLIC_KEY,
-#    aws_secret_access_key=settings.AWS_SERVER_SECRET_KEY,
-#)
-sqs = boto3.client('sqs') # session.resource('sqs')
+session = boto3.Session(
+    aws_access_key_id=os.getenv('AWS_SERVER_PUBLIC_KEY'),
+    aws_secret_access_key=os.getenv('AWS_SERVER_SECRET_KEY')
+)
+session.resource('sqs') # sqs = boto3.client('sqs') # use this for local testing
 queue_url = os.getenv('SQS_QUEUE_URL')
 sqs_delay = os.getenv('SQS_MESSAGE_DELAY')
 # Some default process settings

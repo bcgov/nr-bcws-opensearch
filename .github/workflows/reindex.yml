@@ -34,5 +34,7 @@ jobs:
           SQS_MESSAGE_DELAY: ${{ secrets.REINDEX_SQS_MESSAGE_DELAY }}
           QUERY_ROW_COUNT: ${{ secrets.REINDEX_QUERY_ROW_COUNT }}
           AV_SCAN: ${{ secrets.REINDEX_AV_SCAN }}
+          AWS_SERVER_PUBLIC_KEY: ${{ secrets.REINDEX_AWS_SERVER_PUBLIC_KEY }}
+          AWS_SERVER_SECRET_KEY: ${{ secrets.REINDEX_AWS_SERVER_SECRET_KEY }}
         run: |
           python ./wfdm-file-reindexer/wfmd-file-reindexer.py
