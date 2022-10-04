@@ -2,29 +2,31 @@ import requests
 from requests.auth import HTTPBasicAuth
 import boto3
 import sys
+import os
 
 # Token service, for fetching a token
-token_service = '***'
+token_service = os.getenv('TOKEN_SERVICE')
 # Client, use Basic Auth
-client_name = 'WFDM_DOCUMENTS_INDEX'
-client_secret = '*****'
+client_name = os.getenv('CLIENT')
+client_secret = os.getenv('CLIENT_SECRET')
 # WFDM API endpoints
-wfdm_api = '***'
+wfdm_api = os.getenv('WFDM_API_URL')
 doc_endpoint = wfdm_api + 'document' # can we take a moment to recognize that this is a poor API naming scheme
 docs_endpoint = wfdm_api + 'documents'
 wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # AWS Client
 # Create SQS client
-session = boto3.Session(
-    aws_access_key_id=settings.AWS_SERVER_PUBLIC_KEY,
-    aws_secret_access_key=settings.AWS_SERVER_SECRET_KEY,
-)
-session.resource('sqs') # #sqs = boto3.client('sqs') # for local testing
-queue_url = '***'
+#session = boto3.Session(
+#    aws_access_key_id=settings.AWS_SERVER_PUBLIC_KEY,
+#    aws_secret_access_key=settings.AWS_SERVER_SECRET_KEY,
+#)
+sqs = boto3.client('sqs') # session.resource('sqs')
+queue_url = os.getenv('SQS_QUEUE_URL')
+sqs_delay = os.getenv('SQS_MESSAGE_DELAY')
 # Some default process settings
-row_count = 20
-clam_scan = False
+row_count = os.getenv('QUERY_ROW_COUNT')
+clam_scan = os.getenv('AV_SCAN')
 
 print('')
 print('-------------------------------------------------------')
@@ -65,7 +67,7 @@ def reindex_wfdm(document_id, page, row_count):
       event = 'meta' if clam_scan == False else 'bytes'
       sqs.send_message(
         QueueUrl=queue_url,
-        DelaySeconds=10,
+        DelaySeconds=sqs_delay,
         MessageAttributes={},
         MessageBody=(
             '{"fileId":"' + document['fileId'] + '","fileVersionNumber":"' + str(document['versionNumber']) + '","eventType":"' + event + '","fileType":"' + document['fileType'] + '"}'

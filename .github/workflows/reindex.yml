@@ -1,0 +1,38 @@
+name: Execute the WFDM Re-indexing script
+on:
+  workflow_dispatch:
+
+  schedule:
+    # * is a special character in YAML, so you have to quote this string
+    # Execute: Runs at 12:00am January 15th.
+    - cron:  '0 0 15 1 *'
+jobs:
+  SRIS_CHEFS_LOAD:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: checkout repo content
+        uses: actions/checkout@v2 # checkout the repository content to GitHub runner.
+        with:
+          ref: deploy/prod # Specify the branch to checkout.
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9.12 #install the python version needed
+      - name: install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests
+          pip install boto3
+      - name: execute the python script
+        env:
+          TOKEN_SERVICE: ${{ secrets.REINDEX_TOKEN_SERVICE }}
+          CLIENT: ${{ secrets.REINDEX_CLIENT }}
+          CLIENT_SECRET: ${{ secrets.REINDEX_CLIENT_SECRET }}
+          WFDM_API_URL: ${{ secrets.REINDEX_WFDM_API_URL }}
+          SQS_QUEUE_URL: ${{ secrets.REINDEX_SQS_QUEUE_URL }}
+          SQS_MESSAGE_DELAY: ${{ secrets.REINDEX_SQS_MESSAGE_DELAY }}
+          QUERY_ROW_COUNT: ${{ secrets.REINDEX_QUERY_ROW_COUNT }}
+          AV_SCAN: ${{ secrets.REINDEX_AV_SCAN }}
+        run: |
+          python ./wfdm-file-reindexer/wfmd-file-reindexer.py
