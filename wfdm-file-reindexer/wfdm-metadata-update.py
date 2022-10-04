@@ -3,26 +3,26 @@ import requests
 from requests.auth import HTTPBasicAuth
 import sys
 import dateutil.parser
+import os
 
 # Token service, for fetching a token
-token_service = '***'
+token_service = os.getenv('TOKEN_SERVICE')
 # Client, use Basic Auth
-client_name = '***'
-client_secret = '***'
+client_name = os.getenv('CLIENT')
+client_secret = os.getenv('CLIENT_SECRET')
 # WFDM API endpoints
-wfdm_api = '***'
+wfdm_api = os.getenv('WFDM_API_URL')
 doc_endpoint = wfdm_api + 'document' # can we take a moment to recognize that this is a poor API naming scheme
 docs_endpoint = wfdm_api + 'documents'
 wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
-row_count = 20
+row_count = row_count = os.getenv('QUERY_ROW_COUNT')
 
 print('')
 print('-------------------------------------------------------')
 print('Starting Meta Update')
 print('WFDM Paging: ' + str(row_count) + ' rows')
-print('Connect to AWS Queue: ' + queue_url)
 print('Connect to WFDM API: ' + wfdm_api)
 print('-------------------------------------------------------')
 print('')

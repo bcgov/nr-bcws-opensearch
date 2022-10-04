@@ -1,4 +1,4 @@
-name: Execute the WFDM Re-indexing script
+name: Execute the WFDM metadata update script
 on:
   workflow_dispatch:
 
@@ -23,18 +23,12 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install requests
-          pip install boto3
       - name: execute the python script
         env:
           TOKEN_SERVICE: ${{ secrets.REINDEX_TOKEN_SERVICE }}
           CLIENT: ${{ secrets.REINDEX_CLIENT }}
           CLIENT_SECRET: ${{ secrets.REINDEX_CLIENT_SECRET }}
           WFDM_API_URL: ${{ secrets.REINDEX_WFDM_API_URL }}
-          SQS_QUEUE_URL: ${{ secrets.REINDEX_SQS_QUEUE_URL }}
-          SQS_MESSAGE_DELAY: ${{ secrets.REINDEX_SQS_MESSAGE_DELAY }}
           QUERY_ROW_COUNT: ${{ secrets.REINDEX_QUERY_ROW_COUNT }}
-          AV_SCAN: ${{ secrets.REINDEX_AV_SCAN }}
-          AWS_SERVER_PUBLIC_KEY: ${{ secrets.REINDEX_AWS_SERVER_PUBLIC_KEY }}
-          AWS_SERVER_SECRET_KEY: ${{ secrets.REINDEX_AWS_SERVER_SECRET_KEY }}
         run: |
-          python ./wfdm-file-reindexer/wfdm-file-reindexer.py
+          python ./wfdm-file-reindexer/wfdm-metadata-update.py
