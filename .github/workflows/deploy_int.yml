@@ -12,6 +12,7 @@ env:
   TF_VERSION: 1.1.0
   TG_VERSION: 0.29.2
   TARGET_ENV: int
+  NPMRC: ${{ secrets.NPMRC }}
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "deploy"
@@ -37,7 +38,7 @@ jobs:
           distribution: 'adopt'
 
       - name: Add .npmrc file
-        run: echo -e ${{ secrets.NPMRC }} > ~/.npmrc
+        run: echo -e $NPMRC > ~/.npmrc
 
       #Compile lambda functions
       - name: Compile lambda
