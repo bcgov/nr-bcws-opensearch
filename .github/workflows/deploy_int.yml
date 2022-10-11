@@ -46,7 +46,7 @@ jobs:
           mvn --batch-mode install -f wfdm-file-index-service/pom.xml
 
       - name: Make directory and copy in jar files
-        run: mkdir staging && cp target/*.jar staging
+        run: mkdir staging && cp /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm/*.jar staging
         
       - uses: shallwefootball/s3-upload-action@master
         name: Upload S3
