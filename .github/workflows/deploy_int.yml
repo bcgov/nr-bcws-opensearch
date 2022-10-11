@@ -40,7 +40,7 @@ jobs:
       #Compile lambda functions
       - name: Compile lambda
         run: |
-          mvn --batch-mode install -f aws-lambda-layer-base/dependency-reduced-pom.xml
+          mvn --batch-mode install -f aws-lambda-layer-base/pom.xml
           mvn --batch-mode install -f wfdm-clamav-service/wfdm-clamav-scan-handler/pom.xml
           mvn --batch-mode install -f wfdm-file-index-initializer/pom.xml
           mvn --batch-mode install -f wfdm-file-index-service/pom.xml
