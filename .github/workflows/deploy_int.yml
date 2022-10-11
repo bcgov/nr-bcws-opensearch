@@ -55,7 +55,7 @@ jobs:
           aws_key_id: ${{ secrets.AWS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           aws_bucket: wfdm-s3-bucket-${{ env.TARGET_ENV }}
-          sourceDir: staging
+          source_dir: staging
           destination_dir: ''
 
         # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
