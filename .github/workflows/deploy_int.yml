@@ -36,12 +36,16 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
+      - name: Add .npmrc file
+        run: echo -e ${{ secrets.NPMRC }} > ~/.npmrc
+
       #Compile lambda functions
       - name: Compile lambda
         run: |
-          mvn install -f wfdm-clamav-service/wfdm-clamav-scan-handler/pom.xml
-          mvn install -f wfdm-file-index-initializer/pom.xml
-          mvn install -f wfdm-file-index-service/pom.xml
+          mvn --settings mvn_settings/settings.xml --batch-mode --update-snapshots -Drepo.login=${{ secrets.IDIR_AS_EMAIL }} -Drepo.password=${{ secrets.IDIR_PASSWORD }} install -f aws-lambda-layer-base/pom.xml
+          mvn --settings mvn_settings/settings.xml --batch-mode --update-snapshots -Drepo.login=${{ secrets.IDIR_AS_EMAIL }} -Drepo.password=${{ secrets.IDIR_PASSWORD }} install -f wfdm-clamav-service/wfdm-clamav-scan-handler/pom.xml
+          mvn --settings mvn_settings/settings.xml --batch-mode --update-snapshots -Drepo.login=${{ secrets.IDIR_AS_EMAIL }} -Drepo.password=${{ secrets.IDIR_PASSWORD }} install -f wfdm-file-index-initializer/pom.xml
+          mvn --settings mvn_settings/settings.xml --batch-mode --update-snapshots -Drepo.login=${{ secrets.IDIR_AS_EMAIL }} -Drepo.password=${{ secrets.IDIR_PASSWORD }} install -f wfdm-file-index-service/pom.xml
 
       - name: Make directory and copy in jar files
         run: mkdir staging && cp target/*.jar staging
