@@ -50,9 +50,9 @@ jobs:
         
       - name: Get source code hash of jar files
         run: |
-          openssl sha staging/wfdm-clamav-scan-handler* > staging/wfdm-clamav-scan-handler-hash.txt
-          openssl sha staging/wfdm-file-index-initializer* > staging/wfdm-file-index-initializer-hash.txt
-          openssl sha staging/wfdm-opensearch-indexing* > staging/wfdm-opensearch-indexing-hash.txt
+          openssl sha256 staging/wfdm-clamav-scan-handler* > staging/wfdm-clamav-scan-handler-hash.txt
+          openssl sha256 staging/wfdm-file-index-initializer* > staging/wfdm-file-index-initializer-hash.txt
+          openssl sha256 staging/wfdm-opensearch-indexing* > staging/wfdm-opensearch-indexing-hash.txt
 
       - uses: shallwefootball/s3-upload-action@master
         name: Upload S3
