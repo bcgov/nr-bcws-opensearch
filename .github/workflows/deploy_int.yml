@@ -82,5 +82,4 @@ jobs:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
           opensearch_password: ${{ secrets.OPENSEARCH_PASSWORD_INT }}
           opensearch_user: ${{ secrets.OPENSEARCH_USER_INT }}
-        #run: terragrunt run-all apply --terragrunt-non-interactive
-        run: terragrunt run-all plan --terragrunt-non-interactive
+        run: terragrunt run-all apply --terragrunt-non-interactive
