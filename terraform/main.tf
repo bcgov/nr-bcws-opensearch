@@ -832,10 +832,10 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     {
       "Effect": "Allow",
       "Principal": {
-        "AWS": "${data.aws_caller_identity.current.account_id}"
+        "AWS": "*"
       },
-      "Action": "es:ESHttp*",
-      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.opensearchDomainName}/*"
+      "Action": "es:*",
+      "Resource": "arn:aws:es:ca-central-1:460053263286:domain/wf1-wfdm-opensearch-int/*"
     }
   ]
 }
