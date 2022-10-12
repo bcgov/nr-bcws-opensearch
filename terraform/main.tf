@@ -695,7 +695,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   s3_key        = var.lambda_clamav_filename
   role          = aws_iam_role.lambda_clamav_role.arn
   handler       = var.clamav_function_handler
-  source_code_hash = "${data.aws_s3_bucket_object.clamab_function_hash.body}"
+  source_code_hash = "${data.aws_s3_bucket_object.clamav_function_hash.body}"
   runtime     = "java8"
   layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
