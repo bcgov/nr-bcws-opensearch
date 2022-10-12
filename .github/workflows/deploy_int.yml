@@ -48,6 +48,12 @@ jobs:
       - name: Make directory and copy in jar files
         run: mkdir staging && find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm -name '*.jar' -exec cp -prv '{}' 'staging' ';'
         
+      - name: Get source code hash of jar files
+        run: |
+          openssl sha staging/wfdm-clamav-scan-handler* > staging/wfdm-clamav-scan-handler-hash.txt
+          openssl sha staging/wfdm-file-index-initializer* > staging/wfdm-file-index-initializer-hash.txt
+          openssl sha staging/wfdm-opensearch-indexing* > staging/wfdm-opensearch-indexing-hash.txt
+
       - uses: shallwefootball/s3-upload-action@master
         name: Upload S3
         id: S3
@@ -74,5 +80,7 @@ jobs:
         working-directory: terragrunt/INT
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
+          opensearch_password: ${{ secrets.OPENSEARCH_PASSWORD_INT }}
+          opensearch_user: ${{ secrets.OPENSEARCH_USER_INT }}
         #run: terragrunt run-all apply --terragrunt-non-interactive
         run: terragrunt run-all plan --terragrunt-non-interactive
