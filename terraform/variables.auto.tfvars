@@ -1,6 +1,6 @@
 ebs_volume_size             = 10
 domain                      = "bcwildfireservices.com"
-lambda_function_handler     = "ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing.ProcessSQSMessage"
+lambda_function_handler     = "ca.bc.gov.nrs.wfdm.wfdm_file_index_service.ProcessSQSMessage"
 indexing_function_handler   = "ca.bc.gov.nrs.wfdm.wfdm_file_index_initializer.ProcessSQSMessage::handleRequest"
 clamav_function_handler     = "ca.bc.gov.nrs.wfdm.wfdm_clamav_scan_handler.ProcessSQSMessage::handleRequest"
 lambda_payload_filename     = "wfdm-opensearch-indexing-1.0.jar"

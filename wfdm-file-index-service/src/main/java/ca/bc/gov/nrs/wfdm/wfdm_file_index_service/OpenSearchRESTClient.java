@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
+package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -130,7 +130,20 @@ public class OpenSearchRESTClient {
 	    	Map<String, Object> metadataKeyVal = new HashMap<>();
 	    	jsonOb = metadataArray.getJSONObject(i);
 	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
-	    	metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+			
+			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+				metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
+			}
+
+			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
+				metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
+			}
+
+			if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
+				metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
+			}
+
 	    	metadataList.add(metadataKeyVal);
 	    }
 	    document.put("metadata", metadataList);
@@ -269,6 +282,21 @@ public class OpenSearchRESTClient {
 			JSONObject json = jsonArray.getJSONObject(i);
 			JSONObject jobject = new JSONObject();
 			jobject.put(metadataName, json.getString(metadataName));
+
+			switch (json.getString("metadataType")) {
+				case "BOOLEAN":
+					jobject.put("metadataBooleanValue", json.getString(metadataValue));
+					break;
+				case "NUMBER":
+					jobject.put("metadataNumberValue", json.getString(metadataValue));
+					break;
+				case "DATE":
+					jobject.put("metadataDateValue", json.getString(metadataValue));
+					break;
+			}
+
+
+
 			jobject.put(metadataValue, json.getString(metadataValue));
 			jArray.put(jobject);
 
