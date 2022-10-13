@@ -127,6 +127,7 @@
 			<artifactId>aws-java-sdk-sns</artifactId>
 			<version>1.12.281</version>
 		</dependency>
+		
 
 		<!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch -->
 		<dependency>
