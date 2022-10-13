@@ -283,16 +283,18 @@ public class OpenSearchRESTClient {
 			JSONObject jobject = new JSONObject();
 			jobject.put(metadataName, json.getString(metadataName));
 
-			switch (json.getString("metadataType")) {
-				case "BOOLEAN":
-					jobject.put("metadataBooleanValue", json.getString(metadataValue));
-					break;
-				case "NUMBER":
-					jobject.put("metadataNumberValue", json.getString(metadataValue));
-					break;
-				case "DATE":
-					jobject.put("metadataDateValue", json.getString(metadataValue));
-					break;
+			if (json.has("metadataType")) {
+				switch (json.getString("metadataType")) {
+					case "BOOLEAN":
+						jobject.put("metadataBooleanValue", json.getString(metadataValue));
+						break;
+					case "NUMBER":
+						jobject.put("metadataNumberValue", json.getString(metadataValue));
+						break;
+					case "DATE":
+						jobject.put("metadataDateValue", json.getString(metadataValue));
+						break;
+				}
 			}
 
 
