@@ -122,7 +122,7 @@ public class OpenSearchRESTClient {
 			document.put("fileSize", 0);
 		}
 
-	    JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
+	    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
 	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
 	    JSONObject jsonOb = new JSONObject();
@@ -274,7 +274,7 @@ public class OpenSearchRESTClient {
 		return restClient;
 	}
 
-	private static JSONArray filterDataFromFileDetails(String jsonarray, String metadataName, String metadataValue) {
+	private static JSONArray filterDataFromFileDetailsMeta(String jsonarray, String metadataName, String metadataValue) {
 
 		JSONArray jsonArray = new JSONArray(jsonarray);
 		JSONArray jArray = new JSONArray();
@@ -303,6 +303,22 @@ public class OpenSearchRESTClient {
 		jArray = setDefaultMetaData(jArray);
 
 		return jArray;
+	}
+
+	private static JSONArray filterDataFromFileDetails(String jsonarray, String metadataName, String metadataValue) {
+
+		JSONArray jsonArray = new JSONArray(jsonarray);
+		JSONArray jArray = new JSONArray();
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject json = jsonArray.getJSONObject(i);
+			JSONObject jobject = new JSONObject();
+			jobject.put(metadataName, json.getString(metadataName));
+			jobject.put(metadataValue, json.getString(metadataValue));
+			jArray.put(jobject);
+
+		}
+		return jArray;
+
 	}
 	
 
