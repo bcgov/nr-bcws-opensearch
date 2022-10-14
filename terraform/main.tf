@@ -835,7 +835,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
         "AWS": "*"
       },
       "Action": "es:*",
-      "Resource": "arn:aws:es:ca-central-1:460053263286:domain/wf1-wfdm-opensearch-int/*"
+      "Resource": "arn:aws:es:ca-central-1:460053263286:domain/wf1-wfdm-opensearch-${var.env}/*"
     }
   ]
 }
