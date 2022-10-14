@@ -16,10 +16,10 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  * Static handler for WFDM API Access.
  */
 public class GetFileFromWFDMAPI {
-  
-  
+
   // Private constructor hides the implicit public constructor
-  private GetFileFromWFDMAPI() { /* empty */ }
+  private GetFileFromWFDMAPI() {
+    /* empty */ }
 
   /**
    * Fetch an Access Token for authentication with the WFDM API
@@ -29,7 +29,7 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getAccessToken (String client, String password) throws UnirestException {
+  public static String getAccessToken(String client, String password) throws UnirestException {
     HttpResponse<JsonNode> httpResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_TOKEN_URL").trim())
         .basicAuth(client, password)
         .asJson();
@@ -51,7 +51,7 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getFileInformation (String accessToken, String fileId) throws UnirestException {
+  public static String getFileInformation(String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
@@ -63,13 +63,14 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  public static boolean setVirusScanMetadata (String accessToken, String fileId, String versionNumber, JSONObject fileDetails, String status) throws UnirestException {
+  public static boolean setVirusScanMetadata(String accessToken, String fileId, String versionNumber,
+      JSONObject fileDetails, String status) throws UnirestException {
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("wfdm-system-scanStatus-" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMScanStatus" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -82,15 +83,15 @@ public class GetFileFromWFDMAPI {
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "wfdm-system-scanStatus-" + versionNumber);
+    meta.put("metadataName", "WFDMScanStatus" + versionNumber);
     meta.put("metadataValue", status);
     metaArray.put(meta);
 
     JSONObject meta2 = new JSONObject();
     meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta2.put("metadataName", "wfdm-system-scanDate-" + versionNumber);
+    meta2.put("metadataName", "WFDMSystemScanDate-" + versionNumber);
     Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    meta2.put("metadataValue",formatter.format( new Date().getTime()));
+    meta2.put("metadataValue", formatter.format(new Date().getTime()));
     metaArray.put(meta2);
 
     // PUT the changes
