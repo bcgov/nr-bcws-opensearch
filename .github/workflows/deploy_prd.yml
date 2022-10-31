@@ -11,6 +11,8 @@ on:
 env:
   TF_VERSION: 1.1.0
   TG_VERSION: 0.29.2
+  TARGET_ENV: prd
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "deploy"
@@ -29,6 +31,39 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      #Compile lambda functions
+      - name: Compile lambda
+        run: |
+          mvn --batch-mode install -f aws-lambda-layer-base/pom.xml
+          mvn --batch-mode install -f wfdm-clamav-service/wfdm-clamav-scan-handler/pom.xml
+          mvn --batch-mode install -f wfdm-file-index-initializer/pom.xml
+          mvn --batch-mode install -f wfdm-file-index-service/pom.xml
+
+      - name: Make directory and copy in jar files
+        run: mkdir staging && find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm -name '*.jar' -exec cp -prv '{}' 'staging' ';'
+        
+      - name: Get source code hash of jar files
+        run: |
+          openssl sha256 staging/wfdm-clamav-scan-handler* > staging/wfdm-clamav-scan-handler-hash.txt
+          openssl sha256 staging/wfdm-file-index-initializer* > staging/wfdm-file-index-initializer-hash.txt
+          openssl sha256 staging/wfdm-opensearch-indexing* > staging/wfdm-opensearch-indexing-hash.txt
+
+      - uses: shallwefootball/s3-upload-action@master
+        name: Upload S3
+        id: S3
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: wfdm-s3-bucket-${{ env.TARGET_ENV }}
+          source_dir: staging
+          destination_dir: ''
+
         # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -45,4 +80,7 @@ jobs:
         working-directory: terragrunt/PRD
         env:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
+          opensearch_password: ${{ secrets.OPENSEARCH_PASSWORD_PRD }}
+          opensearch_user: ${{ secrets.OPENSEARCH_USER_PRD }}
         run: terragrunt run-all apply --terragrunt-non-interactive
+        #run: terragrunt run-all plan --terragrunt-non-interactive
