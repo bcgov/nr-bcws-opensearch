@@ -784,6 +784,7 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
   advanced_security_options {
     enabled = true
     internal_user_database_enabled = true
+    anonymous_auth_enabled         = true
     master_user_options {
       master_user_name = var.opensearch_user
       master_user_password = var.opensearch_password
