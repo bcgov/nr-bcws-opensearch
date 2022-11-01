@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
+package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
 /*
  * Copyright 2012-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.

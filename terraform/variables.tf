@@ -283,14 +283,29 @@ variable "lambda_payload_filename" {
   default = null
 }
 
+variable "lambda_payload_hash_name" {
+  type = string
+  default = "wfdm-opensearch-indexing-hash.txt"
+}
+
 variable "lambda_initializer_filename" {
   type    = string
   default = null
 }
 
+variable "lambda_initializer_hash_name" {
+  type = string
+  default = "wfdm-file-index-initializer-hash.txt"
+}
+
 variable "lambda_clamav_filename" {
   type    = string
   default = null
+}
+
+variable "lambda_clamav_hash_name" {
+  type = string
+  default = "wfdm-clamav-scan-handler-hash.txt"
 }
 
 variable "java_layer_name" {
@@ -385,4 +400,14 @@ variable "supported_mime_types" {
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "application/vnd.openxmlformats-officedocument.presentationml.slideshow"
   ]
+}
+
+variable "opensearch_user" {
+  type = string
+  default = ""
+}
+
+variable "opensearch_password" {
+  type = string
+  default = ""
 }

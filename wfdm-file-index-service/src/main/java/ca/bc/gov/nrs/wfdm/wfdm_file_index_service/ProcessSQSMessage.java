@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
+package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

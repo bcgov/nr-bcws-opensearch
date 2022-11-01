@@ -1,4 +1,4 @@
-package ca.bc.gov.nrs.wfdm.wfdm_opensearch_indexing;
+package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -122,7 +122,7 @@ public class OpenSearchRESTClient {
 			document.put("fileSize", 0);
 		}
 
-	    JSONArray metadataArray = filterDataFromFileDetails(fileDetails.getJSONArray("metadata").toString(),
+	    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
 	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
 	    JSONObject jsonOb = new JSONObject();
@@ -130,7 +130,20 @@ public class OpenSearchRESTClient {
 	    	Map<String, Object> metadataKeyVal = new HashMap<>();
 	    	jsonOb = metadataArray.getJSONObject(i);
 	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
-	    	metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+			
+			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+				metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
+			}
+
+			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
+				metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
+			}
+
+			if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
+				metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
+			}
+
 	    	metadataList.add(metadataKeyVal);
 	    }
 	    document.put("metadata", metadataList);
@@ -261,6 +274,37 @@ public class OpenSearchRESTClient {
 		return restClient;
 	}
 
+	private static JSONArray filterDataFromFileDetailsMeta(String jsonarray, String metadataName, String metadataValue) {
+
+		JSONArray jsonArray = new JSONArray(jsonarray);
+		JSONArray jArray = new JSONArray();
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject json = jsonArray.getJSONObject(i);
+			JSONObject jobject = new JSONObject();
+			jobject.put(metadataName, json.getString(metadataName));
+
+			if (json.has("metadataType")) {
+				switch (json.getString("metadataType")) {
+					case "BOOLEAN":
+						jobject.put("metadataBooleanValue", json.getString(metadataValue));
+						break;
+					case "NUMBER":
+						jobject.put("metadataNumberValue", json.getString(metadataValue));
+						break;
+					case "DATE":
+						jobject.put("metadataDateValue", json.getString(metadataValue));
+						break;
+				}
+			}
+			// setting a default metaDataValue so a string version is  always available for defaults
+			jobject.put(metadataValue, json.getString(metadataValue));
+			jArray.put(jobject);
+		}
+		jArray = setDefaultMetaData(jArray);
+
+		return jArray;
+	}
+
 	private static JSONArray filterDataFromFileDetails(String jsonarray, String metadataName, String metadataValue) {
 
 		JSONArray jsonArray = new JSONArray(jsonarray);
@@ -277,7 +321,162 @@ public class OpenSearchRESTClient {
 
 	}
 	
-	
+
+	private static JSONArray setDefaultMetaData(JSONArray jsonArray) {
+
+		Boolean nameExists = false;
+		Boolean creatorExists = false;
+		Boolean titleExists = false;
+		Boolean dateCreatedExists = false;
+		Boolean dateModifiedExists = false;
+		Boolean descriptionExists = false;
+		Boolean formatExists = false;
+		Boolean uniqueIdentifierExists = false;
+		Boolean informationScheduleExists = false;
+		Boolean securityClassificationExists = false;
+		Boolean retentionScheduleExists = false;
+		Boolean oPRExists = false;
+		Boolean incidentNumberExists = false;
+		Boolean appAcronymExists = false;
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject json = jsonArray.getJSONObject(i);
+			JSONObject jobject = new JSONObject();
+
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "name") {
+				nameExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "creator") {
+				creatorExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "type") {
+				titleExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "dateCreated") {
+				dateCreatedExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "dateModified") {
+				dateModifiedExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "description") {
+				descriptionExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "format") {
+				formatExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "uniqueIdentifier") {
+				uniqueIdentifierExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "informationSchedule") {
+				informationScheduleExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "securityClassification") {
+				securityClassificationExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "retentionSchedule") {
+				retentionScheduleExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "oPR") {
+				oPRExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "incidentNumber") {
+				incidentNumberExists = true;
+			}
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "appAcronym") {
+				appAcronymExists = true;
+			}
+
+		}
+
+		if (!nameExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "name");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+
+		if (!creatorExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "creator");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+
+		if (!titleExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "title");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!dateCreatedExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "dateCreated");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!dateModifiedExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "dateModified");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!descriptionExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "description");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!formatExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "format");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!uniqueIdentifierExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "uniqueIdentifier");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!informationScheduleExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "informationSchedule");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!securityClassificationExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "securityClassification");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!retentionScheduleExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "retentionSchedule");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!oPRExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "oPR");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!incidentNumberExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "incidentNumber");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		if (!appAcronymExists) {
+			JSONObject jobject = new JSONObject();
+			jobject.put("metadataName", "appAcronym");
+			jobject.put("metadataValue", "");
+			jsonArray.put(jobject);
+		}
+		return jsonArray;
+	}
+
 	private static JSONObject filterSecurityScope(JSONObject scopeObj) {
 		JSONObject jobject = new JSONObject();
 		boolean canRead = scopeObj.getBoolean("Read");
