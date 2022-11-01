@@ -70,11 +70,11 @@ public class GetFileFromWFDMAPI {
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("WFDMIndexVersion" + versionNumber)) {
+      if( (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber))   || (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber))  )   {
         metaArray.remove(i);
         break;
       }
-      if (metadataName.equalsIgnoreCase("WFDMIndexDate" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -83,13 +83,13 @@ public class GetFileFromWFDMAPI {
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "WFDMIndexVersion" + versionNumber);
+    meta.put("metadataName", "WFDMIndexVersion-" + versionNumber);
     meta.put("metadataValue", "true");
     metaArray.put(meta);
 
     JSONObject meta2 = new JSONObject();
     meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta2.put("metadataName", "WFDMIndexDate" + versionNumber);
+    meta2.put("metadataName", "WFDMIndexDate-" + versionNumber);
     Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     meta2.put("metadataValue", formatter.format(new Date().getTime()));
     metaArray.put(meta2);
