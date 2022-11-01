@@ -65,12 +65,34 @@ public class GetFileFromWFDMAPI {
 
   public static boolean setIndexedMetadata(String accessToken, String fileId, String versionNumber,
       JSONObject fileDetails) throws UnirestException {
+
+    //default fields we will need to add if they don't already exist
+
+    Boolean nameExists = false;
+    Boolean creatorExists = false;
+    Boolean titleExists = false;
+    Boolean dateCreatedExists = false;
+    Boolean dateModifiedExists = false;
+    Boolean descriptionExists = false;
+    Boolean formatExists = false;
+    Boolean uniqueIdentifierExists = false;
+    Boolean informationScheduleExists = false;
+    Boolean securityClassificationExists = false;
+    Boolean retentionScheduleExists = false;
+    Boolean oPRExists = false;
+    Boolean incidentNumberExists = false;
+    Boolean appAcronymExists = false;
+
+
+
+
+
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)  ||  (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber) )             ) {
         metaArray.remove(i);
         break;
       }
@@ -78,7 +100,31 @@ public class GetFileFromWFDMAPI {
         metaArray.remove(i);
         break;
       }
+
+
+      switch(metadataName) {
+        case "Name":
+          nameExists = true;
+          break;
+      }
+        
+
+
+
+
     }
+
+    //check for default metadata, if it exists do nothing, if not update:
+    if (!nameExists) {
+      JSONObject metaName = new JSONObject();
+      metaName.put("metadataName", "Name");
+      metaName.put("metadataValue", "null");
+      metaArray.put(metaName);
+    }
+
+
+
+
 
     // inject scan meta
     JSONObject meta = new JSONObject();
