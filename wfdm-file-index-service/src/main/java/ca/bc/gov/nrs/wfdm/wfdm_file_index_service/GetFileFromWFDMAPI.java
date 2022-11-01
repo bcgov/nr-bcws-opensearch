@@ -102,12 +102,14 @@ public class GetFileFromWFDMAPI {
       }
 
 
-
-        
-
+      
 
 
 
+
+    }
+
+    //check for default metadata, if it exists do nothing, if not update:
 
 
     // inject scan meta
