@@ -10,6 +10,7 @@ import javax.xml.transform.TransformerConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.exception.TikaException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.xml.sax.SAXException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
