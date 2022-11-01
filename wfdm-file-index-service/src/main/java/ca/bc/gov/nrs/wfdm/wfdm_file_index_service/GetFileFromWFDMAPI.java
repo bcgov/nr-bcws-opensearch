@@ -102,25 +102,9 @@ public class GetFileFromWFDMAPI {
       }
 
 
-      switch(metadataName) {
-        case "Name":
-          nameExists = true;
-          break;
-      }
+
         
 
-
-
-
-    }
-
-    //check for default metadata, if it exists do nothing, if not update:
-    if (!nameExists) {
-      JSONObject metaName = new JSONObject();
-      metaName.put("metadataName", "Name");
-      metaName.put("metadataValue", "null");
-      metaArray.put(metaName);
-    }
 
 
 
