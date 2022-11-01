@@ -39,7 +39,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   @Override
-  public String handleRequest(Map<String,Object> event, Context context) {
+  public String handleRequest(Map<String, Object> event, Context context) {
     LambdaLogger logger = context.getLogger();
     String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
     // null check sqsEvents!
@@ -53,18 +53,18 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
-      logger.log("fileDetailsJson"+fileDetailsJson.getString("fileId"));
+      logger.log("fileDetailsJson" + fileDetailsJson.getString("fileId"));
 
       String fileId = fileDetailsJson.getString("fileId");
 
       String versionNumber;
       if (fileDetailsJson.has("fileVersionNumber")) {
-        if (fileDetailsJson.getString("fileVersionNumber").equals("null")){
+        if (fileDetailsJson.getString("fileVersionNumber").equals("null")) {
           versionNumber = "1";
         } else {
           versionNumber = fileDetailsJson.getString("fileVersionNumber");
         }
-      }  else {
+      } else {
         versionNumber = "1";
       }
       //TODO:Update to correct event type from WFDM-API
@@ -77,27 +77,27 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       }
 
       String scanStatus;
-      if(fileDetailsJson.has("message") && !fileDetailsJson.isNull("message") )
-    	  scanStatus = fileDetailsJson.getString("message");
+      if (fileDetailsJson.has("message") && !fileDetailsJson.isNull("message"))
+        scanStatus = fileDetailsJson.getString("message");
       else
-    	  scanStatus = "-";
+        scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
       logger.log(eventType);
       String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
       String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
-	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
-	  String CLIENT_ID = secretCD[0];
-	  String PASSWORD = secretCD[1];
+      String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+      String CLIENT_ID = secretCD[0];
+      String PASSWORD = secretCD[1];
 
-	  //logger.log("message"+fileDetailsJson.getString("message"));
+      //logger.log("message"+fileDetailsJson.getString("message"));
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
       // aren't in a cache slowly getting stale. Could be replaced by a check token
       // and
       // a cached token
       String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
-      logger.log("wfdmToken :"+wfdmToken);
+      logger.log("wfdmToken :" + wfdmToken);
       if (wfdmToken == null)
         throw new Exception("Could not authorize access for WFDM");
 
@@ -105,7 +105,6 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
 
       logger.log("\nInfo: fileInfo is: " + fileInfo);
-
 
       if (fileInfo == null) {
         throw new Exception("File not found!");
@@ -121,14 +120,14 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         if (eventType.equalsIgnoreCase("bytes")) {
           // Fetch the bytes from the bucket, not the WFDM API
           AmazonS3 s3client = AmazonS3ClientBuilder
-            .standard()
-            .withCredentials(credentialsProvider)
-            .withRegion(region)
-            .build();
+              .standard()
+              .withCredentials(credentialsProvider)
+              .withRegion(region)
+              .build();
 
           Bucket clamavBucket = null;
           List<Bucket> buckets = s3client.listBuckets();
-          for(Bucket bucket : buckets) {
+          for (Bucket bucket : buckets) {
             if (bucket.getName().equalsIgnoreCase(bucketName)) {
               clamavBucket = bucket;
             }
@@ -136,13 +135,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
           // If the bucket doesn't exist, re-create it
           // For some reason, calling doesBucketExistV2 returns false???
-          if(clamavBucket == null) {
+          if (clamavBucket == null) {
             throw new Exception("S3 Bucket " + bucketName + " does not exist. Virus scan will be skipped");
           }
 
           logger.log("\nInfo: Fetching file bytes...");
-        
-          
+
           S3Object scannedObject = s3client.getObject(new GetObjectRequest(bucketName, fileId + "-" + versionNumber));
           stream = new BufferedInputStream(scannedObject.getObjectContent());
 
@@ -153,12 +151,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
           if (mimeType.equalsIgnoreCase("text/plain") ||
               mimeType.equalsIgnoreCase("application/msword") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")||
-              mimeType.equalsIgnoreCase("application/pdf")  ||
-              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")  ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ){
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+              mimeType.equalsIgnoreCase("application/pdf") ||
+              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12") ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
             content = TikaParseDocument.parseStream(stream);
-            logger.log("\nInfo: content after parsing "+content);
+            logger.log("\nInfo: content after parsing " + content);
           } else {
             // nothing to see here folks, we won't process this file. However
             // this isn't an error and we might want to handle metadata, etc.
@@ -170,13 +168,20 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           s3client.deleteObject(new DeleteObjectRequest(clamavBucket.getName(), fileId + "-" + versionNumber));
         }
 
+        // Set Default Index Values For Required Fields if they do not exist
+        JSONArray updatedMeta = setDefaultMetadata(fileDetailsJson);
+
+        fileDetailsJson.remove("metadata");
+        fileDetailsJson.put("metadata", updatedMeta);
+
+
         // Push content and File meta up to our Opensearch Index
         logger.log("\nInfo: Indexing with OpenSearch...");
         String filePath = fileDetailsJson.getString("filePath");
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
         OpenSearchRESTClient restClient = new OpenSearchRESTClient();
-        restClient.addIndex(content, fileName, fileDetailsJson,scanStatus);
+        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
         // Push ID onto SQS for clamAV
         logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
@@ -212,4 +217,166 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     logger.log("\nInfo: Close Handler");
     return "Closed";
   }
+  
+  public static JSONArray setDefaultMetadata(JSONObject fileDetailsJson) throws UnirestException {
+
+    Boolean nameExists = false;
+    Boolean creatorExists = false;
+    Boolean titleExists = false;
+    Boolean dateCreatedExists = false;
+    Boolean dateModifiedExists = false;
+    Boolean descriptionExists = false;
+    Boolean formatExists = false;
+    Boolean uniqueIdentifierExists = false;
+    Boolean informationScheduleExists = false;
+    Boolean securityClassificationExists = false;
+    Boolean retentionScheduleExists = false;
+    Boolean oPRExists = false;
+    Boolean incidentNumberExists = false;
+    Boolean appAcronymExists = false;
+
+    JSONArray metaArray = fileDetailsJson.getJSONArray("metadata");
+    // Locate any existing scan meta and remove
+    for (int i = 0; i < metaArray.length(); i++) {
+      String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+
+      if (metadataName == "name") {
+        nameExists = true;
+      }
+      if (metadataName == "creator") {
+        creatorExists = true;
+      }
+      if (metadataName == "type") {
+        titleExists = true;
+      }
+      if (metadataName == "dateCreated") {
+        dateCreatedExists = true;
+      }
+      if (metadataName == "dateModified") {
+        dateModifiedExists = true;
+      }
+      if (metadataName == "description") {
+        descriptionExists = true;
+      }
+      if (metadataName == "format") {
+        formatExists = true;
+      }
+      if (metadataName == "uniqueIdentifier") {
+        uniqueIdentifierExists = true;
+      }
+      if (metadataName == "informationSchedule") {
+        informationScheduleExists = true;
+      }
+      if (metadataName == "securityClassification") {
+        securityClassificationExists = true;
+      }
+      if (metadataName == "retentionSchedule") {
+        retentionScheduleExists = true;
+      }
+      if (metadataName == "oPR") {
+        oPRExists = true;
+      }
+      if (metadataName == "incidentNumber") {
+        incidentNumberExists = true;
+      }
+      if (metadataName == "appAcronym") {
+        appAcronymExists = true;
+      }
+
+    }
+
+    if (!nameExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "name");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+
+    if (!creatorExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "creator");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+
+    if (!titleExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "title");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!dateCreatedExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "dateCreated");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!dateModifiedExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "dateModified");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!descriptionExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "description");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!formatExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "format");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!uniqueIdentifierExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "uniqueIdentifier");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!informationScheduleExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "informationSchedule");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!securityClassificationExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "securityClassification");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!retentionScheduleExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "retentionSchedule");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!oPRExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "oPR");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!incidentNumberExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "incidentNumber");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+    if (!appAcronymExists) {
+      JSONObject jobject = new JSONObject();
+      jobject.put("metadataName", "appAcronym");
+      jobject.put("metadataValue", "null");
+      metaArray.put(jobject);
+    }
+
+    return metaArray;
+
+  }
+
+
+
+
 }
