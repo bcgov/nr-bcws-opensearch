@@ -70,11 +70,11 @@ public class GetFileFromWFDMAPI {
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("WFDMScanStatus" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMScanStatus-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
-      if (metadataName.equalsIgnoreCase("wfdm-system-scanDate-" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMSystemScanDate-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -83,7 +83,7 @@ public class GetFileFromWFDMAPI {
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "WFDMScanStatus" + versionNumber);
+    meta.put("metadataName", "WFDMScanStatus-" + versionNumber);
     meta.put("metadataValue", status);
     metaArray.put(meta);
 
