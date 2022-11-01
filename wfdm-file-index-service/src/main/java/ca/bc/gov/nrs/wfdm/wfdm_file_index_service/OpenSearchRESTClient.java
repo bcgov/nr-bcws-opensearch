@@ -391,87 +391,87 @@ public class OpenSearchRESTClient {
 		if (!nameExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "Name");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 
 		if (!creatorExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "Creator");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 
 		if (!titleExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "Title");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!dateCreatedExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "DateCreated");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!dateModifiedExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "DateModified");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!descriptionExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "Description");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!formatExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "Format");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!uniqueIdentifierExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "UniqueIdentifier");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!informationScheduleExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "InformationSchedule");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!securityClassificationExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "SecurityClassification");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!retentionScheduleExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "RetentionSchedule");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!oPRExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "OPR");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!incidentNumberExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "IncidentNumber");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!appAcronymExists) {
 			JSONObject jobject = new JSONObject();
 			jobject.put("metadataName", "AppAcronym");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		return jsonArray;

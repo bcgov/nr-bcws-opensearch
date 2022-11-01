@@ -68,8 +68,7 @@ public class GetFileFromWFDMAPI {
 
     //default fields we will need to add if they don't already exist
 
-    Boolean nameExists = false;
-    Boolean creatorExists = false;
+
     Boolean titleExists = false;
     Boolean dateCreatedExists = false;
     Boolean dateModifiedExists = false;
@@ -100,9 +99,10 @@ public class GetFileFromWFDMAPI {
         metaArray.remove(i);
         break;
       }
-
-
-      
+      if (metadataName.equalsIgnoreCase("Title")) {
+        titleExists = true;
+        break;
+      }
 
 
 
@@ -110,7 +110,13 @@ public class GetFileFromWFDMAPI {
     }
 
     //check for default metadata, if it exists do nothing, if not update:
-
+    if (!titleExists) {
+      JSONObject metaTitle = new JSONObject();
+      metaTitle.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+      metaTitle.put("metadataName", "Title");
+      metaTitle.put("metadataValue", "null");
+      metaArray.put(metaTitle);
+    }
 
     // inject scan meta
     JSONObject meta = new JSONObject();
