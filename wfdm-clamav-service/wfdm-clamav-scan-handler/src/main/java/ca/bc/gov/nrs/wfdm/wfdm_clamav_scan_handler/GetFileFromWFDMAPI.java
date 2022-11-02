@@ -70,7 +70,7 @@ public class GetFileFromWFDMAPI {
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if  (metadataName.equalsIgnoreCase("WFDMScanStatus-" + versionNumber))  {
+      if (metadataName.equalsIgnoreCase("WFDMScanStatus-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
