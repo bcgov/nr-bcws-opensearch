@@ -10,6 +10,7 @@ import javax.xml.transform.TransformerConfigurationException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.exception.TikaException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.xml.sax.SAXException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -39,7 +40,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
   @Override
-  public String handleRequest(Map<String,Object> event, Context context) {
+  public String handleRequest(Map<String, Object> event, Context context) {
     LambdaLogger logger = context.getLogger();
     String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
     // null check sqsEvents!
@@ -53,18 +54,18 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
-      logger.log("fileDetailsJson"+fileDetailsJson.getString("fileId"));
+      logger.log("fileDetailsJson" + fileDetailsJson.getString("fileId"));
 
       String fileId = fileDetailsJson.getString("fileId");
 
       String versionNumber;
       if (fileDetailsJson.has("fileVersionNumber")) {
-        if (fileDetailsJson.getString("fileVersionNumber").equals("null")){
+        if (fileDetailsJson.getString("fileVersionNumber").equals("null")) {
           versionNumber = "1";
         } else {
           versionNumber = fileDetailsJson.getString("fileVersionNumber");
         }
-      }  else {
+      } else {
         versionNumber = "1";
       }
       //TODO:Update to correct event type from WFDM-API
@@ -77,27 +78,27 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       }
 
       String scanStatus;
-      if(fileDetailsJson.has("message") && !fileDetailsJson.isNull("message") )
-    	  scanStatus = fileDetailsJson.getString("message");
+      if (fileDetailsJson.has("message") && !fileDetailsJson.isNull("message"))
+        scanStatus = fileDetailsJson.getString("message");
       else
-    	  scanStatus = "-";
+        scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
       logger.log(eventType);
       String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
       String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
-	  String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
-	  String CLIENT_ID = secretCD[0];
-	  String PASSWORD = secretCD[1];
+      String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+      String CLIENT_ID = secretCD[0];
+      String PASSWORD = secretCD[1];
 
-	  //logger.log("message"+fileDetailsJson.getString("message"));
+      //logger.log("message"+fileDetailsJson.getString("message"));
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
       // aren't in a cache slowly getting stale. Could be replaced by a check token
       // and
       // a cached token
       String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
-      logger.log("wfdmToken :"+wfdmToken);
+      logger.log("wfdmToken :" + wfdmToken);
       if (wfdmToken == null)
         throw new Exception("Could not authorize access for WFDM");
 
@@ -105,7 +106,6 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
 
       logger.log("\nInfo: fileInfo is: " + fileInfo);
-
 
       if (fileInfo == null) {
         throw new Exception("File not found!");
@@ -121,14 +121,14 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         if (eventType.equalsIgnoreCase("bytes")) {
           // Fetch the bytes from the bucket, not the WFDM API
           AmazonS3 s3client = AmazonS3ClientBuilder
-            .standard()
-            .withCredentials(credentialsProvider)
-            .withRegion(region)
-            .build();
+              .standard()
+              .withCredentials(credentialsProvider)
+              .withRegion(region)
+              .build();
 
           Bucket clamavBucket = null;
           List<Bucket> buckets = s3client.listBuckets();
-          for(Bucket bucket : buckets) {
+          for (Bucket bucket : buckets) {
             if (bucket.getName().equalsIgnoreCase(bucketName)) {
               clamavBucket = bucket;
             }
@@ -136,13 +136,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
           // If the bucket doesn't exist, re-create it
           // For some reason, calling doesBucketExistV2 returns false???
-          if(clamavBucket == null) {
+          if (clamavBucket == null) {
             throw new Exception("S3 Bucket " + bucketName + " does not exist. Virus scan will be skipped");
           }
 
           logger.log("\nInfo: Fetching file bytes...");
-        
-          
+
           S3Object scannedObject = s3client.getObject(new GetObjectRequest(bucketName, fileId + "-" + versionNumber));
           stream = new BufferedInputStream(scannedObject.getObjectContent());
 
@@ -153,12 +152,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
           if (mimeType.equalsIgnoreCase("text/plain") ||
               mimeType.equalsIgnoreCase("application/msword") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")||
-              mimeType.equalsIgnoreCase("application/pdf")  ||
-              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12")  ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ){
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+              mimeType.equalsIgnoreCase("application/pdf") ||
+              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12") ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
             content = TikaParseDocument.parseStream(stream);
-            logger.log("\nInfo: content after parsing "+content);
+            logger.log("\nInfo: content after parsing " + content);
           } else {
             // nothing to see here folks, we won't process this file. However
             // this isn't an error and we might want to handle metadata, etc.
@@ -176,7 +175,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
         OpenSearchRESTClient restClient = new OpenSearchRESTClient();
-        restClient.addIndex(content, fileName, fileDetailsJson,scanStatus);
+        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
         // Push ID onto SQS for clamAV
         logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
@@ -212,4 +211,5 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     logger.log("\nInfo: Close Handler");
     return "Closed";
   }
+  
 }

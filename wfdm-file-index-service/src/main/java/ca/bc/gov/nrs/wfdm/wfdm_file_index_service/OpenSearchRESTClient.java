@@ -343,46 +343,46 @@ public class OpenSearchRESTClient {
 			JSONObject json = jsonArray.getJSONObject(i);
 			JSONObject jobject = new JSONObject();
 
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "name") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "Name") {
 				nameExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "creator") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "Creator") {
 				creatorExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "type") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "Title") {
 				titleExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "dateCreated") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "DateCreated") {
 				dateCreatedExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "dateModified") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "DateModified") {
 				dateModifiedExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "description") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "Description") {
 				descriptionExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "format") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "Format") {
 				formatExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "uniqueIdentifier") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "UniqueIdentifier") {
 				uniqueIdentifierExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "informationSchedule") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "InformationSchedule") {
 				informationScheduleExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "securityClassification") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "SecurityClassification") {
 				securityClassificationExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "retentionSchedule") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "RetentionSchedule") {
 				retentionScheduleExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "oPR") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "OPR") {
 				oPRExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "incidentNumber") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "IncidentNumber") {
 				incidentNumberExists = true;
 			}
-			if (jobject.has("metadataName") && jobject.get("metadataName") == "appAcronym") {
+			if (jobject.has("metadataName") && jobject.get("metadataName") == "AppAcronym") {
 				appAcronymExists = true;
 			}
 
@@ -390,88 +390,88 @@ public class OpenSearchRESTClient {
 
 		if (!nameExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "name");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "Name");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 
 		if (!creatorExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "creator");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "Creator");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 
 		if (!titleExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "title");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "Title");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!dateCreatedExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "dateCreated");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "DateCreated");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!dateModifiedExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "dateModified");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "DateModified");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!descriptionExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "description");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "Description");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!formatExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "format");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "Format");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!uniqueIdentifierExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "uniqueIdentifier");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "UniqueIdentifier");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!informationScheduleExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "informationSchedule");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "InformationSchedule");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!securityClassificationExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "securityClassification");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "SecurityClassification");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!retentionScheduleExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "retentionSchedule");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "RetentionSchedule");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!oPRExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "oPR");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "OPR");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!incidentNumberExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "incidentNumber");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "IncidentNumber");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		if (!appAcronymExists) {
 			JSONObject jobject = new JSONObject();
-			jobject.put("metadataName", "appAcronym");
-			jobject.put("metadataValue", "");
+			jobject.put("metadataName", "AppAcronym");
+			jobject.put("metadataValue", "NULL");
 			jsonArray.put(jobject);
 		}
 		return jsonArray;

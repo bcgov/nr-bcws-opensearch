@@ -65,31 +65,92 @@ public class GetFileFromWFDMAPI {
 
   public static boolean setIndexedMetadata(String accessToken, String fileId, String versionNumber,
       JSONObject fileDetails) throws UnirestException {
+
+    // default fields we will need to add if they don't already exist
+
+    Boolean creatorExists = false;
+    Boolean titleExists = false;
+    Boolean dateCreatedExists = false;
+    Boolean dateModifiedExists = false;
+    Boolean descriptionExists = false;
+    Boolean formatExists = false;
+    Boolean uniqueIdentifierExists = false;
+    Boolean informationScheduleExists = false;
+    Boolean securityClassificationExists = false;
+    Boolean retentionScheduleExists = false;
+    Boolean oPRExists = false;
+    Boolean incidentNumberExists = false;
+    Boolean appAcronymExists = false;
+
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("WFDMIndexVersion" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
+          || (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber))) {
         metaArray.remove(i);
         break;
       }
-      if (metadataName.equalsIgnoreCase("WFDMIndexDate" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
+
+      creatorExists = metadataName.equalsIgnoreCase("Creator");
+      titleExists = metadataName.equalsIgnoreCase("Title");
+      dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
+      dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
+      descriptionExists = metadataName.equalsIgnoreCase("Description");
+      formatExists = metadataName.equalsIgnoreCase("Format");
+      uniqueIdentifierExists = metadataName.equalsIgnoreCase("UniqueIdentifier");
+      informationScheduleExists = metadataName.equalsIgnoreCase("InformationSchedule");
+      securityClassificationExists = metadataName.equalsIgnoreCase("SecurityClassification");
+      retentionScheduleExists = metadataName.equalsIgnoreCase("RetentionSchedule");
+      oPRExists = metadataName.equalsIgnoreCase("OPR");
+      incidentNumberExists = metadataName.equalsIgnoreCase("IncidentNumber");
+      appAcronymExists = metadataName.equalsIgnoreCase("AppAcronym");
+
     }
+
+    // check for default metadata, if it exists do nothing
+    if (!creatorExists)
+      metaArray.put(addMeta("Creator"));
+    if (!titleExists)
+      metaArray.put(addMeta("Title"));
+    if (!dateCreatedExists)
+      metaArray.put(addMeta("DateCreated"));
+    if (!dateModifiedExists)
+      metaArray.put(addMeta("DateModified"));
+    if (!descriptionExists)
+      metaArray.put(addMeta("Description"));
+    if (!formatExists)
+      metaArray.put(addMeta("Format"));
+    if (!uniqueIdentifierExists)
+      metaArray.put(addMeta("UniqueIdentifier"));
+    if (!informationScheduleExists)
+      metaArray.put(addMeta("InformationSchedule"));
+    if (!securityClassificationExists)
+      metaArray.put(addMeta("SecurityClassification"));
+    if (!retentionScheduleExists)
+      metaArray.put(addMeta("RetentionSchedule"));
+    if (!oPRExists)
+      metaArray.put(addMeta("OPR"));
+    if (!incidentNumberExists)
+      metaArray.put(addMeta("IncidentNumber"));
+    if (!appAcronymExists)
+      metaArray.put(addMeta("AppAcronym"));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "WFDMIndexVersion" + versionNumber);
+    meta.put("metadataName", "WFDMIndexVersion-" + versionNumber);
     meta.put("metadataValue", "true");
     metaArray.put(meta);
 
     JSONObject meta2 = new JSONObject();
     meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta2.put("metadataName", "WFDMIndexDate" + versionNumber);
+    meta2.put("metadataName", "WFDMIndexDate-" + versionNumber);
     Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     meta2.put("metadataValue", formatter.format(new Date().getTime()));
     metaArray.put(meta2);
@@ -104,4 +165,13 @@ public class GetFileFromWFDMAPI {
 
     return metaUpdateResponse.getStatus() == 200;
   }
+
+  public static JSONObject addMeta(String metaName) {
+    JSONObject meta = new JSONObject();
+    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+    meta.put("metadataName", metaName);
+    meta.put("metadataValue", "null");
+    return meta;
+  }
+
 }
