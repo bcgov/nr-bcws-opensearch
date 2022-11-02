@@ -74,7 +74,7 @@ public class GetFileFromWFDMAPI {
         metaArray.remove(i);
         break;
       }
-      if (metadataName.equalsIgnoreCase("WFDMSystemScanDate-" + versionNumber)) {
+      if (metadataName.equalsIgnoreCase("WFDMVirusScanDate-" + versionNumber)) {
         metaArray.remove(i);
         break;
       }
@@ -89,7 +89,7 @@ public class GetFileFromWFDMAPI {
 
     JSONObject meta2 = new JSONObject();
     meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta2.put("metadataName", "WFDMSystemScanDate-" + versionNumber);
+    meta2.put("metadataName", "WFDMVirusScanDate-" + versionNumber);
     Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     meta2.put("metadataValue", formatter.format(new Date().getTime()));
     metaArray.put(meta2);
