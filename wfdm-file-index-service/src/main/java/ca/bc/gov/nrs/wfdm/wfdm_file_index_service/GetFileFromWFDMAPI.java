@@ -66,7 +66,7 @@ public class GetFileFromWFDMAPI {
   public static boolean setIndexedMetadata(String accessToken, String fileId, String versionNumber,
       JSONObject fileDetails) throws UnirestException {
 
-    //default fields we will need to add if they don't already exist
+    // default fields we will need to add if they don't already exist
 
     Boolean creatorExists = false;
     Boolean titleExists = false;
@@ -82,16 +82,13 @@ public class GetFileFromWFDMAPI {
     Boolean incidentNumberExists = false;
     Boolean appAcronymExists = false;
 
-
-
-
-
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)  ||  (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber) )             ) {
+      if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
+          || (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber))) {
         metaArray.remove(i);
         break;
       }
@@ -99,167 +96,50 @@ public class GetFileFromWFDMAPI {
         metaArray.remove(i);
         break;
       }
-      if (metadataName.equalsIgnoreCase("Creator")) {
-        creatorExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("Title")) {
-        titleExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("DateCreated")) {
-        dateCreatedExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("DateModified")) {
-        dateModifiedExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("Description")) {
-        descriptionExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("Format")) {
-        formatExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("UniqueIdentifier")) {
-        uniqueIdentifierExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("InformationSchedule")) {
-        informationScheduleExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("SecurityClassification")) {
-        securityClassificationExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("RetentionSchedule")) {
-        retentionScheduleExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("OPR")) {
-        oPRExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("IncidentNumber")) {
-        incidentNumberExists = true;
-        break;
-      }
-      if (metadataName.equalsIgnoreCase("AppAcronym")) {
-        appAcronymExists = true;
-        break;
-      }
 
-
-
+      creatorExists = metadataName.equalsIgnoreCase("Creator");
+      titleExists = metadataName.equalsIgnoreCase("Title");
+      dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
+      dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
+      descriptionExists = metadataName.equalsIgnoreCase("Description");
+      formatExists = metadataName.equalsIgnoreCase("Format");
+      uniqueIdentifierExists = metadataName.equalsIgnoreCase("UniqueIdentifier");
+      informationScheduleExists = metadataName.equalsIgnoreCase("InformationSchedule");
+      securityClassificationExists = metadataName.equalsIgnoreCase("SecurityClassification");
+      retentionScheduleExists = metadataName.equalsIgnoreCase("RetentionSchedule");
+      oPRExists = metadataName.equalsIgnoreCase("OPR");
+      incidentNumberExists = metadataName.equalsIgnoreCase("IncidentNumber");
+      appAcronymExists = metadataName.equalsIgnoreCase("AppAcronym");
 
     }
 
-    //check for default metadata, if it exists do nothing
-    if (!creatorExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "Creator");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!titleExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "Title");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-
-    if (!dateCreatedExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "DateCreated");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!dateModifiedExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "DateModified");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-
-    if (!descriptionExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "Description");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-
-    if (!formatExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "Format");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!uniqueIdentifierExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "UniqueIdentifier");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!informationScheduleExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "InformationSchedule");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!securityClassificationExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "SecurityClassification");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!retentionScheduleExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "RetentionSchedule");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!oPRExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "OPR");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!incidentNumberExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "IncidentNumber");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-    if (!appAcronymExists) {
-      JSONObject meta = new JSONObject();
-      meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-      meta.put("metadataName", "AppAcronym");
-      meta.put("metadataValue", "null");
-      metaArray.put(meta);
-    }
-
-
-
-
-
-
-
-
+    // check for default metadata, if it exists do nothing
+    if (!creatorExists)
+      metaArray.put(addMeta("Creator"));
+    if (!titleExists)
+      metaArray.put(addMeta("Title"));
+    if (!dateCreatedExists)
+      metaArray.put(addMeta("DateCreated"));
+    if (!dateModifiedExists)
+      metaArray.put(addMeta("DateModified"));
+    if (!descriptionExists)
+      metaArray.put(addMeta("Description"));
+    if (!formatExists)
+      metaArray.put(addMeta("Format"));
+    if (!uniqueIdentifierExists)
+      metaArray.put(addMeta("UniqueIdentifier"));
+    if (!informationScheduleExists)
+      metaArray.put(addMeta("InformationSchedule"));
+    if (!securityClassificationExists)
+      metaArray.put(addMeta("SecurityClassification"));
+    if (!retentionScheduleExists)
+      metaArray.put(addMeta("RetentionSchedule"));
+    if (!oPRExists)
+      metaArray.put(addMeta("OPR"));
+    if (!incidentNumberExists)
+      metaArray.put(addMeta("IncidentNumber"));
+    if (!appAcronymExists)
+      metaArray.put(addMeta("AppAcronym"));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
@@ -285,4 +165,13 @@ public class GetFileFromWFDMAPI {
 
     return metaUpdateResponse.getStatus() == 200;
   }
+
+  public static JSONObject addMeta(String metaName) {
+    JSONObject meta = new JSONObject();
+    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+    meta.put("metadataName", metaName);
+    meta.put("metadataValue", "null");
+    return meta;
+  }
+
 }
