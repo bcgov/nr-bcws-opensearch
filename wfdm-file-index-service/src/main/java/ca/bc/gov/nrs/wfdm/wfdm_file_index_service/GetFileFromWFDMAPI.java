@@ -97,49 +97,36 @@ public class GetFileFromWFDMAPI {
         break;
       }
 
-      creatorExists = metadataName.equalsIgnoreCase("Creator");
-      titleExists = metadataName.equalsIgnoreCase("Title");
-      dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
-      dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
-      descriptionExists = metadataName.equalsIgnoreCase("Description");
-      formatExists = metadataName.equalsIgnoreCase("Format");
-      uniqueIdentifierExists = metadataName.equalsIgnoreCase("UniqueIdentifier");
-      informationScheduleExists = metadataName.equalsIgnoreCase("InformationSchedule");
-      securityClassificationExists = metadataName.equalsIgnoreCase("SecurityClassification");
-      retentionScheduleExists = metadataName.equalsIgnoreCase("RetentionSchedule");
-      oPRExists = metadataName.equalsIgnoreCase("OPR");
-      incidentNumberExists = metadataName.equalsIgnoreCase("IncidentNumber");
-      appAcronymExists = metadataName.equalsIgnoreCase("AppAcronym");
+      if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
+      if (!titleExists) titleExists = metadataName.equalsIgnoreCase("Title");
+      if (!dateCreatedExists) dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
+      if (!dateModifiedExists) dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
+      if (!descriptionExists) descriptionExists = metadataName.equalsIgnoreCase("Description");
+      if (!formatExists) formatExists = metadataName.equalsIgnoreCase("Format");
+      if (!uniqueIdentifierExists) uniqueIdentifierExists = metadataName.equalsIgnoreCase("UniqueIdentifier");
+      if (!informationScheduleExists)  informationScheduleExists = metadataName.equalsIgnoreCase("InformationSchedule");
+      if (!securityClassificationExists) securityClassificationExists = metadataName.equalsIgnoreCase("SecurityClassification");
+      if (!retentionScheduleExists)  retentionScheduleExists = metadataName.equalsIgnoreCase("RetentionSchedule");
+      if (!oPRExists)  oPRExists = metadataName.equalsIgnoreCase("OPR");      
+      if (!incidentNumberExists) incidentNumberExists = metadataName.equalsIgnoreCase("IncidentNumber");
+      if (!appAcronymExists) appAcronymExists = metadataName.equalsIgnoreCase("AppAcronym");
 
     }
 
     // check for default metadata, if it exists do nothing
-    if (!creatorExists)
-      metaArray.put(addMeta("Creator"));
-    if (!titleExists)
-      metaArray.put(addMeta("Title"));
-    if (!dateCreatedExists)
-      metaArray.put(addMeta("DateCreated"));
-    if (!dateModifiedExists)
-      metaArray.put(addMeta("DateModified"));
-    if (!descriptionExists)
-      metaArray.put(addMeta("Description"));
-    if (!formatExists)
-      metaArray.put(addMeta("Format"));
-    if (!uniqueIdentifierExists)
-      metaArray.put(addMeta("UniqueIdentifier"));
-    if (!informationScheduleExists)
-      metaArray.put(addMeta("InformationSchedule"));
-    if (!securityClassificationExists)
-      metaArray.put(addMeta("SecurityClassification"));
-    if (!retentionScheduleExists)
-      metaArray.put(addMeta("RetentionSchedule"));
-    if (!oPRExists)
-      metaArray.put(addMeta("OPR"));
-    if (!incidentNumberExists)
-      metaArray.put(addMeta("IncidentNumber"));
-    if (!appAcronymExists)
-      metaArray.put(addMeta("AppAcronym"));
+    if (!creatorExists) metaArray.put(addMeta("Creator"));
+    if (!titleExists) metaArray.put(addMeta("Title"));
+    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated"));
+    if (!dateModifiedExists) metaArray.put(addMeta("DateModified"));
+    if (!descriptionExists) metaArray.put(addMeta("Description"));
+    if (!formatExists) metaArray.put(addMeta("Format"));
+    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier"));
+    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule"));
+    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification"));
+    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule"));
+    if (!oPRExists) metaArray.put(addMeta("OPR"));
+    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber"));
+    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym"));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
