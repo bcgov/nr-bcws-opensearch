@@ -124,6 +124,9 @@ public class OpenSearchRESTClient {
 
 	    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
+
+
+
 	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
 	    JSONObject jsonOb = new JSONObject();
 	    for(int i= 0 ; i < metadataArray.length() ; i++) {
@@ -132,9 +135,10 @@ public class OpenSearchRESTClient {
 	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
 			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
 			
-			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
-				metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
-			}
+			// Currently the dates that are passed in do not qualify for the date format the index is using, will have to be addressed later
+		//	if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+		//		metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
+		//	}
 
 			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
 				metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
