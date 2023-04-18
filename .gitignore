@@ -19,3 +19,7 @@ main_work
 # IntelliJ
 .idea
 *.iml
+# aws
+.aws-sam
+# vs code
+.vscode
