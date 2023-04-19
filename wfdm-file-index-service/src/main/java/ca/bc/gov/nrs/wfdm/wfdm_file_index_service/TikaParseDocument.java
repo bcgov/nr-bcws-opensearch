@@ -20,10 +20,6 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.microsoft.OfficeParser;
-import org.apache.tika.parser.microsoft.ooxml.OOXMLParser;
-import org.apache.tika.parser.pdf.PDFParser;
-import org.apache.tika.parser.txt.TXTParser;
 import org.xml.sax.SAXException;
 import org.json.simple.JSONObject;
 
@@ -65,30 +61,6 @@ public class TikaParseDocument {
     // Use an AutoDetect parser for handling content types dynamically. See
     // Tika's documentation for list of supported types and their responses
     AutoDetectParser parser = new AutoDetectParser();
-// option 1
-//    AutoDetectParser parser1 = new AutoDetectParser(new TXTParser(), new OfficeParser(), new OOXMLParser(), new PDFParser());
-      
-// option 2
-//    Parser parser = null;
-//    switch (mimeType) {
-//        case "text/plain":
-//            parser = new TXTParser();
-//            break;
-//        case "application/msword":
-//            parser = new OfficeParser();
-//            break;
-//        case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-//        case "application/vnd.ms-excel.sheet.macroEnabled.12":
-//        case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-//            parser = new OOXMLParser();
-//            break;
-//        case "application/pdf":
-//            parser = new PDFParser();
-//            break;
-//        default:
-//            parser = new AutoDetectParser();
-//            break;
-//    }
     
     ParseContext parseContext = new ParseContext();
     parseContext.set(Parser.class, parser);
