@@ -156,7 +156,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
               mimeType.equalsIgnoreCase("application/pdf") ||
               mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12") ||
               mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
-            content = TikaParseDocument.parseStream(stream);
+            content = TikaParseDocument.parseStream(stream, mimeType);
             logger.log("\nInfo: content after parsing " + content);
           } else {
             // nothing to see here folks, we won't process this file. However
