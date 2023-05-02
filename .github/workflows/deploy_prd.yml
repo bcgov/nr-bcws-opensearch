@@ -4,9 +4,8 @@ name: deploy_prd
 
 # Controls when the action will run.
 on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-    tags: [deploy-prd*]
+  release:
+    types: [released]
 
 env:
   TF_VERSION: 1.1.0

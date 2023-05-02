@@ -4,9 +4,22 @@ name: deploy_int
 
 # Controls when the action will run.
 on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-    tags: [deploy-int*]
+  pull_request_target:
+    types:
+      - closed
+    branches:
+      - 'main'
+    paths:
+      - .github/**
+      - aws-lambda-layer-base/**
+      - terraform/**
+      - terragrunt/**
+      - wfdm-file-scan-service/**
+      - wfdm-clamav-service/**
+      - wfdm-file-index-initializer/**
+      - wfdm-file-index-service/**
+      - wfdm-file-reindexer/**
+
 
 env:
   TF_VERSION: 1.1.0
