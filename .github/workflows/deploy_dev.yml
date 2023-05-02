@@ -46,8 +46,18 @@ jobs:
           mvn --batch-mode install -f wfdm-file-index-initializer/pom.xml
           mvn --batch-mode install -f wfdm-file-index-service/pom.xml
 
-      - name: Make directory and copy in jar files
-        run: mkdir staging && find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm -name '*.jar' -exec cp -prv '{}' 'staging' ';'
+      - name: Create zip file structure
+        run: |
+          mkdir java
+          mkdir java/lib
+          find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm/aws-lambda-layer-base -name *.jar -exec mv {} ./java/lib/aws-lambda-layer-base \;
+
+      - uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r java.zip java
+
+      - name: Make directory, copy in jar files and zip file
+        run: mkdir staging && find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm -name '*.jar' -exec cp -prv '{}' 'staging' ';' && cp java.zip staging/java.zip
         
       - name: Get source code hash of jar files
         run: |
