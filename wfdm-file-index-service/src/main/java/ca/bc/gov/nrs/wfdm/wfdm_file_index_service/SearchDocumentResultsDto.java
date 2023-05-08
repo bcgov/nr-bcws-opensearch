@@ -17,11 +17,11 @@ public class SearchDocumentResultsDto {
     private String lastUpdatedBy;
     private String fileLink;
     private String fileSize;
-    private String lastModifiedTime;
+    private String lastModified;
     private String fileRetention;
     private String UploadedBy;
     private String fileExtension;
-    private Long   fileSizeBytes;
+    private Long fileSizeBytes;
     private String fileType;
     private String fileContent;
     private String lockedInd;
@@ -140,12 +140,12 @@ public class SearchDocumentResultsDto {
         this.fileSize = fileSize;
     }
 
-    public String getLastModifiedTime() {
-        return lastModifiedTime;
+    public String getLastModified() {
+        return lastModified;
     }
 
-    public void setLastModifiedTime(String lastModifiedTime) {
-        this.lastModifiedTime = lastModifiedTime;
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
     }
 
     public String getFileRetention() {

@@ -34,6 +34,7 @@ public class OpenSearchRESTClient {
 	// should likely be moved into a config file...
 	private static String serviceName = "es";
 	private static String region = "ca-central-1";
+	private static String units = "BKMGTPEZY";
 	private OpenSearchClient openSearchClient;
 	private SdkHttpClient httpClient;
 
@@ -48,9 +49,8 @@ public class OpenSearchRESTClient {
 	 * @throws OpenSearchException
 	 */
 	public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails, String scanStatus) throws OpenSearchException {
-		 String indexName = System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME").trim();
-		 String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
-		// TODO: FX, do not need https:// in WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT
+		String indexName = System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME").trim();
+		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
 		logger.info(domainEndpoint);
 		openSearchClient = openSearchClient(domainEndpoint, serviceName, Region.CA_CENTRAL_1);
 		
@@ -65,7 +65,7 @@ public class OpenSearchRESTClient {
 		searchDocumentResultsDto.setAbsoluteFilePath(fileDetails.getString("filePath"));
 		
 		if(!fileDetails.isNull("lastUpdatedTimestamp")) {
-			searchDocumentResultsDto.setLastModifiedTime(fileDetails.get("lastUpdatedTimestamp").toString());
+			searchDocumentResultsDto.setLastModified(fileDetails.get("lastUpdatedTimestamp").toString());
 		}
 		
 		if(!fileDetails.isNull("lastUpdatedBy")) {
@@ -110,6 +110,8 @@ public class OpenSearchRESTClient {
 		} else {
 			searchDocumentResultsDto.setFileSize(String.valueOf(0));
 		}
+
+		searchDocumentResultsDto.setFileSizeBytes(parsetoBytes(searchDocumentResultsDto.getFileSize()));
 
 	    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
 				"metadataName", "metadataValue");
@@ -330,6 +332,25 @@ public class OpenSearchRESTClient {
 	    value *= Long.signum(bytes);
 	    return String.format("%.1f %ciB", value / 1024.0, ci.current());
 	}
-	
+
+	// Converting file size back to bytes from human readable
+	public static long parsetoBytes(String arg0) {
+		if (arg0.equals("0"))
+			return Long.valueOf(0);
+		int spaceNdx = arg0.indexOf(" ");
+		if (spaceNdx < 0)
+			return Long.valueOf(arg0);
+		double ret = Double.parseDouble(arg0.substring(0, spaceNdx));
+		String unitString = arg0.substring(spaceNdx + 1);
+		int unitChar = unitString.charAt(0);
+		int power = units.indexOf(unitChar);
+		boolean isSi = unitString.indexOf('i') != -1;
+		int factor = 1024;
+		if (isSi) {
+			factor = 1000;
+		}
+
+		return Double.valueOf(ret * Math.pow(factor, power)).longValue();
+	}
 	
 }
