@@ -800,6 +800,16 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     enabled = true
   }
 
+  // Workaround to bypass bug in terraform, see https://github.com/hashicorp/terraform-provider-aws/issues/30205 for details
+  dynamic "auto_tune_options" {
+    for_each = var.opensearch_autotune == "ENABLED" ? [1] : []
+
+    content {
+      desired_state       = var.opensearch_autotune
+      rollback_on_disable = "NO_ROLLBACK"
+    }
+  }
+
   cluster_config {
     dedicated_master_count   = var.master_node_instance_count
     dedicated_master_enabled = var.master_node_usage
