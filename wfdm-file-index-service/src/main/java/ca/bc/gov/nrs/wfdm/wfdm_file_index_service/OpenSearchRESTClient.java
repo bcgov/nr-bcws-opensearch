@@ -135,10 +135,13 @@ public class OpenSearchRESTClient {
 	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
 			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
 			
-			// Currently the dates that are passed in do not qualify for the date format the index is using, will have to be addressed later
-		//	if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
-		//		metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
-		//	}
+			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+				// alter date string into an opensearch acceptable format
+				String dateValue = jsonOb.get("metadataDateValue").toString();
+				dateValue = dateValue.replace(" ", "T");
+
+				metadataKeyVal.put("metadataDateValue", dateValue);
+			}
 
 			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
 				metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
