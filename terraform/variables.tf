@@ -242,6 +242,12 @@ variable "ultrawarm_node_instance_type" {
   default = "ultrawarm1.medium.elasticsearch"
 }
 
+variable "opensearch_autotune" {
+  type = string
+  default = "DISABLED"
+  description = "whether to use AutoTune or not"
+}
+
 variable "OPENSEARCH_PASSWORD" {
   type        = string
   default     = null
