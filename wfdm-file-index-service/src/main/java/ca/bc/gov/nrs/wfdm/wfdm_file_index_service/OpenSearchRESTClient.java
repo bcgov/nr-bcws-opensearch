@@ -126,7 +126,6 @@ public class OpenSearchRESTClient {
 				"metadataName", "metadataValue");
 
 
-
 	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
 	    JSONObject jsonOb = new JSONObject();
 	    for(int i= 0 ; i < metadataArray.length() ; i++) {
@@ -139,7 +138,6 @@ public class OpenSearchRESTClient {
 				// alter date string into an opensearch acceptable format
 				String dateValue = jsonOb.get("metadataDateValue").toString();
 				dateValue = dateValue.replace(" ", "T");
-
 				metadataKeyVal.put("metadataDateValue", dateValue);
 			}
 
