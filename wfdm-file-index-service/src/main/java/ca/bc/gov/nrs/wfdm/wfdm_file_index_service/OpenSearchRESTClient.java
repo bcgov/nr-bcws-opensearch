@@ -135,7 +135,9 @@ public class OpenSearchRESTClient {
 			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
 			
 			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
-				// alter date string into an opensearch acceptable format
+				// alter date string into an opensearch strict_date_optional_time format
+				// example: “2019-03-23T21:34:46”
+
 				String dateValue = jsonOb.get("metadataDateValue").toString();
 				dateValue = dateValue.replace(" ", "T");
 				metadataKeyVal.put("metadataDateValue", dateValue);
