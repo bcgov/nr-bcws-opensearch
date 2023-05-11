@@ -195,8 +195,8 @@ public class OpenSearchRESTClient {
 		try {
 			json = mapper.writeValueAsString(searchDocumentResultsDto);
 		} catch (JsonProcessingException e) {
-			logger.error("json mapper failed :" +  e);
-			throw new RuntimeException("JSON?????", e);
+			logger.error("json mapper failed: {}", e.getMessage());
+			throw new RuntimeException("json mapper failed to convert index data to json: ", e);
 		}
 		
 		// Form the indexing request, send it, and print the response
