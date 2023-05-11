@@ -50,7 +50,7 @@ jobs:
         run: |
           mkdir java
           mkdir java/lib
-          find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm/aws-lambda-layer-base -name *.jar -exec mv {} ./java/lib/aws-lambda-layer-base \;
+          find /home/runner/.m2/repository/ca/bc/gov/nrs/wfdm/aws-lambda-layer-base -name *.jar -exec mv {} ./java/lib/aws-lambda-layer-base.jar \;
 
       - uses: montudor/action-zip@v1
         with:
