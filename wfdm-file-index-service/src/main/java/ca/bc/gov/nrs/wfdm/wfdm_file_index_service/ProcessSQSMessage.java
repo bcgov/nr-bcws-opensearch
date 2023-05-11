@@ -191,6 +191,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());
     } catch (TikaException tex) {
       logger.log("\nTika Parsing Error: " + tex.getLocalizedMessage());
+    } catch (OpenSearchException e) {
+      logger.log("\nOpen Search Error: " + e.getLocalizedMessage());
     } catch (Exception ex) {
       logger.log("\nUnhandled Error: " + ex.getLocalizedMessage());
     } finally {
