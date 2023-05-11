@@ -113,36 +113,40 @@ public class OpenSearchRESTClient {
 
 		searchDocumentResultsDto.setFileSizeBytes(parsetoBytes(searchDocumentResultsDto.getFileSize()));
 
-	    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
-				"metadataName", "metadataValue");
+    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
+      "metadataName", "metadataValue");
 
-	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
-	    JSONObject jsonOb = new JSONObject();
-	    for (int i = 0 ; i < metadataArray.length() ; i++) {
-	    	Map<String, Object> metadataKeyVal = new HashMap<>();
-	    	jsonOb = metadataArray.getJSONObject(i);
-	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
-			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
-			
-			// Currently the dates that are passed in do not qualify for the date format the index is using, will have to be addressed later
-		//	if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
-		//		metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
-		//	}
+    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
+    JSONObject jsonOb = new JSONObject();
+    for (int i = 0 ; i < metadataArray.length() ; i++) {
+        Map<String, Object> metadataKeyVal = new HashMap<>();
+        jsonOb = metadataArray.getJSONObject(i);
+        metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
+        metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
 
-			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
-				metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
-			}
+        if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+          // alter date string into an opensearch strict_date_optional_time format
+          // example: “2019-03-23T21:34:46”
 
-			if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
-				metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
-			}
+          String dateValue = jsonOb.get("metadataDateValue").toString();
+          dateValue = dateValue.replace(" ", "T");
+          metadataKeyVal.put("metadataDateValue", dateValue);
+        }
 
-	    	metadataList.add(metadataKeyVal);
-	    }
+        if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
+          metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
+        }
+
+        if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
+          metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
+        }
+
+        metadataList.add(metadataKeyVal);
+    }
 		
 		searchDocumentResultsDto.setMetadata(metadataList);
 	    
-	    JSONArray securityArray = fileDetails.getJSONArray("security");
+	  JSONArray securityArray = fileDetails.getJSONArray("security");
 		JSONArray jsonArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
 			JSONObject objects = securityArray.getJSONObject(i);

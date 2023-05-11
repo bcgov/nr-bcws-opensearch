@@ -835,21 +835,23 @@ resource "aws_elasticsearch_domain" "main_elasticsearch_domain" {
     Environment = var.env
   }
 
-  access_policies = <<CONFIG
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "es:*",
-      "Resource": "arn:aws:es:ca-central-1:460053263286:domain/wf1-wfdm-opensearch-${var.env}/*"
-    }
-  ]
-}
-CONFIG
+  // REMOVED ACCESS POLICY - not needed when instead using fine-grained access
+
+#   access_policies = <<CONFIG
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "*"
+#       },
+#       "Action": "es:*",
+#       "Resource": "arn:aws:es:ca-central-1:460053263286:domain/wf1-wfdm-opensearch-${var.env}/*"
+#     }
+#   ]
+# }
+# CONFIG
 }
 
 /*
