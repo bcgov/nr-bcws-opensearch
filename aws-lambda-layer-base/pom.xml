@@ -13,7 +13,7 @@
  <properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<aws.java.sdk.version>2.14.11</aws.java.sdk.version>
+		<aws.java.sdk.version>2.17.219</aws.java.sdk.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -83,8 +83,6 @@
 			<artifactId>xmpcore</artifactId>
 			<version>5.1.3</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-opensearch -->
 
 		<dependency>
 			<groupId>junit</groupId>
@@ -144,13 +142,28 @@
 			<version>1.12.281</version>
 		</dependency>
 		
-
-		<!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch -->
 		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>elasticsearch-rest-high-level-client</artifactId>
-			<version>7.0.0</version>
+			<groupId>org.opensearch.client</groupId>
+			<artifactId>opensearch-java</artifactId>
+			<version>2.4.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.opensearch.client</groupId>
+			<artifactId>opensearch-rest-client</artifactId>
+			<version>2.6.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/software.amazon.awssdk/apache-client -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>apache-client</artifactId>
+			<version>2.17.224</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>2.17.219</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-sqs</artifactId>
