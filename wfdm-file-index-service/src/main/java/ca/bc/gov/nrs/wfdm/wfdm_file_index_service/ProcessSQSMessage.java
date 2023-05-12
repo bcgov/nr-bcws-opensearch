@@ -174,6 +174,11 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         String filePath = fileDetailsJson.getString("filePath");
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
+        OpenSearchRESTClient restClient = new OpenSearchRESTClient();
+        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
+        // Push ID onto SQS for clamAV
+        logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
+
         // update metadata
         boolean metaAdded = GetFileFromWFDMAPI.setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson);
         if (!metaAdded) {
@@ -181,13 +186,6 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           // Should we continue to process the data from this point, or just choke?
           logger.log("\nERROR: Failed to add metadata to file resource");
         }
-
-        OpenSearchRESTClient restClient = new OpenSearchRESTClient();
-        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
-        // Push ID onto SQS for clamAV
-        logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
-
-
       }
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());
