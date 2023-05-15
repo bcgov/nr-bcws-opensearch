@@ -114,19 +114,22 @@ public class GetFileFromWFDMAPI {
     }
 
     // check for default metadata, if it exists do nothing
-    if (!creatorExists) metaArray.put(addMeta("Creator"));
-    if (!titleExists) metaArray.put(addMeta("Title"));
-    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated"));
-    if (!dateModifiedExists) metaArray.put(addMeta("DateModified"));
-    if (!descriptionExists) metaArray.put(addMeta("Description"));
-    if (!formatExists) metaArray.put(addMeta("Format"));
-    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier"));
-    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule"));
-    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification"));
-    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule"));
-    if (!oPRExists) metaArray.put(addMeta("OPR"));
-    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber"));
-    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym"));
+    if (!creatorExists) {
+      String uploadedBy = fileDetails.getString("uploadedBy");
+      metaArray.put(addMeta("Creator", uploadedBy));
+    }
+    if (!titleExists) metaArray.put(addMeta("Title", null));
+    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", null));
+    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", null));
+    if (!descriptionExists) metaArray.put(addMeta("Description", null));
+    if (!formatExists) metaArray.put(addMeta("Format", null));
+    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", null));
+    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", null));
+    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", null));
+    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", null));
+    if (!oPRExists) metaArray.put(addMeta("OPR", null));
+    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", null));
+    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", null));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
@@ -153,11 +156,11 @@ public class GetFileFromWFDMAPI {
     return metaUpdateResponse.getStatus() == 200;
   }
 
-  public static JSONObject addMeta(String metaName) {
+  public static JSONObject addMeta(String metaName, String metaValue) {
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
     meta.put("metadataName", metaName);
-    meta.put("metadataValue", "null");
+    meta.put("metadataValue", metaValue);
     return meta;
   }
 
