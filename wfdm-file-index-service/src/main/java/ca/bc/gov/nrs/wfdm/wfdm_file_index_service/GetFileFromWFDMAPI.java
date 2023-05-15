@@ -118,18 +118,18 @@ public class GetFileFromWFDMAPI {
       String uploadedBy = fileDetails.getString("uploadedBy");
       metaArray.put(addMeta("Creator", uploadedBy));
     }
-    if (!titleExists) metaArray.put(addMeta("Title", null));
-    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", null));
-    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", null));
-    if (!descriptionExists) metaArray.put(addMeta("Description", null));
-    if (!formatExists) metaArray.put(addMeta("Format", null));
-    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", null));
-    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", null));
-    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", null));
-    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", null));
-    if (!oPRExists) metaArray.put(addMeta("OPR", null));
-    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", null));
-    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", null));
+    if (!titleExists) metaArray.put(addMeta("Title", "null"));
+    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", "null"));
+    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
+    if (!descriptionExists) metaArray.put(addMeta("Description", "null"));
+    if (!formatExists) metaArray.put(addMeta("Format", "null"));
+    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", "null"));
+    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", "null"));
+    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", "null"));
+    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", "null"));
+    if (!oPRExists) metaArray.put(addMeta("OPR", "null"));
+    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", "null"));
+    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", "null"));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
