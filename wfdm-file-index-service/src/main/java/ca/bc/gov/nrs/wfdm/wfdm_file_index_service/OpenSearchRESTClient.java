@@ -89,8 +89,12 @@ public class OpenSearchRESTClient {
 
 		searchDocumentResultsDto.setFileName(fileName);
 		
-		String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
-		searchDocumentResultsDto.setFileExtension(fileExtension);
+		if (!fileDetails.isNull("fileExtension")) {
+			searchDocumentResultsDto.setFileExtension(fileDetails.get("fileExtension").toString());
+		} else if (fileName.contains(".")) {
+			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+			searchDocumentResultsDto.setFileExtension(fileExtension);
+		}
 
 		if(!fileDetails.isNull("retention")) {
 			searchDocumentResultsDto.setFileRetention(fileDetails.get("retention").toString());
@@ -108,8 +112,8 @@ public class OpenSearchRESTClient {
 		searchDocumentResultsDto.setFilePath(parent.getString("filePath"));
 		
 		if (!fileDetails.isNull("fileSize")) {
-			Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
-			String fileSize =  humanReadableByteCountBin(fileSizeLong);
+			Long fileSizeLong = fileDetails.getLong("fileSize");
+			String fileSize =  humanReadableByteCountBin(fileSizeLong.longValue());
 			searchDocumentResultsDto.setFileSize(fileSize);
 		} else {
 			searchDocumentResultsDto.setFileSize(String.valueOf(0));
@@ -343,11 +347,13 @@ public class OpenSearchRESTClient {
 
 	// Converting file size back to bytes from human readable
 	public static long parsetoBytes(String arg0) {
-		if (arg0.equals("0"))
+		if (arg0.equals("0")) {
 			return Long.valueOf(0);
+		}
 		int spaceNdx = arg0.indexOf(" ");
-		if (spaceNdx < 0)
+		if (spaceNdx < 0) {
 			return Long.valueOf(arg0);
+		}
 		double ret = Double.parseDouble(arg0.substring(0, spaceNdx));
 		String unitString = arg0.substring(spaceNdx + 1);
 		int unitChar = unitString.charAt(0);
