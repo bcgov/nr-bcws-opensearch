@@ -186,6 +186,13 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           // Should we continue to process the data from this point, or just choke?
           logger.log("\nERROR: Failed to add metadata to file resource");
         }
+
+        // after updating metadata, get file info again and update index
+        fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId); 
+        fileDetailsJson = new JSONObject(fileInfo);
+
+        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus); 
+
       }
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());

@@ -614,8 +614,6 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   s3_key              = var.layer_file_name
   description         = "Common layer with java jars files"
   compatible_runtimes = ["java11"]
-  skip_destroy        = true
-
 }
 
 
@@ -654,6 +652,9 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       WFDM_DOCUMENT_FILE_SIZE_SCAN_LIMIT       = "${var.file_scan_size_limit}"
     }
   }
+  depends_on = [
+    aws_lambda_layer_version.aws-java-base-layer-terraform
+  ]
 }
 
 #Lambda File Indexing Initializer
@@ -686,6 +687,9 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
 
     }
   }
+  depends_on = [
+    aws_lambda_layer_version.aws-java-base-layer-terraform
+  ]
 }
 
 #Lambda ClamAV handler
@@ -716,6 +720,9 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
       WFDM_DOCUMENT_SECRET_MANAGER = "${var.secret_manager_name}"
     }
   }
+  depends_on = [
+    aws_lambda_layer_version.aws-java-base-layer-terraform
+  ]
 }
 
 data "aws_sqs_queue" "clamav_queue" {
