@@ -82,6 +82,8 @@ public class GetFileFromWFDMAPI {
     Boolean incidentNumberExists = false;
     Boolean appAcronymExists = false;
 
+    Boolean creatorIsNull = false;
+
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
@@ -95,6 +97,16 @@ public class GetFileFromWFDMAPI {
       if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
         metaArray.remove(i);
         break;
+      }
+
+      // By default the API inherits the parent folders meta value, 
+      //Creator needs to have a default value of uploadedBy,
+      // So if the parent folder creator is Null, we still want to set the default value
+      if (metadataName.equalsIgnoreCase("Creator")) {
+        String creatorValue = metaArray.getJSONObject(i).getString("metadataValue");
+        if (creatorValue == "null") {
+          creatorIsNull = true;
+        }
       }
 
       if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
