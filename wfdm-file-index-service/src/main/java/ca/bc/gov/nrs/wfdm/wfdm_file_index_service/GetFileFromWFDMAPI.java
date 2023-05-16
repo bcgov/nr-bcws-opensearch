@@ -81,8 +81,10 @@ public class GetFileFromWFDMAPI {
     Boolean oPRExists = false;
     Boolean incidentNumberExists = false;
     Boolean appAcronymExists = false;
+    Boolean uploadedByExists = false;
 
     Boolean creatorIsNull = false;
+    Boolean uploadedByIsNull = false;
 
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
@@ -103,10 +105,14 @@ public class GetFileFromWFDMAPI {
       //Creator needs to have a default value of uploadedBy,
       // So if the parent folder creator is Null, we still want to set the default value
       if (metadataName.equalsIgnoreCase("Creator")) {
-            creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null"); 
+        creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
+      }
+      if (metadataName.equalsIgnoreCase("UploadedBy")) {
+        uploadedByIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
 
       if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
+      if (!uploadedByExists) uploadedByExists = metadataName.equalsIgnoreCase("UploadBy");
       if (!titleExists) titleExists = metadataName.equalsIgnoreCase("Title");
       if (!dateCreatedExists) dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
       if (!dateModifiedExists) dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
@@ -123,10 +129,16 @@ public class GetFileFromWFDMAPI {
     }
 
     // check for default metadata, if it exists do nothing
-    if (!creatorExists) {
+    if (!creatorExists || creatorIsNull)  {
       String uploadedBy = fileDetails.getString("uploadedBy");
       metaArray.put(addMeta("Creator", uploadedBy));
     }
+    if (!uploadedByExists || uploadedByIsNull) {
+      String uploadedBy = fileDetails.getString("uploadedBy");
+      metaArray.put(addMeta("UploadedBy", uploadedBy));
+    }
+
+
     if (!titleExists) metaArray.put(addMeta("Title", "null"));
     if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", "null"));
     if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
