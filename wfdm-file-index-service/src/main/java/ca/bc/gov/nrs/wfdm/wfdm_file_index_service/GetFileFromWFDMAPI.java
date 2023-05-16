@@ -103,10 +103,7 @@ public class GetFileFromWFDMAPI {
       //Creator needs to have a default value of uploadedBy,
       // So if the parent folder creator is Null, we still want to set the default value
       if (metadataName.equalsIgnoreCase("Creator")) {
-        String creatorValue = metaArray.getJSONObject(i).getString("metadataValue");
-        if (creatorValue == "null") {
-          creatorIsNull = true;
-        }
+            creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null"); 
       }
 
       if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
