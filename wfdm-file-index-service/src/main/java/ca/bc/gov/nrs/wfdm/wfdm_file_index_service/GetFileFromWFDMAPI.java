@@ -82,6 +82,8 @@ public class GetFileFromWFDMAPI {
     Boolean incidentNumberExists = false;
     Boolean appAcronymExists = false;
 
+    Boolean creatorIsNull = false;
+
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
@@ -95,6 +97,13 @@ public class GetFileFromWFDMAPI {
       if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
         metaArray.remove(i);
         break;
+      }
+
+      // By default the API inherits the parent folders meta value, 
+      //Creator needs to have a default value of uploadedBy,
+      // So if the parent folder creator is Null, we still want to set the default value
+      if (metadataName.equalsIgnoreCase("Creator")) {
+            creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null"); 
       }
 
       if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
@@ -118,18 +127,18 @@ public class GetFileFromWFDMAPI {
       String uploadedBy = fileDetails.getString("uploadedBy");
       metaArray.put(addMeta("Creator", uploadedBy));
     }
-    if (!titleExists) metaArray.put(addMeta("Title", null));
-    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", null));
-    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", null));
-    if (!descriptionExists) metaArray.put(addMeta("Description", null));
-    if (!formatExists) metaArray.put(addMeta("Format", null));
-    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", null));
-    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", null));
-    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", null));
-    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", null));
-    if (!oPRExists) metaArray.put(addMeta("OPR", null));
-    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", null));
-    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", null));
+    if (!titleExists) metaArray.put(addMeta("Title", "null"));
+    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", "null"));
+    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
+    if (!descriptionExists) metaArray.put(addMeta("Description", "null"));
+    if (!formatExists) metaArray.put(addMeta("Format", "null"));
+    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", "null"));
+    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", "null"));
+    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", "null"));
+    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", "null"));
+    if (!oPRExists) metaArray.put(addMeta("OPR", "null"));
+    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", "null"));
+    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", "null"));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
