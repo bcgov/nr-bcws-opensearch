@@ -67,6 +67,10 @@ public class OpenSearchRESTClient {
 		if(!fileDetails.isNull("lastUpdatedTimestamp")) {
 			searchDocumentResultsDto.setLastModified(fileDetails.get("lastUpdatedTimestamp").toString());
 		}
+
+		if(!fileDetails.isNull("uploadedBy")) {
+			searchDocumentResultsDto.setUploadedBy(fileDetails.get("uploadedBy").toString());
+		}
 		
 		if(!fileDetails.isNull("lastUpdatedBy")) {
 			searchDocumentResultsDto.setLastUpdatedBy(fileDetails.get("lastUpdatedBy").toString());
@@ -85,8 +89,12 @@ public class OpenSearchRESTClient {
 
 		searchDocumentResultsDto.setFileName(fileName);
 		
-		String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
-		searchDocumentResultsDto.setFileExtension(fileExtension);
+		if (!fileDetails.isNull("fileExtension")) {
+			searchDocumentResultsDto.setFileExtension(fileDetails.get("fileExtension").toString());
+		} else if (fileName.contains(".")) {
+			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+			searchDocumentResultsDto.setFileExtension(fileExtension);
+		}
 
 		if(!fileDetails.isNull("retention")) {
 			searchDocumentResultsDto.setFileRetention(fileDetails.get("retention").toString());
@@ -104,8 +112,8 @@ public class OpenSearchRESTClient {
 		searchDocumentResultsDto.setFilePath(parent.getString("filePath"));
 		
 		if (!fileDetails.isNull("fileSize")) {
-			Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
-			String fileSize =  humanReadableByteCountBin(fileSizeLong);
+			Long fileSizeLong = fileDetails.getLong("fileSize");
+			String fileSize =  humanReadableByteCountBin(fileSizeLong.longValue());
 			searchDocumentResultsDto.setFileSize(fileSize);
 		} else {
 			searchDocumentResultsDto.setFileSize(String.valueOf(0));
@@ -113,40 +121,40 @@ public class OpenSearchRESTClient {
 
 		searchDocumentResultsDto.setFileSizeBytes(parsetoBytes(searchDocumentResultsDto.getFileSize()));
 
-    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
-      "metadataName", "metadataValue");
+		JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(), 
+				"metadataName", "metadataValue");
 
-    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
-    JSONObject jsonOb = new JSONObject();
-    for (int i = 0 ; i < metadataArray.length() ; i++) {
-        Map<String, Object> metadataKeyVal = new HashMap<>();
-        jsonOb = metadataArray.getJSONObject(i);
-        metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
-        metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
-
-        if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
-          // alter date string into an opensearch strict_date_optional_time format
-          // example: “2019-03-23T21:34:46”
-
-          String dateValue = jsonOb.get("metadataDateValue").toString();
-          dateValue = dateValue.replace(" ", "T");
-          metadataKeyVal.put("metadataDateValue", dateValue);
-        }
-
-        if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
-          metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
-        }
-
-        if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
-          metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
-        }
-
-        metadataList.add(metadataKeyVal);
-    }
+		ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
+		JSONObject jsonOb = new JSONObject();
+		for (int i = 0 ; i < metadataArray.length() ; i++) {
+			Map<String, Object> metadataKeyVal = new HashMap<>();
+			jsonOb = metadataArray.getJSONObject(i);
+			metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
+			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+	
+			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+			  // alter date string into an opensearch strict_date_optional_time format
+			  // example: “2019-03-23T21:34:46”
+	
+			  String dateValue = jsonOb.get("metadataDateValue").toString();
+			  dateValue = dateValue.replace(" ", "T");
+			  metadataKeyVal.put("metadataDateValue", dateValue);
+			}
+	
+			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
+			  metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
+			}
+	
+			if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
+			  metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
+			}
+	
+			metadataList.add(metadataKeyVal);
+		}
 		
 		searchDocumentResultsDto.setMetadata(metadataList);
 	    
-	  JSONArray securityArray = fileDetails.getJSONArray("security");
+	  	JSONArray securityArray = fileDetails.getJSONArray("security");
 		JSONArray jsonArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
 			JSONObject objects = securityArray.getJSONObject(i);
@@ -339,11 +347,13 @@ public class OpenSearchRESTClient {
 
 	// Converting file size back to bytes from human readable
 	public static long parsetoBytes(String arg0) {
-		if (arg0.equals("0"))
+		if (arg0.equals("0")) {
 			return Long.valueOf(0);
+		}
 		int spaceNdx = arg0.indexOf(" ");
-		if (spaceNdx < 0)
+		if (spaceNdx < 0) {
 			return Long.valueOf(arg0);
+		}
 		double ret = Double.parseDouble(arg0.substring(0, spaceNdx));
 		String unitString = arg0.substring(spaceNdx + 1);
 		int unitChar = unitString.charAt(0);

@@ -19,7 +19,7 @@ public class SearchDocumentResultsDto {
     private String fileSize;
     private String lastModified;
     private String fileRetention;
-    private String UploadedBy;
+    private String uploadedBy;
     private String fileExtension;
     private Long fileSizeBytes;
     private String fileType;
@@ -157,11 +157,11 @@ public class SearchDocumentResultsDto {
     }
 
     public String getUploadedBy() {
-        return UploadedBy;
+        return uploadedBy;
     }
 
     public void setUploadedBy(String uploadedBy) {
-        UploadedBy = uploadedBy;
+        uploadedBy = uploadedBy;
     }
 
     public String getFileExtension() {
