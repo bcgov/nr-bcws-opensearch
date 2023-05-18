@@ -161,7 +161,7 @@ public class SearchDocumentResultsDto {
     }
 
     public void setUploadedBy(String uploadedBy) {
-        uploadedBy = uploadedBy;
+        this.uploadedBy = uploadedBy;
     }
 
     public String getFileExtension() {
