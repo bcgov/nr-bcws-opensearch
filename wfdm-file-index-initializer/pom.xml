@@ -16,6 +16,7 @@
 	<sonar.organization>bcgov-sonarcloud</sonar.organization>
   <sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	<sonar.projectKey>bcgov_nr-bcws-opensearch</sonar.projectKey>
+	<sonar.java.binaries>target</sonar.java.binaries>
  </properties>
 	<dependencies>
 		<dependency>
