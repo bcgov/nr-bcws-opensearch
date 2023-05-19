@@ -54,5 +54,6 @@ generate "inputs" {
   secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
   opensearch_user = "${local.opensearch_user}"
   opensearch_password = "${local.opensearch_password}"
+  ElasticSearch_Version = "OpenSearch_2.5"
 EOF
 }

@@ -1,37 +1,26 @@
 package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
-import java.io.IOException;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.IndexResponse;
+import org.opensearch.client.transport.aws.AwsSdk2Transport;
+import org.opensearch.client.transport.aws.AwsSdk2TransportOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.http.SdkHttpClient;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.regions.Region;
 
 /**
  * OpenSeachRESTClient provides access to the OpenSearch Restful API. This is
@@ -45,9 +34,9 @@ public class OpenSearchRESTClient {
 	// should likely be moved into a config file...
 	private static String serviceName = "es";
 	private static String region = "ca-central-1";
-	static RestHighLevelClient restClient;
-
-	static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+	private static String units = "BKMGTPEZY";
+	private OpenSearchClient openSearchClient;
+	private SdkHttpClient httpClient;
 
 	/**
 	 * Adds the provided content and metadata to the OpenSearch index
@@ -57,108 +46,121 @@ public class OpenSearchRESTClient {
 	 * @param scanStatus 
 	 * @return
 	 * 
-	 * @throws IOException
+	 * @throws OpenSearchException
 	 */
-	public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails, String scanStatus) throws IOException {
+	public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails, String scanStatus) throws OpenSearchException {
 		String indexName = System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME").trim();
-		restClient = searchClient(serviceName, region);
+		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
+		logger.info(domainEndpoint);
+		openSearchClient = openSearchClient(domainEndpoint, serviceName, Region.CA_CENTRAL_1);
 		
-		if(restClient == null) {
-			logger.info("rest client is null");
+		if (openSearchClient == null) {
+			logger.info("open search client is null");
 		}
 		logger.info("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
 
-		String type = "_doc";
+		SearchDocumentResultsDto searchDocumentResultsDto = new SearchDocumentResultsDto();
+		
+		searchDocumentResultsDto.setKey(fileName);
+		searchDocumentResultsDto.setAbsoluteFilePath(fileDetails.getString("filePath"));
+		
+		if(!fileDetails.isNull("lastUpdatedTimestamp")) {
+			searchDocumentResultsDto.setLastModified(fileDetails.get("lastUpdatedTimestamp").toString());
+		}
 
-		Map<String, Object> document = new HashMap<>();
-		document.put("key", fileName);
-		document.put("absoluteFilePath",fileDetails.getString("filePath"));
+		if(!fileDetails.isNull("uploadedBy")) {
+			searchDocumentResultsDto.setUploadedBy(fileDetails.get("uploadedBy").toString());
+		}
 		
-		if(!fileDetails.isNull("lastUpdatedTimestamp"))
-			document.put("lastModified", fileDetails.get("lastUpdatedTimestamp"));
-		else
-			document.put("lastModified", null);
-		
-		if(!fileDetails.isNull("lastUpdatedBy"))
-			document.put("lastUpdatedBy", fileDetails.get("lastUpdatedBy"));
-		else
-			document.put("lastUpdatedBy", null);
+		if(!fileDetails.isNull("lastUpdatedBy")) {
+			searchDocumentResultsDto.setLastUpdatedBy(fileDetails.get("lastUpdatedBy").toString());
+		}
 		
 		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
 		if (fileDetails.get("mimeType") == "null") {
-			document.put("mimeType", "DIRECTORY");
+			searchDocumentResultsDto.setMimeType("DIRECTORY");
 		} else {
-			document.put("mimeType", fileDetails.get("mimeType").toString() );
+			searchDocumentResultsDto.setMimeType(fileDetails.get("mimeType").toString());
 		}
 		
 		if (fileDetails.get("fileType") != "null"  ){
-			document.put("fileType", fileDetails.get("fileType").toString());
+			searchDocumentResultsDto.setFileType(fileDetails.get("fileType").toString());
 		}
 
-		document.put("fileName", fileName);
+		searchDocumentResultsDto.setFileName(fileName);
+		
+		if (!fileDetails.isNull("fileExtension")) {
+			searchDocumentResultsDto.setFileExtension(fileDetails.get("fileExtension").toString());
+		} else if (fileName.contains(".")) {
+			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+			searchDocumentResultsDto.setFileExtension(fileExtension);
+		}
 
-
-		if(!fileDetails.isNull("retention"))
-			document.put("fileRetention", fileDetails.get("retention"));
-		else
-			document.put("fileRetention", null);
+		if(!fileDetails.isNull("retention")) {
+			searchDocumentResultsDto.setFileRetention(fileDetails.get("retention").toString());
+		}
 
 		if (content != null && !content.isEmpty()) {
-				JSONObject jsonObj = new JSONObject(content);
-				document.put("fileContent", jsonObj.getString("Text"));
+			JSONObject jsonObj = new JSONObject(content);
+			searchDocumentResultsDto.setFileContent(jsonObj.getString("Text"));
 		}
 		
 		JSONObject parent = fileDetails.getJSONObject("parent");
 		JSONArray parentLinkArray = parent.getJSONArray("links");
 		JSONObject parentLinkObj = parentLinkArray.getJSONObject(0);
-		document.put("fileLink", parentLinkObj.get("href"));
-		document.put("filePath", parent.getString("filePath"));
+		searchDocumentResultsDto.setFileLink(parentLinkObj.get("href").toString());
+		searchDocumentResultsDto.setFilePath(parent.getString("filePath"));
 		
 		if (!fileDetails.isNull("fileSize")) {
-			Integer fileSizeLong = (Integer) fileDetails.get("fileSize");
-			String fileSize =  humanReadableByteCountBin(fileSizeLong);
-			document.put("fileSize", fileSize);
+			Long fileSizeLong = fileDetails.getLong("fileSize");
+			String fileSize =  humanReadableByteCountBin(fileSizeLong.longValue());
+			searchDocumentResultsDto.setFileSize(fileSize);
 		} else {
-			document.put("fileSize", 0);
+			searchDocumentResultsDto.setFileSize(String.valueOf(0));
 		}
 
-	    JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
+		searchDocumentResultsDto.setFileSizeBytes(parsetoBytes(searchDocumentResultsDto.getFileSize()));
+
+		JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(), 
 				"metadataName", "metadataValue");
 
-
-
-	    ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
-	    JSONObject jsonOb = new JSONObject();
-	    for(int i= 0 ; i < metadataArray.length() ; i++) {
-	    	Map<String, Object> metadataKeyVal = new HashMap<>();
-	    	jsonOb = metadataArray.getJSONObject(i);
-	    	metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
+		ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
+		JSONObject jsonOb = new JSONObject();
+		for (int i = 0 ; i < metadataArray.length() ; i++) {
+			Map<String, Object> metadataKeyVal = new HashMap<>();
+			jsonOb = metadataArray.getJSONObject(i);
+			metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
 			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
-			
-			// Currently the dates that are passed in do not qualify for the date format the index is using, will have to be addressed later
-		//	if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
-		//		metadataKeyVal.put("metadataDateValue", jsonOb.get("metadataDateValue"));
-		//	}
-
+	
+			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+			  // alter date string into an opensearch strict_date_optional_time format
+			  // example: “2019-03-23T21:34:46”
+	
+			  String dateValue = jsonOb.get("metadataDateValue").toString();
+			  dateValue = dateValue.replace(" ", "T");
+			  metadataKeyVal.put("metadataDateValue", dateValue);
+			}
+	
 			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
-				metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
+			  metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
 			}
-
+	
 			if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
-				metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
+			  metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
 			}
-
-	    	metadataList.add(metadataKeyVal);
-	    }
-	    document.put("metadata", metadataList);
+	
+			metadataList.add(metadataKeyVal);
+		}
+		
+		searchDocumentResultsDto.setMetadata(metadataList);
 	    
-	    JSONArray securityArray = fileDetails.getJSONArray("security");
+	  	JSONArray securityArray = fileDetails.getJSONArray("security");
 		JSONArray jsonArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
 			JSONObject objects = securityArray.getJSONObject(i);
 			jsonArray.put(objects.get("securityKey"));
-
 		}
+
 		JSONArray jsonSecurityArray = filterDataFromFileDetails(jsonArray.toString(), "displayLabel", "securityKey");
 		ArrayList<Map<String, Object>> securityList = new ArrayList<>();
 		for (int i = 0; i < jsonSecurityArray.length(); i++) {
@@ -168,9 +170,8 @@ public class OpenSearchRESTClient {
 			securityKeyVal.put("securityKey", jsonOb.get("securityKey"));
 			securityList.add(securityKeyVal);
 		}
-		document.put("security", securityList);
 		
-		
+		searchDocumentResultsDto.setSecurity(securityList);
 		
 		JSONArray scopeArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
@@ -182,7 +183,6 @@ public class OpenSearchRESTClient {
 			scopeObj.put("displayLabel", jsonArray.toString());
 			JSONObject jsobObjects = filterSecurityScope(scopeObj);
 			scopeArray.put(jsobObjects);
-			
 		}
 		
 		ArrayList<Map<String, Object>> securityScopeList = new ArrayList<>();
@@ -194,88 +194,67 @@ public class OpenSearchRESTClient {
 			securityScopeList.add(securityScopeKeyVal);
 		}
 				
-		document.put("securityScope", securityScopeList);
-	
-		document.put("scanStatus", scanStatus);
-		String id = fileDetails.getString("fileId");
+		searchDocumentResultsDto.setSecurityScope(securityScopeList);
 		
+		searchDocumentResultsDto.setScanStatus(scanStatus);
+
+		String id = fileDetails.getString("fileId");
+		searchDocumentResultsDto.setFileId(id);
 
 		String json;
 		ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			json = mapper.writeValueAsString(document);
+			json = mapper.writeValueAsString(searchDocumentResultsDto);
 		} catch (JsonProcessingException e) {
-			logger.error("json mapper failed :" +  e);
-			throw new ElasticsearchException("JSON?????", e);
+			logger.error("json mapper failed: {}", e.getMessage());
+			throw new RuntimeException("json mapper failed to convert index data to json: ", e);
 		}
-
-		IndexRequest indexRequest = new IndexRequest(indexName, type, id);
-		Set<String> keys1 = document.keySet();
-		XContentBuilder builder1 = jsonBuilder().startObject();
-		for (String key : keys1) {
-			builder1.field(key, document.get(key));
-		}
-
-		builder1.endObject();
-		indexRequest.source(builder1);
-
-		Set<String> keys = document.keySet();
-		XContentBuilder builder = jsonBuilder().startObject();
-		for (String key : keys) {
-			builder.field(key, document.get(key));
-		}
-		builder.endObject();
-
-		UpdateRequest updateRequest = new UpdateRequest();
-		updateRequest.index(indexName);
-		updateRequest.type(type);
-		updateRequest.id(id);
-		updateRequest.doc(builder);
-		updateRequest.upsert(indexRequest);
-
+		
 		// Form the indexing request, send it, and print the response
-		logger.info("adding data into index"+indexName);
-		IndexRequest createRequest = new IndexRequest(indexName, type, id).source(document);
-		logger.info("createRequest");
-		logger.info(createRequest.getDescription());
-
+		logger.info("adding data into index" + indexName);
+		IndexRequest<SearchDocumentResultsDto> indexRequest = new IndexRequest.Builder<SearchDocumentResultsDto>()
+						.index(indexName).id(id).document(searchDocumentResultsDto).build();
+		logger.info("create indexRequest");
+		logger.info(indexRequest.toString());
 
 		IndexResponse response = null;
 		try {
-			response = restClient.index(createRequest, RequestOptions.DEFAULT);
-			logger.info("Response:"+response);
-		
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			response = openSearchClient.index(indexRequest);
+			logger.info("Response:" + response);
+		} catch (Exception e) {
+			logger.error("Error indexing document into open search: {}", e.getMessage());
+			throw new OpenSearchException(e);
 		} finally {
-			try {
-				restClient.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (openSearchClient != null) {
+				try {
+					logger.debug("Closing open search connection");
+					if (httpClient != null) {
+						httpClient.close();
+						httpClient = null;
+					}
+					openSearchClient = null;
+				} catch (Exception e) {
+					logger.error("Error closing open search connection: {}", e.getMessage());
+				}
 			}
 		}
-
+		
 		return response;
 	}
-
-	// Adds the intercepter to the OpenSearch REST client
-	public RestHighLevelClient searchClient(String serviceName, String region) {
-		AWS4Signer signer = new AWS4Signer();
-		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
-		logger.info(domainEndpoint);
-		signer.setServiceName(serviceName);
-		signer.setRegionName(region);
-		HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer,
-				credentialsProvider);
-		RestClientBuilder builder = RestClient.builder(HttpHost.create(domainEndpoint))
-				.setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor));
-
-		restClient = new RestHighLevelClient(builder);
-
-		return restClient;
+	
+	public OpenSearchClient openSearchClient(String openSearchEndpoint, String serviceName, Region region) {
+		httpClient = ApacheHttpClient.builder().build();
+		OpenSearchClient client = new OpenSearchClient(
+				new AwsSdk2Transport(
+						httpClient, 
+						openSearchEndpoint, 
+						serviceName, 
+						region, 
+						AwsSdk2TransportOptions.builder().build())
+		);
+		
+		return client;
 	}
 
 	private static JSONArray filterDataFromFileDetailsMeta(String jsonarray, String metadataName, String metadataValue) {
@@ -365,6 +344,27 @@ public class OpenSearchRESTClient {
 	    value *= Long.signum(bytes);
 	    return String.format("%.1f %ciB", value / 1024.0, ci.current());
 	}
-	
+
+	// Converting file size back to bytes from human readable
+	public static long parsetoBytes(String arg0) {
+		if (arg0.equals("0")) {
+			return Long.valueOf(0);
+		}
+		int spaceNdx = arg0.indexOf(" ");
+		if (spaceNdx < 0) {
+			return Long.valueOf(arg0);
+		}
+		double ret = Double.parseDouble(arg0.substring(0, spaceNdx));
+		String unitString = arg0.substring(spaceNdx + 1);
+		int unitChar = unitString.charAt(0);
+		int power = units.indexOf(unitChar);
+		boolean isSi = unitString.indexOf('i') != -1;
+		int factor = 1024;
+		if (isSi) {
+			factor = 1000;
+		}
+
+		return Double.valueOf(ret * Math.pow(factor, power)).longValue();
+	}
 	
 }

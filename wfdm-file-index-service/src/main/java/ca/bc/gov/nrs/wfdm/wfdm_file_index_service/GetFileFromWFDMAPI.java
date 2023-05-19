@@ -81,6 +81,10 @@ public class GetFileFromWFDMAPI {
     Boolean oPRExists = false;
     Boolean incidentNumberExists = false;
     Boolean appAcronymExists = false;
+    Boolean uploadedByExists = false;
+
+    Boolean creatorIsNull = false;
+    Boolean uploadedByIsNull = false;
 
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
@@ -97,7 +101,18 @@ public class GetFileFromWFDMAPI {
         break;
       }
 
+      // By default the API inherits the parent folders meta value, 
+      //Creator needs to have a default value of uploadedBy,
+      // So if the parent folder creator is Null, we still want to set the default value
+      if (metadataName.equalsIgnoreCase("Creator")) {
+        creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
+      }
+      if (metadataName.equalsIgnoreCase("UploadedBy")) {
+        uploadedByIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
+      }
+
       if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
+      if (!uploadedByExists) uploadedByExists = metadataName.equalsIgnoreCase("UploadBy");
       if (!titleExists) titleExists = metadataName.equalsIgnoreCase("Title");
       if (!dateCreatedExists) dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
       if (!dateModifiedExists) dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
@@ -114,19 +129,28 @@ public class GetFileFromWFDMAPI {
     }
 
     // check for default metadata, if it exists do nothing
-    if (!creatorExists) metaArray.put(addMeta("Creator"));
-    if (!titleExists) metaArray.put(addMeta("Title"));
-    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated"));
-    if (!dateModifiedExists) metaArray.put(addMeta("DateModified"));
-    if (!descriptionExists) metaArray.put(addMeta("Description"));
-    if (!formatExists) metaArray.put(addMeta("Format"));
-    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier"));
-    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule"));
-    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification"));
-    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule"));
-    if (!oPRExists) metaArray.put(addMeta("OPR"));
-    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber"));
-    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym"));
+    if (!creatorExists || creatorIsNull)  {
+      String uploadedBy = fileDetails.getString("uploadedBy");
+      metaArray.put(addMeta("Creator", uploadedBy));
+    }
+    if (!uploadedByExists || uploadedByIsNull) {
+      String uploadedBy = fileDetails.getString("uploadedBy");
+      metaArray.put(addMeta("UploadedBy", uploadedBy));
+    }
+
+
+    if (!titleExists) metaArray.put(addMeta("Title", "null"));
+    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", "null"));
+    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
+    if (!descriptionExists) metaArray.put(addMeta("Description", "null"));
+    if (!formatExists) metaArray.put(addMeta("Format", "null"));
+    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", "null"));
+    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", "null"));
+    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", "null"));
+    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", "null"));
+    if (!oPRExists) metaArray.put(addMeta("OPR", "null"));
+    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", "null"));
+    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", "null"));
 
     // inject scan meta
     JSONObject meta = new JSONObject();
@@ -153,11 +177,11 @@ public class GetFileFromWFDMAPI {
     return metaUpdateResponse.getStatus() == 200;
   }
 
-  public static JSONObject addMeta(String metaName) {
+  public static JSONObject addMeta(String metaName, String metaValue) {
     JSONObject meta = new JSONObject();
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
     meta.put("metadataName", metaName);
-    meta.put("metadataValue", "null");
+    meta.put("metadataValue", metaValue);
     return meta;
   }
 
