@@ -121,7 +121,6 @@ public class GetFileFromWFDMAPI {
       if (!uniqueIdentifierExists) uniqueIdentifierExists = metadataName.equalsIgnoreCase("UniqueIdentifier");
       if (!informationScheduleExists)  informationScheduleExists = metadataName.equalsIgnoreCase("InformationSchedule");
       if (!securityClassificationExists) securityClassificationExists = metadataName.equalsIgnoreCase("SecurityClassification");
-      if (!retentionScheduleExists)  retentionScheduleExists = metadataName.equalsIgnoreCase("RetentionSchedule");
       if (!oPRExists)  oPRExists = metadataName.equalsIgnoreCase("OPR");      
       if (!incidentNumberExists) incidentNumberExists = metadataName.equalsIgnoreCase("IncidentNumber");
       if (!appAcronymExists) appAcronymExists = metadataName.equalsIgnoreCase("AppAcronym");
@@ -147,7 +146,6 @@ public class GetFileFromWFDMAPI {
     if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", "null"));
     if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", "null"));
     if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", "null"));
-    if (!retentionScheduleExists)  metaArray.put(addMeta("RetentionSchedule", "null"));
     if (!oPRExists) metaArray.put(addMeta("OPR", "null"));
     if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", "null"));
     if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", "null"));
