@@ -15,6 +15,7 @@
     <aws.java.sdk.version>2.14.11</aws.java.sdk.version>
     <sonar.organization>bcgov-sonarcloud</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.projectKey>bcgov_nr-bcws-opensearch</sonar.projectKey>
   </properties>
 	<dependencies>
 		<dependency>
