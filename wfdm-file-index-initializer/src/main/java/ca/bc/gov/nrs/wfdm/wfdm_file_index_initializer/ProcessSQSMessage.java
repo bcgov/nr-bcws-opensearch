@@ -152,7 +152,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
           //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
-          else if (eventType.equalsIgnoreCase("meta")  &&  (fileDetailsJson.get("mimeType").toString() == "null")  )  { 
+          else if (eventType.equalsIgnoreCase("meta") && (fileDetailsJson.get("mimeType").toString().equals("null"))) { 
             AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
             InvokeRequest request = new InvokeRequest();
             request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
