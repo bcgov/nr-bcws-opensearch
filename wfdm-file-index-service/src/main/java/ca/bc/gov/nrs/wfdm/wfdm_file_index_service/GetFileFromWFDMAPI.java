@@ -129,11 +129,11 @@ public class GetFileFromWFDMAPI {
 
     // check for default metadata, if it exists do nothing
     if (!creatorExists || creatorIsNull)  {
-      String uploadedBy = fileDetails.getString("uploadedBy");
+      String uploadedBy = fileDetails.isNull("uploadedBy") ? "null" : fileDetails.getString("uploadedBy");
       metaArray.put(addMeta("Creator", uploadedBy));
     }
     if (!uploadedByExists || uploadedByIsNull) {
-      String uploadedBy = fileDetails.getString("uploadedBy");
+      String uploadedBy = fileDetails.isNull("uploadedBy") ? "null" : fileDetails.getString("uploadedBy");
       metaArray.put(addMeta("UploadedBy", uploadedBy));
     }
 
