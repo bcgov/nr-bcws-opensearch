@@ -91,21 +91,23 @@ public class GetFileFromWFDMAPI {
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-      if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
+      if ( i >= 0 && metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
           || (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber))) {
         metaArray.remove(i);
+        i--;
       }
-      if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
+      if (i >= 0 && metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
         metaArray.remove(i);
+        i--;
       }
 
       // By default the API inherits the parent folders meta value, 
       //Creator needs to have a default value of uploadedBy,
       // So if the parent folder creator is Null, we still want to set the default value
-      if (metadataName.equalsIgnoreCase("Creator")) {
+      if (i >= 0 && metadataName.equalsIgnoreCase("Creator")) {
         creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
-      if (metadataName.equalsIgnoreCase("UploadedBy")) {
+      if (i >= 0 && metadataName.equalsIgnoreCase("UploadedBy")) {
         uploadedByIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
 
