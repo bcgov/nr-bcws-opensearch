@@ -94,11 +94,9 @@ public class GetFileFromWFDMAPI {
       if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
           || (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber))) {
         metaArray.remove(i);
-        break;
       }
       if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
         metaArray.remove(i);
-        break;
       }
 
       // By default the API inherits the parent folders meta value, 
