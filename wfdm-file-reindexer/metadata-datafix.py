@@ -1,9 +1,12 @@
+from sqlite3 import Date
 import requests
 from requests.auth import HTTPBasicAuth
-import boto3
 import sys
+import dateutil.parser
 import os
+import json
 
+# Token service, for fetching a token
 token_service = 'https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&response_type=token&grant_type=client_credentials'
 # Client, use Basic Auth
 client_name = 'WFDM_DOCUMENTS_INDEX'
@@ -14,35 +17,23 @@ doc_endpoint = wfdm_api + 'document' # can we take a moment to recognize that th
 docs_endpoint = wfdm_api + 'documents'
 wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
-# AWS Client
-# Create SQS client
-session = boto3.Session(
-    aws_access_key_id=os.getenv('AKIAWWHKPWO3KIFOMHN2'),
-    aws_secret_access_key=os.getenv('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')
-)
-sqs = boto3.client('sqs') # use this for local testing
-queue_url = 'https://sqs.ca-central-1.amazonaws.com/460053263286/WF1-WFDM-sqs-queue-INT'
-sqs_delay = os.getenv('SQS_MESSAGE_DELAY')
 # Some default process settings
-row_count = 20
-clam_scan = os.getenv('AV_SCAN')
+row_count = row_count = os.getenv('QUERY_ROW_COUNT')
 
 print('')
 print('-------------------------------------------------------')
-print('Starting Re-Index processing')
+print('Starting Meta Update')
 print('WFDM Paging: ' + str(row_count) + ' rows')
-print('Run ClamAV Scan? ' + str(clam_scan))
-print('Connect to AWS Queue: ' + queue_url)
 print('Connect to WFDM API: ' + wfdm_api)
 print('-------------------------------------------------------')
 print('')
 
 # Define our Recursive function
-def reindex_wfdm_metadata(document_id, page, row_count):
+def update_metadata(document_id, page, row_count):
   # REMEMBER: There are fetch size limits, so we'll need to be paging data
   # For whatever reason, the page is not a zero-based index
   # This will be recursive, so there's always a stack overflow risk here
-  print('Re-indexing documents in the folder ' + document_id)
+  print('Updating documents in the folder ' + document_id)
   url = docs_endpoint + doc_root + document_id + '&pageNumber=' + str(page) + '&pageRowCount=' + str(row_count) + '&orderBy=default%20ASC'
   wfdm_docs_response = requests.get(url, headers={'Authorization': 'Bearer ' + token})
   # verify 200
@@ -54,31 +45,59 @@ def reindex_wfdm_metadata(document_id, page, row_count):
   del wfdm_docs_response
 
   print('Found ' + str(len(wfdm_docs['collection'])) + ' documents, page ' + str(page) + ' of ' + str(wfdm_docs['totalPageCount']))
-  # Time to start looping through the documents here and re-indexing.
-  # If the document is a DIRECTORY, then we don't actually index or scan, we just kick off
-  # another call to reindex_wfdm. Remember to set the page back to 1
+  # Time to start looping through the documents and updating their meta types
   for document in wfdm_docs['collection']:
-    if document['fileType'] == 'DIRECTORY':
-      reindex_wfdm(document['fileId'], 1, row_count)
-    else:
-      # We found a file, so we can force an update and kick off a re-index process
-      # if scan == true, we should grab the bytes and set eventType to bytes
-      event = 'meta' if clam_scan == False else 'bytes'
-      sqs.send_message(
-        QueueUrl=queue_url,
-        DelaySeconds=sqs_delay,
-        MessageAttributes={},
-        MessageBody=(
-            '{"fileId":"' + document['fileId'] + '","fileVersionNumber":"' + str(document['versionNumber']) + '","eventType":"' + event + '","fileType":"' + document['fileType'] + '"}'
-        )
-      )
+    # Reload the document so we know we have a valid etag and meta records
+    print('Fetching Document ' + document['fileId'] + '...')
+    wfdm_doc_response = requests.get(docs_endpoint + '/' + document['fileId'], headers={'Authorization': 'Bearer ' + token})
+    # verify 200
+    if wfdm_doc_response.status_code != 200:
+      print(wfdm_doc_response)
+    else :  
+      # Pull out the fileId, this is our parent for WFDM
+      doc_json = wfdm_doc_response.json()
+      del wfdm_doc_response
+      # First, update the metadata records
+      for meta in doc_json['metadata']:
+        # Detect the data type, and update
+        # the dataType attribute on the metadata column
+        value = meta['metadataValue']
+        if isinstance(value, (int, float)):
+          meta['metadataType'] = 'Number'
+        elif value.lower() in ['true', 'false', 't', 'f']:
+          meta['metadataType'] = 'Boolean'
+        else:
+          is_date = False
+
+          try:
+            dateutil.parser.parse(value)
+            is_date = True
+          except:
+            is_date = False
+
+          if is_date:
+            meta['metadataType'] = 'Date'
+          else:
+            meta['metadataType'] = 'String'
+
+      # Now that they type is updated, we can push in an update
+      wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
+      # verify 200
+      if wfdm_put_response.status_code != 200:
+        print(wfdm_put_response)
+        # Don't fail out here, just cary on
+      del wfdm_put_response
+
+      # then, if this is a directory, jump into it and update the documents it contains
+      if document['fileType'] == 'DIRECTORY':
+        update_metadata(document['fileId'], 1, row_count)
 
   # check if we need to page
   if wfdm_docs['totalPageCount'] > page:
     # Indeed we do
-    reindex_wfdm(document_id, page + 1, row_count)
+    update_metadata(document_id, page + 1, row_count)
   
-  # At this point, the reindex_wfdm call is complete and will exit
+  # Completed updates and exiting
   return 0
 
 # Step #1, lets go get a token for the API
@@ -102,6 +121,6 @@ if wfdm_root_response.status_code != 200:
 # Pull out the fileId, this is our parent for WFDM
 root_id = wfdm_root_response.json()['fileId']
 del wfdm_root_response
-# start the re-indexing with our recursive reindex function
-print('... Done! Starting re-indexing process from root document ' + str(root_id))
-reindex_wfdm(root_id, 1, row_count)
+# start the metadata update
+print('... Done! Starting Metadata update process from root document ' + str(root_id))
+update_metadata(root_id, 1, row_count)
