@@ -18,7 +18,9 @@ docs_endpoint = wfdm_api + 'documents'
 wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
-row_count = row_count = os.getenv('QUERY_ROW_COUNT')
+row_count = 20
+
+importedMetadataFixJson = { "fixType": "rename", "fieldNameToUpdate" : "appName", "destinationFieldName": "AppAcronym" }
 
 print('')
 print('-------------------------------------------------------')
