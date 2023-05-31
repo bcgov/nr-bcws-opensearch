@@ -2,11 +2,12 @@ from sqlite3 import Date
 import requests
 from requests.auth import HTTPBasicAuth
 import sys
-import dateutil.parser
+from os.path import isfile, join
 import os
 import json
-import pathlib
 
+
+	
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
 # Client, use Basic Auth
@@ -22,13 +23,20 @@ doc_root = '?parentId='
 # Some default process settings
 row_count = row_count = os.getenv('QUERY_ROW_COUNT')
 
-pathName = os.path.dirname(os.path.abspath(__file__))
-with open(pathName + '/jsonUpdates/wfrmFieldUpdates.json') as jsonFile:
-    importedMetadataFixJson = jsonFile.read()
 
-jsonParsed = json.loads(importedMetadataFixJson)
-jsonValues = jsonParsed.values()
-jsonListValues = list(jsonValues)
+
+pathName = os.path.dirname(os.path.abspath(__file__))
+jsonFiles = [f for f in os.listdir(pathName + '/jsonUpdates') if isfile(join(pathName + '/jsonUpdates', f))]
+
+jsonListValues = []
+
+for file in jsonFiles:
+    with open(pathName + '/jsonUpdates/' + file) as jsonFile:
+        importedMetadataFixJson = jsonFile.read()
+        jsonParsed = json.loads(importedMetadataFixJson)
+        jsonValues = jsonParsed.values()
+        jsonListValues.append( list(jsonValues))
+
 
 print('')
 print('-------------------------------------------------------')
@@ -83,22 +91,23 @@ def update_metadata(document_id, page, row_count):
                 name = meta['metadataName']
                 # avoid checking the default field, they're fine
                 if name != ("Title" or "DateCreated" or "DateModified" or "Description" or "Format" or "UniqueIdentifier" or "InformationSchedule" or "SecurityClassification" or "OPR" or "IncidentNumber" or "AppAcronym"):
-                    for i in jsonListValues[0]:
-                        if i["fieldNameToUpdate"] == name:
-                            # when we're transfering data to a default field, we need to find that default field, set it with the original field value, then remove the removed array
-                            if i["fixType"] == "transferValueThenDelete":
-                                print(i["fixType"])
-                                for meta2 in doc_json['metadata']:
-                                    if meta2['metadataName'] == i['destinationFieldName']:
-                                        meta2['metadataValue'] = value
-                                        doc_json['metadata'].pop(
-                                            positionInMetaArr)
-                                        break
-                            elif i["fixType"] == "renameField":
-                                print(i["fixType"])
-                                meta['metadataName'] = i["destinationFieldName"]
-                        else:
-                            print(name + "does not exist")
+                    for j, jsonFile in enumerate(jsonListValues):
+                        for i in jsonListValues[j][0]:
+                            if i["fieldNameToUpdate"] == name:
+                                # when we're transfering data to a default field, we need to find that default field, set it with the original field value, then remove the removed array
+                                if i["fixType"] == "transferValueThenDelete":
+                                    print(i["fixType"])
+                                    for meta2 in doc_json['metadata']:
+                                        if meta2['metadataName'] == i['destinationFieldName']:
+                                            meta2['metadataValue'] = value
+                                            doc_json['metadata'].pop(
+                                                positionInMetaArr)
+                                            break
+                                elif i["fixType"] == "renameField":
+                                    print(i["fixType"])
+                                    meta['metadataName'] = i["destinationFieldName"]
+                            else:
+                                print(name + "does not exist")
 
             # Now that they type is updated, we can push in an update
             wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
