@@ -5,12 +5,13 @@ import sys
 import dateutil.parser
 import os
 import json
+import pathlib
 
 # Token service, for fetching a token
 token_service = 'https://intapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&response_type=token&grant_type=client_credentials'
 # Client, use Basic Auth
 client_name = 'WFDM_DOCUMENTS_INDEX'
-client_secret = 'Password'
+client_secret = ''
 # WFDM API endpoints
 wfdm_api = 'https://i1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/'
 doc_endpoint = wfdm_api + 'document' # can we take a moment to recognize that this is a poor API naming scheme
@@ -20,7 +21,13 @@ doc_root = '?parentId='
 # Some default process settings
 row_count = 20
 
-importedMetadataFixJson = { "fixType": "rename", "fieldNameToUpdate" : "appName", "destinationFieldName": "AppAcronym" }
+pathName = os.path.dirname(os.path.abspath(__file__))
+with open(pathName + '/jsonUpdates/wfrmFieldUpdates.json') as jsonFile:
+    importedMetadataFixJson = jsonFile.read()
+
+jsonParsed = json.loads(importedMetadataFixJson)
+jsonValues = jsonParsed.values()
+jsonListValues = list(jsonValues)
 
 print('')
 print('-------------------------------------------------------')
@@ -60,27 +67,29 @@ def update_metadata(document_id, page, row_count):
       doc_json = wfdm_doc_response.json()
       del wfdm_doc_response
       # First, update the metadata records
-      for meta in doc_json['metadata']:
+      for positionInMetaArr, meta in enumerate( doc_json['metadata']):
         # Detect the data type, and update
         # the dataType attribute on the metadata column
         value = meta['metadataValue']
-        if isinstance(value, (int, float)):
-          meta['metadataType'] = 'Number'
-        elif value.lower() in ['true', 'false', 't', 'f']:
-          meta['metadataType'] = 'Boolean'
-        else:
-          is_date = False
+        name = meta['metadataName']
+        ## avoid checking the default field, they're fine
+        if name != ("Title" or "DateCreated" or "DateModified" or "Description" or "Format" or "UniqueIdentifier" or "InformationSchedule" or "SecurityClassification" or "OPR" or "IncidentNumber" or "AppAcronym"):
+            for i in jsonListValues[0]:
+                if i["fieldNameToUpdate"] == name:
+                    ## when we're transfering data to a default field, we need to find that default field, set it with the original field value, then remove the removed array
+                    if i["fixType"] == "transferValueThenDelete":
+                        print(i["fixType"])
+                        for meta2 in doc_json['metadata']:
+                           if meta2['metadataName'] == i['destinationFieldName']:
+                              meta2['metadataValue'] = value
+                              doc_json['metadata'].pop(positionInMetaArr)
+                              break
+                    elif i["fixType"] == "renameField":
+                        print(i["fixType"])
+                        meta['metadataName'] = i["destinationFieldName"]
+                else:
+                    print(name + "does not exist")
 
-          try:
-            dateutil.parser.parse(value)
-            is_date = True
-          except:
-            is_date = False
-
-          if is_date:
-            meta['metadataType'] = 'Date'
-          else:
-            meta['metadataType'] = 'String'
 
       # Now that they type is updated, we can push in an update
       wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
