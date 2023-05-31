@@ -1,0 +1,34 @@
+{
+    "wfwx": [
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "application.domain.name",
+            "destinationFieldName": "AppAcronym "
+        },
+		        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "owner",
+            "destinationFieldName": "Creator"
+        },
+		        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "Retention Term",
+            "destinationFieldName": "RetentionSchedule"
+        },
+		{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "orientation",
+            "destinationFieldName": "Orientation"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "source",
+            "destinationFieldName": "Source"
+        },
+        {
+            "fixType": "renameField",
+            "fieldNameToUpdate": "processed",
+            "destinationFieldName": "Processed"
+        }
+    ]
+}
