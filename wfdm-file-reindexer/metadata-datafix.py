@@ -85,8 +85,6 @@ def update_metadata(document_id, page, row_count):
             del wfdm_doc_response
             # First, update the metadata records
             for positionInMetaArr, meta in enumerate(doc_json['metadata']):
-                # Detect the data type, and update
-                # the dataType attribute on the metadata column
                 value = meta['metadataValue']
                 name = meta['metadataName']
                 # avoid checking the default field, they're fine
@@ -96,7 +94,6 @@ def update_metadata(document_id, page, row_count):
                             if i["fieldNameToUpdate"] == name:
                                 # when we're transfering data to a default field, we need to find that default field, set it with the original field value, then remove the removed array
                                 if i["fixType"] == "transferValueThenDelete":
-                                    print(i["fixType"])
                                     for meta2 in doc_json['metadata']:
                                         if meta2['metadataName'] == i['destinationFieldName']:
                                             meta2['metadataValue'] = value
@@ -104,10 +101,8 @@ def update_metadata(document_id, page, row_count):
                                                 positionInMetaArr)
                                             break
                                 elif i["fixType"] == "renameField":
-                                    print(i["fixType"])
                                     meta['metadataName'] = i["destinationFieldName"]
-                            else:
-                                print(name + "does not exist")
+
 
             # Now that they type is updated, we can push in an update
             wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
