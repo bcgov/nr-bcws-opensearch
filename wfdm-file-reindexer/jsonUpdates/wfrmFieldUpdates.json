@@ -1,0 +1,54 @@
+{
+    "wfrm": [
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "appAcronym",
+            "destinationFieldName": "AppAcronym"
+        },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "application.domain.name",
+            "destinationFieldName": "AppAcronym"
+        },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "appName",
+            "destinationFieldName": "AppAcronym"
+        },
+        {
+            "fixType": "renameField",
+            "fieldNameToUpdate": "appName",
+            "destinationFieldName": "AppAcronym"
+        },
+        {
+            "fixType": "renameField",
+            "fieldNameToUpdate": "category",
+            "destinationFieldName": "Category"
+        },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "Date Uploaded",
+            "destinationFieldName": "DateCreated"
+        },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "Document Description",
+            "destinationFieldName": "Description"
+        },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "File Name",
+            "destinationFieldName": "Name"
+        },
+        {
+            "fixType": "renameField",
+            "fieldNameToUpdate": "Resource Name",
+            "destinationFieldName": "ResourceName"
+        },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "Uploaded By",
+            "destinationFieldName": "UploadedBy"
+        }
+    ]
+}
