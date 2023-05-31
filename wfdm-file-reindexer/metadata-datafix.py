@@ -84,12 +84,12 @@ def update_metadata(document_id, page, row_count):
             doc_json = wfdm_doc_response.json()
             del wfdm_doc_response
             # First, update the metadata records
-            for positionInMetaArr, meta in enumerate(doc_json['metadata']):
-                value = meta['metadataValue']
-                name = meta['metadataName']
-                # avoid checking the default field, they're fine
-                if name != ("Title" or "DateCreated" or "DateModified" or "Description" or "Format" or "UniqueIdentifier" or "InformationSchedule" or "SecurityClassification" or "OPR" or "IncidentNumber" or "AppAcronym"):
-                    for j, jsonFile in enumerate(jsonListValues):
+            for j, jsonFile in enumerate(jsonListValues):
+                for positionInMetaArr, meta in enumerate(doc_json['metadata']):
+                    value = meta['metadataValue']
+                    name = meta['metadataName']
+                    # avoid checking the default field, they're fine
+                    if name != ("Title" or "DateCreated" or "DateModified" or "Description" or "Format" or "UniqueIdentifier" or "InformationSchedule" or "SecurityClassification" or "OPR" or "IncidentNumber" or "AppAcronym"):
                         for i in jsonListValues[j][0]:
                             if i["fieldNameToUpdate"] == name:
                                 # when we're transfering data to a default field, we need to find that default field, set it with the original field value, then remove the removed array
@@ -99,6 +99,7 @@ def update_metadata(document_id, page, row_count):
                                             meta2['metadataValue'] = value
                                             doc_json['metadata'].pop(
                                                 positionInMetaArr)
+                                            positionInMetaArr = positionInMetaArr - 1
                                             break
                                 elif i["fixType"] == "renameField":
                                     meta['metadataName'] = i["destinationFieldName"]
