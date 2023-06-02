@@ -36,7 +36,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         with:
           args: >
-            -Dsonar.java.binaries=nr-bcws-opensearch/nr-bcws-opensearch/wfdm-file-index-service/target/classes,nr-bcws-opensearch/nr-bcws-opensearch/wfdm-file-index-initializer/target/classes,nr-bcws-opensearch/nr-bcws-opensearch/wfdm-clamav-service/wfdm-clamav-scan-handler/target/classes
+            -Dsonar.java.binaries=home/runner/work/nr-bcws-opensearch/nr-bcws-opensearch/wfdm-file-index-service/target/classes,home/runner/work/nr-bcws-opensearch/nr-bcws-opensearch/wfdm-file-index-initializer/target/classes,home/runner/work/nr-bcws-opensearch/nr-bcws-opensearch/wfdm-clamav-service/wfdm-clamav-scan-handler/target/classes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
