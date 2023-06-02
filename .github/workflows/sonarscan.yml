@@ -10,6 +10,25 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      #Compile lambda functions
+      - name: Compile lambda
+        run: |
+          mvn --batch-mode install -f aws-lambda-layer-base/pom.xml
+          mvn --batch-mode install -f wfdm-clamav-service/wfdm-clamav-scan-handler/pom.xml
+          mvn --batch-mode install -f wfdm-file-index-initializer/pom.xml
+          mvn --batch-mode install -f wfdm-file-index-service/pom.xml
+
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
