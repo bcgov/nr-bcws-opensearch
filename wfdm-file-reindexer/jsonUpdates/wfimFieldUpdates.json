@@ -1,0 +1,79 @@
+{
+    "wfim": [
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "actual-filename",
+            "destinationFieldName": "Title"
+        },
+		{
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "appAcronym",
+            "destinationFieldName": "AppAcronym"
+        },
+		{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "azimuth",
+            "destinationFieldName": "Azimuth"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "category",
+            "destinationFieldName": "Category"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "commsSuitable",
+            "destinationFieldName": "CommsSuitable"
+        },
+				{
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "created",
+            "destinationFieldName": "DateCreated"
+        },
+						{
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "owner",
+            "destinationFieldName": "Creator"
+        },
+								{
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "Owner",
+            "destinationFieldName": "Creator"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "elevation",
+            "destinationFieldName": "Elevation"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "imageHeight",
+            "destinationFieldName": "ImageHeight"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "imageWidth",
+            "destinationFieldName": "ImageWidth"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "latitude",
+            "destinationFieldName": "Latitude"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "longitude",
+            "destinationFieldName": "Longitude"
+        },
+				{
+            "fixType": "renameField",
+            "fieldNameToUpdate": "thumbnail",
+            "destinationFieldName": "Thumbnail"
+        },
+        {
+            "fixType": "renameField",
+            "fieldNameToUpdate": "thumbnailFor",
+            "destinationFieldName": "ThumbnailFor"
+        }
+    ]
+}
