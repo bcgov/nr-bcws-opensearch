@@ -55,6 +55,15 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
       return new SQSBatchResponse(batchItemFailures);
     }
 
+    // Add a sleep here to delay message handling to avoid potential file update racing condition with other services 
+    // calling WFDM api
+    try {
+      logger.log("\nInfo: delay running file index initializer lambda for 5 min to avoid file update racing condition");
+      Thread.sleep(300000);
+    } catch (InterruptedException e) {
+      logger.log("\nThread is interrupted: " + e.getMessage());
+    }
+
     // Iterate the available messages
     for (SQSEvent.SQSMessage message : sqsEvent.getRecords()) {
       try {
