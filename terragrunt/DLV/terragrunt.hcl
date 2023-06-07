@@ -24,7 +24,7 @@ terraform {
   backend "remote" {
     organization = "wf1-wfdm-opensearch"
     workspaces {
-        name = "nr-bcws-opensearch"
+        name = "nr-bcws-opensearch-DLV"
     }
   }
 }
