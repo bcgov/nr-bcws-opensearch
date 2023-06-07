@@ -104,26 +104,26 @@ public class GetFileFromWFDMAPI {
       // By default the API inherits the parent folders meta value, 
       //Creator needs to have a default value of uploadedBy,
       // So if the parent folder creator is Null, we still want to set the default value
-      if (i >= 0 && metadataName.equalsIgnoreCase("Creator")) {
+      if (i >= 0 && metadataName.equals("Creator")) {
         creatorIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
-      if (i >= 0 && metadataName.equalsIgnoreCase("UploadedBy")) {
+      if (i >= 0 && metadataName.equals("UploadedBy")) {
         uploadedByIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
 
-      if (!creatorExists) creatorExists = metadataName.equalsIgnoreCase("Creator");
-      if (!uploadedByExists) uploadedByExists = metadataName.equalsIgnoreCase("UploadBy");
-      if (!titleExists) titleExists = metadataName.equalsIgnoreCase("Title");
-      if (!dateCreatedExists) dateCreatedExists = metadataName.equalsIgnoreCase("DateCreated");
-      if (!dateModifiedExists) dateModifiedExists = metadataName.equalsIgnoreCase("DateModified");
-      if (!descriptionExists) descriptionExists = metadataName.equalsIgnoreCase("Description");
-      if (!formatExists) formatExists = metadataName.equalsIgnoreCase("Format");
-      if (!uniqueIdentifierExists) uniqueIdentifierExists = metadataName.equalsIgnoreCase("UniqueIdentifier");
-      if (!informationScheduleExists)  informationScheduleExists = metadataName.equalsIgnoreCase("InformationSchedule");
-      if (!securityClassificationExists) securityClassificationExists = metadataName.equalsIgnoreCase("SecurityClassification");
-      if (!oPRExists)  oPRExists = metadataName.equalsIgnoreCase("OPR");      
-      if (!incidentNumberExists) incidentNumberExists = metadataName.equalsIgnoreCase("IncidentNumber");
-      if (!appAcronymExists) appAcronymExists = metadataName.equalsIgnoreCase("AppAcronym");
+      if (!creatorExists) creatorExists = metadataName.equals("Creator");
+      if (!uploadedByExists) uploadedByExists = metadataName.equals("UploadBy");
+      if (!titleExists) titleExists = metadataName.equals("Title");
+      if (!dateCreatedExists) dateCreatedExists = metadataName.equals("DateCreated");
+      if (!dateModifiedExists) dateModifiedExists = metadataName.equals("DateModified");
+      if (!descriptionExists) descriptionExists = metadataName.equals("Description");
+      if (!formatExists) formatExists = metadataName.equals("Format");
+      if (!uniqueIdentifierExists) uniqueIdentifierExists = metadataName.equals("UniqueIdentifier");
+      if (!informationScheduleExists)  informationScheduleExists = metadataName.equals("InformationSchedule");
+      if (!securityClassificationExists) securityClassificationExists = metadataName.equals("SecurityClassification");
+      if (!oPRExists)  oPRExists = metadataName.equals("OPR");      
+      if (!incidentNumberExists) incidentNumberExists = metadataName.equals("IncidentNumber");
+      if (!appAcronymExists) appAcronymExists = metadataName.equals("AppAcronym");
 
     }
 
