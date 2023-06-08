@@ -12,7 +12,8 @@ locals {
   document_token_url = "https://testapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackTST"
   clamstackQueue = "WfdmClamavStackTST-wfdmClamscanQueuetstAF294E61-P6JScScVrkzs"
-
+  opensearch_password = get_env("opensearch_password")
+  opensearch_user = get_env("opensearch_user")
 }
 
 generate "backend" {
@@ -50,5 +51,8 @@ generate "inputs" {
   document_token_url = "${local.document_token_url}"
   clamQueue = "${local.clamstackQueue}"
   secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
+  opensearch_user = "${local.opensearch_user}"
+  opensearch_password = "${local.opensearch_password}"
+  ElasticSearch_Version = "OpenSearch_2.5"
 EOF
 }
