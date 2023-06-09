@@ -30,6 +30,11 @@
             "fieldNameToUpdate": "created",
             "destinationFieldName": "DateCreated"
         },
+        {
+            "fixType": "transferValueThenDelete",
+            "fieldNameToUpdate": "content-type",
+            "destinationFieldName": "Format"
+        },
 						{
             "fixType": "transferValueThenDelete",
             "fieldNameToUpdate": "owner",

@@ -3,7 +3,7 @@
         {
             "fixType": "transferValueThenDelete",
             "fieldNameToUpdate": "application.domain.name",
-            "destinationFieldName": "AppAcronym "
+            "destinationFieldName": "AppAcronym"
         },
 		        {
             "fixType": "transferValueThenDelete",
