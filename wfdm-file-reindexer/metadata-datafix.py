@@ -81,6 +81,7 @@ def update_metadata(document_id, page, row_count):
             print(wfdm_doc_response)
         else:
             # Pull out the fileId, this is our parent for WFDM
+            changed = False
             doc_json = wfdm_doc_response.json()
             del wfdm_doc_response
             # First, update the metadata records
@@ -100,23 +101,26 @@ def update_metadata(document_id, page, row_count):
                                             doc_json['metadata'].pop(
                                                 positionInMetaArr)
                                             positionInMetaArr = positionInMetaArr - 1
+                                            changed = True
                                             break
                                 elif i["fixType"] == "renameField":
                                     meta['metadataName'] = i["destinationFieldName"]
+                                    changed = True
 
 
-            # Now that they type is updated, we can push in an update
-            wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
-                doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
-            # verify 200
-            if wfdm_put_response.status_code != 200:
-                print(wfdm_put_response)
-                # Don't fail out here, just cary on
-            del wfdm_put_response
+            if (changed):
+                # Now that they type is updated, we can push in an update
+                wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
+                    doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
+                # verify 200
+                if wfdm_put_response.status_code != 200:
+                    print(wfdm_put_response)
+                    # Don't fail out here, just cary on
+                del wfdm_put_response
 
-            # then, if this is a directory, jump into it and update the documents it contains
-            if document['fileType'] == 'DIRECTORY':
-                update_metadata(document['fileId'], 1, row_count)
+                # then, if this is a directory, jump into it and update the documents it contains
+                if document['fileType'] == 'DIRECTORY':
+                    update_metadata(document['fileId'], 1, row_count)
 
     # check if we need to page
     if wfdm_docs['totalPageCount'] > page:

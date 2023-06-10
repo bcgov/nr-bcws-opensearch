@@ -3,17 +3,17 @@
         {
             "fixType": "transferValueThenDelete",
             "fieldNameToUpdate": "appAcronym",
-            "destinationFieldName": "AppAcronym "
+            "destinationFieldName": "AppAcronym"
         },
 		        {
             "fixType": "transferValueThenDelete",
             "fieldNameToUpdate": "application.domain.name",
-            "destinationFieldName": "AppAcronym "
+            "destinationFieldName": "AppAcronym"
         },
 		        {
             "fixType": "transferValueThenDelete",
             "fieldNameToUpdate": "Classification",
-            "destinationFieldName": "InformationSchedule "
+            "destinationFieldName": "InformationSchedule"
         },
 		        {
             "fixType": "transferValueThenDelete",
