@@ -9,15 +9,9 @@
   <name>wfdm-opensearch</name>
   <url>http://maven.apache.org</url>
 
-<!-- https://mvnrepository.com/artifact/org.sonarsource.scanner.maven/sonar-maven-plugin -->
-<dependencies>
-   <dependency>
-    <groupId>org.sonarsource.scanner.maven</groupId>
-    <artifactId>sonar-maven-plugin</artifactId>
-    <version>3.9.1.2184</version>
-</dependency> 
-</dependencies>
-
+  <properties>
+    <sonar.organization>bcgov-sonarcloud</sonar.organization>
+  </properties>
   
   <modules>
     <module>aws-lambda-layer-base</module>
