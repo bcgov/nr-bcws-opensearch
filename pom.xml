@@ -5,7 +5,6 @@
   <groupId>ca.bc.gov.nrs.wfdm</groupId>
   <artifactId>wfdm-opensearch</artifactId>
   <version>1.0</version>
-  <packaging>jar</packaging>
   <name>wfdm-opensearch</name>
   <url>http://maven.apache.org</url>
 
