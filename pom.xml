@@ -11,6 +11,8 @@
 
   <properties>
     <sonar.organization>bcgov-sonarcloud</sonar.organization>
+    <sonar.projectKey>nr-bcws-opensearch</sonar.projectKey>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
   
   <modules>
