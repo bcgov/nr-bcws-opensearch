@@ -30,6 +30,7 @@ jobs:
           -Dsonar.login=$SONAR_TOKEN
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.organization=bcgov-sonarcloud \
+          -Dsonar.branch=$GITHUB_REF_NAME
           -Dsonar.projectKey=bcgov_nr-bcws-opensearch
 
       # - uses: actions/checkout@v3
