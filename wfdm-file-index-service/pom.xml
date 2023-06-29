@@ -10,8 +10,8 @@
   <url>http://maven.apache.org</url>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <aws.java.sdk.version>2.14.11</aws.java.sdk.version>
   </properties>
 	<dependencies>
