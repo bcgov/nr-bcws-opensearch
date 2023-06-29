@@ -9,11 +9,10 @@
   <name>wfdm-opensearch</name>
   <url>http://maven.apache.org</url>
 
-  <properties>
-    <sonar.organization>bcgov-sonarcloud</sonar.organization>
-    <sonar.projectKey>bcgov_nr-bcws-opensearch</sonar.projectKey>
-    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-  </properties>
+ <properties>
+  <sonar.organization>bcgov-sonarcloud</sonar.organization>
+  <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+</properties>
   
   <modules>
     <module>aws-lambda-layer-base</module>
