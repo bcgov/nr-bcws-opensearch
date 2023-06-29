@@ -23,7 +23,7 @@ The .hcl files in the terragrunt folder are used to specify paramenters which di
 environments. They also specify the terraform repository to be used when deploying
 
 Documentation on how resources are specified can be found at: 
-	https://registry.terraform.io/providers/hashicorp/aws/3.72.0/docs
+	https://registry.terraform.io/providers/hashicorp/aws/5.6.0/docs
 
 
 
