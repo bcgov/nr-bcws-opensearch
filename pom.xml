@@ -20,4 +20,25 @@
     <module>wfdm-file-index-service</module>
     <module>wfdm-clamav-service/wfdm-clamav-scan-handler</module>
   </modules>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>wfdm-clamav-service/wfdm-clamav-scan/bin</directory>
+      </resource>
+      <resource>
+        <directory>wfdm-clamav-service/wfdm-clamav-scan/lib</directory>
+      </resource>
+      <resource>
+        <directory>terraform</directory>
+      </resource>
+      <resource>
+        <directory>terragrunt</directory>
+      </resource>
+      <resource>
+        <directory>wfdm-file-reindexer</directory>
+      </resource>
+    </resources>
+  </build>
+
 </project>
