@@ -23,3 +23,4 @@ main_work
 .aws-sam
 # vs code
 .vscode
+wfdm-clamav-service/node_modules
