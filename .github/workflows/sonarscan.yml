@@ -34,7 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=bcgov_nr-bcws-opensearch -Dsonar.sources=.github\workflows,terraform,aws-lambda-layer-base,wfdm-clamav-service,wfdm-file-index-initializer,wfdm-file-index-service,wfdm-file-reindexer
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=bcgov_nr-bcws-opensearch -Dsonar.sources=.github/workflows,terraform,aws-lambda-layer-base,wfdm-clamav-service,wfdm-file-index-initializer,wfdm-file-index-service,wfdm-file-reindexer
 
       # - uses: actions/checkout@v3
       #   with:
