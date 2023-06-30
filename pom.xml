@@ -22,23 +22,42 @@
   </modules>
 
   <build>
-    <resources>
-      <resource>
-        <directory>wfdm-clamav-service/wfdm-clamav-scan/bin</directory>
-      </resource>
-      <resource>
-        <directory>wfdm-clamav-service/wfdm-clamav-scan/lib</directory>
-      </resource>
-      <resource>
-        <directory>terraform</directory>
-      </resource>
-      <resource>
-        <directory>terragrunt</directory>
-      </resource>
-      <resource>
-        <directory>wfdm-file-reindexer</directory>
-      </resource>
-    </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <!-- here the phase you need -->
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/extra-resources</outputDirectory>
+              <resources>          
+                <resource>
+                  <directory>wfdm-clamav-service/wfdm-clamav-scan/bin</directory>
+                </resource>
+                <resource>
+                  <directory>wfdm-clamav-service/wfdm-clamav-scan/lib</directory>
+                </resource>
+                <resource>
+                  <directory>terraform</directory>
+                </resource>
+                <resource>
+                  <directory>terragrunt</directory>
+                </resource>
+                <resource>
+                  <directory>wfdm-file-reindexer</directory>
+                </resource>
+              </resources>              
+            </configuration>            
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
 </project>
