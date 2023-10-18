@@ -14,7 +14,6 @@ locals {
   clamstackQueue = "WfdmClamavStackINT-wfdmClamscanQueueintC7DDA541-4i0O18IjJgs0"
   opensearch_password = get_env("opensearch_password")
   opensearch_user = get_env("opensearch_user")
-
 }
 
 generate "backend" {

@@ -21,19 +21,15 @@ generate "backend" {
   if_exists = "overwrite_terragrunt"
   contents = <<EOF
 terraform {
-  backend "remote" {
-    organization = "wf1-wfdm-opensearch"
-    workspaces {
-        name = "nr-bcws-opensearch-DLV"
-    }
+  backend "s3" {
+    bucket         = "wfdm-terraform-remote-state-dlv"
+    key            = "wfdm-opensearch-statefile-dlv"
+    region         = "ca-central-1"
+    dynamodb_table = "wfdm-remote-state-lock-dlv"
+    encrypt        = true
   }
 }
 EOF
-}
-
-remote_state {
-    backend = "remote"
-    config = { }
 }
 
 generate "inputs" {
