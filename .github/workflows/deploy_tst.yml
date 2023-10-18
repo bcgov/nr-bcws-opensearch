@@ -63,15 +63,17 @@ jobs:
           openssl sha256 staging/wfdm-file-index-initializer* > staging/wfdm-file-index-initializer-hash.txt
           openssl sha256 staging/wfdm-opensearch-indexing* > staging/wfdm-opensearch-indexing-hash.txt
 
-      - uses: shallwefootball/s3-upload-action@master
-        name: Upload S3
-        id: S3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: wfdm-s3-bucket-${{ env.TARGET_ENV }}
-          source_dir: staging
-          destination_dir: ''
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_TO_ASSUME }}
+          role-session-name: wfdm-terraform
+          aws-region: ca-central-1
+    
+      - name: Upload S3
+        id: S3
+        run:
+          aws s3 cp ./staging s3://wfdm-s3-bucket-tst --recursive
 
         # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
       - name: Setup Terraform
