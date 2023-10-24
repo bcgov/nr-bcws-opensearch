@@ -77,6 +77,7 @@ public class TikaParseDocument {
         case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
         case "application/vnd.ms-excel.sheet.macroEnabled.12":
         case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
             parser = new OOXMLParser();
             break;
         case "application/pdf":
