@@ -21,25 +21,14 @@ docs_endpoint = wfdm_api + 'documents'
 wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
-row_count = row_count = os.getenv('QUERY_ROW_COUNT')
+row_count = 20
 
 
-pathName = os.path.dirname(os.path.abspath(__file__))
-jsonFiles = [f for f in os.listdir(pathName + '/jsonUpdates') if isfile(join(pathName + '/jsonUpdates', f))]
-
-jsonListValues = []
-
-for file in jsonFiles:
-    with open(pathName + '/jsonUpdates/' + file) as jsonFile:
-        importedMetadataFixJson = jsonFile.read()
-        jsonParsed = json.loads(importedMetadataFixJson)
-        jsonValues = jsonParsed.values()
-        jsonListValues.append( list(jsonValues))
 
 
 print('')
 print('-------------------------------------------------------')
-print('Starting Meta Update')
+print('Starting Delete Green Reports and Protected Files')
 print('WFDM Paging: ' + str(row_count) + ' rows')
 print('Connect to WFDM API: ' + wfdm_api)
 print('-------------------------------------------------------')
@@ -48,7 +37,7 @@ print('')
 # Define our Recursive function
 
 
-def update_metadata(document_id, page, row_count):
+def delete_restricted_file(document_id, page, row_count):
     # REMEMBER: There are fetch size limits, so we'll need to be paging data
     # For whatever reason, the page is not a zero-based index
     # This will be recursive, so there's always a stack overflow risk here
@@ -80,34 +69,30 @@ def update_metadata(document_id, page, row_count):
             print(wfdm_doc_response)
         else:
             # Pull out the fileId, this is our parent for WFDM
-            changed = False
+            deleteFile = False
+            changedMetadata = False
+            isGreenReport = False
             doc_json = wfdm_doc_response.json()
             del wfdm_doc_response
             # First, update the metadata records
-            for j, jsonFile in enumerate(jsonListValues):
-                for positionInMetaArr, meta in enumerate(doc_json['metadata']):
-                    value = meta['metadataValue']
-                    name = meta['metadataName']
-                    # avoid checking the default field, they're fine
-                    if name != ("Title" or "DateCreated" or "DateModified" or "Description" or "Format" or "UniqueIdentifier" or "InformationSchedule" or "SecurityClassification" or "OPR" or "IncidentNumber" or "AppAcronym"):
-                        for i in jsonListValues[j][0]:
-                            if i["fieldNameToUpdate"] == name:
-                                # when we're transfering data to a default field, we need to find that default field, set it with the original field value, then remove the removed array
-                                if i["fixType"] == "transferValueThenDelete":
-                                    for meta2 in doc_json['metadata']:
-                                        if meta2['metadataName'] == i['destinationFieldName']:
-                                            meta2['metadataValue'] = value
-                                            doc_json['metadata'].pop(
-                                                positionInMetaArr)
-                                            positionInMetaArr = positionInMetaArr - 1
-                                            changed = True
-                                            break
-                                elif i["fixType"] == "renameField":
-                                    meta['metadataName'] = i["destinationFieldName"]
-                                    changed = True
+
+            if "GreenReport-" in doc_json["filePath"]:
+                deleteFile = True
+                isGreenReport = True
 
 
-            if (changed):
+            for positionInMetaArr, meta in enumerate(doc_json['metadata']):
+                value = meta['metadataValue']
+                name = meta['metadataName']
+                # avoid checking the default field, they're fine
+                if name == "SecurityClassification" and (value == "Protected B" or value == "Protected C"):
+                    deleteFile = True
+                if isGreenReport and name == "SecurityClassification" and value != "Protected B" and value != "Protected C":
+                        doc_json['metadata'][positionInMetaArr]['metadataValue'] = "Protected B"
+                        changedMetadata = True
+                        
+                   
+            if (changedMetadata):
                 # Now that they type is updated, we can push in an update
                 wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
                     doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
@@ -117,15 +102,24 @@ def update_metadata(document_id, page, row_count):
                     # Don't fail out here, just cary on
                 del wfdm_put_response
 
+            if (deleteFile):
+                # Now that they type is updated, we can push in an update
+                wfdm_put_response = requests.delete(docs_endpoint + '/' + document['fileId'] + "?openSearchIndexDeleteOnlyInd=true", headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
+                # verify 200
+                if wfdm_put_response.status_code != 200:
+                    print(wfdm_put_response)
+                    # Don't fail out here, just cary on
+                del wfdm_put_response
+
 
             # then, if this is a directory, jump into it and update the documents it contains
             if document['fileType'] == 'DIRECTORY':
-                update_metadata(document['fileId'], 1, row_count)
+                delete_restricted_file(document['fileId'], 1, row_count)
 
     # check if we need to page
     if wfdm_docs['totalPageCount'] > page:
         # Indeed we do
-        update_metadata(document_id, page + 1, row_count)
+        delete_restricted_file(document_id, page + 1, row_count)
 
     # Completed updates and exiting
     return 0
@@ -156,6 +150,6 @@ if wfdm_root_response.status_code != 200:
 # Pull out the fileId, this is our parent for WFDM
 root_id = wfdm_root_response.json()['fileId']
 del wfdm_root_response
-# start the metadata update
-print('... Done! Starting Metadata update process from root document ' + str(root_id))
-update_metadata(root_id, 1, row_count)
+# start the looking for files to delete from the index
+print('... Done! Starting file deletion search from ' + str(root_id))
+delete_restricted_file(root_id, 1, row_count)
