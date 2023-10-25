@@ -155,7 +155,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
               mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
               mimeType.equalsIgnoreCase("application/pdf") ||
               mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.presentationml.presentation") ) {
             content = TikaParseDocument.parseStream(stream, mimeType);
             logger.log("\nInfo: content after parsing " + content);
           } else {
@@ -175,24 +176,41 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
         OpenSearchRESTClient restClient = new OpenSearchRESTClient();
-        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
-        // Push ID onto SQS for clamAV
-        logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
-        // update metadata
-        boolean metaAdded = GetFileFromWFDMAPI.setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson);
-        if (!metaAdded) {
-          // We failed to apply the metadata regarding the virus scan status...
-          // Should we continue to process the data from this point, or just choke?
-          logger.log("\nERROR: Failed to add metadata to file resource");
+        // We are disabling indexing of files with a security classification of Protected B or Protected C
+        JSONArray metaArray = fileDetailsJson.getJSONArray("metadata");
+        boolean skipIndexing = false;
+        for (int i = 0; i < metaArray.length(); i++) {
+          String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+          String metadataValue = metaArray.getJSONObject(i).getString("metadataValue");
+
+          if (metadataName.equals("SecurityClassification")
+              && (metadataValue.equals("Protected B") || metadataValue.equals("Protected C"))) {
+            skipIndexing = true;
+          }
         }
 
-        // after updating metadata, get file info again and update index
-        fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId); 
-        fileDetailsJson = new JSONObject(fileInfo);
+        if (!skipIndexing) {
 
-        restClient.addIndex(content, fileName, fileDetailsJson, scanStatus); 
+          restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
+          // Push ID onto SQS for clamAV
+          logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
+          // update metadata
+          boolean metaAdded = GetFileFromWFDMAPI.setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson);
+          if (!metaAdded) {
+            // We failed to apply the metadata regarding the virus scan status...
+            // Should we continue to process the data from this point, or just choke?
+            logger.log("\nERROR: Failed to add metadata to file resource");
+          }
+
+          // after updating metadata, get file info again and update index
+          fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+          fileDetailsJson = new JSONObject(fileInfo);
+
+          restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
+
+        }
       }
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());

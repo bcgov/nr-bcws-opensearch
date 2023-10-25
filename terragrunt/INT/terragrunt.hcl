@@ -14,7 +14,6 @@ locals {
   clamstackQueue = "WfdmClamavStackINT-wfdmClamscanQueueintC7DDA541-4i0O18IjJgs0"
   opensearch_password = get_env("opensearch_password")
   opensearch_user = get_env("opensearch_user")
-
 }
 
 generate "backend" {
@@ -22,19 +21,15 @@ generate "backend" {
   if_exists = "overwrite_terragrunt"
   contents = <<EOF
 terraform {
-  backend "remote" {
-    organization = "wf1-wfdm-opensearch"
-    workspaces {
-        name = "nr-bcws-opensearch"
-    }
+  backend "s3" {
+    bucket         = "wfdm-terraform-remote-state-int"
+    key            = "wfdm-opensearch-statefile-int"
+    region         = "ca-central-1"
+    dynamodb_table = "wfdm-remote-state-lock-int"
+    encrypt        = true
   }
 }
 EOF
-}
-
-remote_state {
-    backend = "remote"
-    config = { }
 }
 
 generate "inputs" {

@@ -19,19 +19,15 @@ generate "backend" {
   if_exists = "overwrite_terragrunt"
   contents = <<EOF
 terraform {
-  backend "remote" {
-    organization = "wf1-wfdm-opensearch"
-    workspaces {
-        name = "nr-bcws-opensearch-DEV"
-    }
+  backend "s3" {
+    bucket         = "wfdm-terraform-remote-state-dev"
+    key            = "wfdm-opensearch-statefile-dev"
+    region         = "ca-central-1"
+    dynamodb_table = "wfdm-remote-state-lock-dev"
+    encrypt        = true
   }
 }
 EOF
-}
-
-remote_state {
-    backend = "remote"
-    config = { }
 }
 
 generate "inputs" {
@@ -49,5 +45,8 @@ generate "inputs" {
   document_token_url = "${local.document_token_url}"
   clamQueue = "${local.clamstackQueue}"
   secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
+  opensearch_user = "${local.opensearch_user}"
+  opensearch_password = "${local.opensearch_password}"
+  ElasticSearch_Version = "OpenSearch_2.5"
 EOF
 }
