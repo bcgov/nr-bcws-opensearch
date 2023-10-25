@@ -6,12 +6,14 @@ name: deploy_dlv
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    tags: [deploy-dlv*]
 
 env:
   TF_VERSION: 1.1.0
   TG_VERSION: 0.29.2
   TARGET_ENV: dlv
+
+permissions:
+  id-token: write
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
