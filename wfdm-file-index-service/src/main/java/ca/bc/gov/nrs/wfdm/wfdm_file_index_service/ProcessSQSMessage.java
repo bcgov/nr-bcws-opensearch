@@ -155,7 +155,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
               mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
               mimeType.equalsIgnoreCase("application/pdf") ||
               mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.presentationml.presentation") ) {
             content = TikaParseDocument.parseStream(stream, mimeType);
             logger.log("\nInfo: content after parsing " + content);
           } else {
