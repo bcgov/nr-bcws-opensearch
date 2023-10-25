@@ -74,24 +74,27 @@ def delete_restricted_file(document_id, page, row_count):
             isGreenReport = False
             doc_json = wfdm_doc_response.json()
             del wfdm_doc_response
-            # First, update the metadata records
-
+           
+            # Delete any GreenReport from the file index, they may not have security classification set 
             if "GreenReport-" in doc_json["filePath"]:
                 deleteFile = True
                 isGreenReport = True
 
-
+            # delete from the index any file with a security classification of Protected B or Protected C
             for positionInMetaArr, meta in enumerate(doc_json['metadata']):
                 value = meta['metadataValue']
                 name = meta['metadataName']
-                # avoid checking the default field, they're fine
+                
                 if name == "SecurityClassification" and (value == "Protected B" or value == "Protected C"):
                     deleteFile = True
+                    break
+                # Green Reports should have a Security Classification of Protected B or Protected C, if they don't update it for them
                 if isGreenReport and name == "SecurityClassification" and value != "Protected B" and value != "Protected C":
                         doc_json['metadata'][positionInMetaArr]['metadataValue'] = "Protected B"
                         changedMetadata = True
+                        break
                         
-                   
+            # update the metadata for green reports
             if (changedMetadata):
                 # Now that they type is updated, we can push in an update
                 wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
@@ -106,7 +109,7 @@ def delete_restricted_file(document_id, page, row_count):
                 # Now that they type is updated, we can push in an update
                 wfdm_put_response = requests.delete(docs_endpoint + '/' + document['fileId'] + "?openSearchIndexDeleteOnlyInd=true", headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
                 # verify 200
-                if wfdm_put_response.status_code != 200:
+                if wfdm_put_response.status_code != 204:
                     print(wfdm_put_response)
                     # Don't fail out here, just cary on
                 del wfdm_put_response
