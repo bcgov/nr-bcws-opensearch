@@ -112,7 +112,7 @@ public class GetFileFromWFDMAPI {
       }
 
       if (!creatorExists) creatorExists = metadataName.equals("Creator");
-      if (!uploadedByExists) uploadedByExists = metadataName.equals("UploadBy");
+      if (!uploadedByExists) uploadedByExists = metadataName.equals("UploadedBy");
       if (!titleExists) titleExists = metadataName.equals("Title");
       if (!dateCreatedExists) dateCreatedExists = metadataName.equals("DateCreated");
       if (!dateModifiedExists) dateModifiedExists = metadataName.equals("DateModified");
