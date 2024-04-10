@@ -117,16 +117,35 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         if (fileDetailsJson.has("mimeType") ){
           mimeType = fileDetailsJson.get("mimeType").toString();
         } else {
-          mimeType = ""; 
+          mimeType = "";
+        }
+        
+        String fileExtension;
+        if (fileDetailsJson.has("fileExtension")) {
+          fileExtension = fileDetailsJson.get("fileExtension").toString().toUpperCase();
+        } else {
+          fileExtension = "";
         }
 
-        // Check the event type. If this is a BYTES event, write the bytes
-        // otherwise, handle meta only and skip clam scan.
-        if (eventType.equalsIgnoreCase("bytes")) {
+        // if a file has a heic or heif mimetype it needs to be converted by the image
+        // conversion lambda rather than processed
+        if (fileExtension.equals("HEIC") || fileExtension.equals("HEIF") ) {
+          logger.log("\nInfo: File with mimeType of " + mimeType + " calling image conversion lambda");
+          AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+          InvokeRequest request = new InvokeRequest();
+          request.withFunctionName(System.getenv("WFDM_IMAGE_CONVERTER_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
+          InvokeResult invoke = client.invoke(request);
+
+        } else {
+
+          // Check the event type. If this is a BYTES event, write the bytes
+          // otherwise, handle meta only and skip clam scan.
+          if (eventType.equalsIgnoreCase("bytes")) {
             logger.log("\nInfo: File found on WFDM: " + fileInfo);
             // Update Virus scan metadata
             // Note, current user likely lacks access to update metadata so we'll need to update webade
-            boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson);
+            boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber,
+                fileDetailsJson);
             if (!metaAdded) {
               // We failed to apply the metadata regarding the virus scan status...
               // Should we continue to process the data from this point, or just choke?
@@ -134,20 +153,20 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             }
 
             AmazonS3 s3client = AmazonS3ClientBuilder
-              .standard()
-              .withCredentials(credentialsProvider)
-              .withRegion(region)
-              .build();
+                .standard()
+                .withCredentials(credentialsProvider)
+                .withRegion(region)
+                .build();
 
             Bucket clamavBucket = null;
             List<Bucket> buckets = s3client.listBuckets();
-            for(Bucket bucket : buckets) {
+            for (Bucket bucket : buckets) {
               if (bucket.getName().equalsIgnoreCase(bucketName)) {
                 clamavBucket = bucket;
               }
             }
 
-            if(clamavBucket == null) {
+            if (clamavBucket == null) {
               throw new Exception("S3 Bucket " + bucketName + " does not exist.");
             }
 
@@ -158,22 +177,26 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
             meta.setContentLength(Long.parseLong(fileDetailsJson.get("fileSize").toString()));
             meta.addUserMetadata("title", fileId + "-" + versionNumber);
             logger.log("putting into s3 bucket");
-            s3client.putObject(new PutObjectRequest(clamavBucket.getName(), fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
+            s3client.putObject(new PutObjectRequest(clamavBucket.getName(),
+                fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
           //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
-          else if (eventType.equalsIgnoreCase("meta") && (fileDetailsJson.get("mimeType").toString().equals("null"))) { 
+          else if (eventType.equalsIgnoreCase("meta") && (fileDetailsJson.get("mimeType").toString().equals("null"))) {
             AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
             InvokeRequest request = new InvokeRequest();
-            request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
+            request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim())
+                .withPayload(fileDetailsJson.toString());
             InvokeResult invoke = client.invoke(request);
 
-        } else {
-          // Meta only update, so fire a message to the Indexer Lambda
-          logger.log("Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" lambda: "+messageBody);
-          AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
-          InvokeRequest request = new InvokeRequest();
-          request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);
-          InvokeResult invoke = client.invoke(request);
+          } else {
+            // Meta only update, so fire a message to the Indexer Lambda
+            logger.log("Calling lambda name: " + System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim() + " lambda: "
+                + messageBody);
+            AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+            InvokeRequest request = new InvokeRequest();
+            request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);
+            InvokeResult invoke = client.invoke(request);
+          }
         }
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
