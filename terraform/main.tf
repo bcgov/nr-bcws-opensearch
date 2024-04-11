@@ -681,6 +681,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
       WFDM_DOCUMENT_CLAMAV_S3BUCKET      = data.aws_s3_bucket.clamav-bucket.bucket
       WFDM_DOCUMENT_TOKEN_URL            = "${var.document_token_url}"
       WFDM_INDEXING_LAMBDA_NAME          = aws_lambda_function.terraform_wfdm_indexing_function.function_name
+      WFDM_IMAGE_CONVERTER_LAMBDA_NAME   =  "WF1-WFDM-image-converter-${var.env}"
       WFDM_DOCUMENT_SECRET_MANAGER       = "${var.secret_manager_name}"
       WFDM_DOCUMENT_FILE_SIZE_SCAN_LIMIT = "${var.file_scan_size_limit}"
 
