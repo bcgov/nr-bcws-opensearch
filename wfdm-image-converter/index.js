@@ -13,22 +13,16 @@ const path = require('path');
 
 
 exports.handler = async (event) => {
-//(async () => {
   try {
 
     let fileId;
-    //fileId = "39251";
     let wfdmApi = process.env.wfdmApi
-    //let wfdmApi = 
     let apiURL = wfdmApi + "documents/";
 
 
     let tokenService = process.env.tokenService
     let clientName = process.env.clientName
     let clientSecret = process.env.clientSecret
-    //let tokenService = 
-    //let clientName = 
-    //let clientSecret = 
 
    
     for (let { messageId, body } of event.Records) {
@@ -157,7 +151,7 @@ exports.handler = async (event) => {
 
 
    }
-//})();
+
 
 async function deleteOriginalImage(url, bearerToken, fileId) {
 
