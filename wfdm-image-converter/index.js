@@ -25,18 +25,8 @@ exports.handler = async (event) => {
     let clientSecret = process.env.clientSecret
 
    
-    for (let { messageId, body } of event.Records) {
-        console.log('SQS message %s: %j', messageId, body);
-        console.log(body);
-        let jsonBody = JSON.stringify(body)
-        jsonBody = jsonBody.split(':')
-        jsonBody = jsonBody[1].split(',')
-        jsonBody = jsonBody[0].replaceAll("'", "")
-        console.log("json body after stringify" + jsonBody)
-        fileId = jsonBody;
-    }
+    fileId = event.fileId;
   
-
     const encoded = Buffer.from(clientName + ':' + clientSecret).toString('base64');
 
     let tokenConfig = {
