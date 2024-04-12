@@ -127,9 +127,22 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           fileExtension = "";
         }
 
+          Integer fileSize;
+          boolean fileTooLargeToConvert = false;
+          if (fileDetailsJson.has("fileSize")) {
+            fileSize = Integer.parseInt(fileDetailsJson.get("fileSize").toString());
+            if (fileSize > 10000000) {
+              fileTooLargeToConvert = true;
+              GetFileFromWFDMAPI.setImageConversionMetadata(wfdmToken, fileId, versionNumber,
+                  fileDetailsJson, "Image Conversion aborted due to file size");
+            }
+          } 
+
         // if a file has a heic or heif mimetype it needs to be converted by the image
         // conversion lambda rather than processed
-        if (fileExtension.equals("HEIC") || fileExtension.equals("HEIF") ) {
+        if ((fileExtension.equals("HEIC") || fileExtension.equals("HEIF")) && !fileTooLargeToConvert) {
+          GetFileFromWFDMAPI.setImageConversionMetadata(wfdmToken, fileId, versionNumber,
+          fileDetailsJson, "Image Conversion attempted");
           logger.log("\nInfo: File with mimeType of " + mimeType + " calling image conversion lambda");
           AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
           InvokeRequest request = new InvokeRequest();
