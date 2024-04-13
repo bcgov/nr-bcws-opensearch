@@ -25,18 +25,8 @@ exports.handler = async (event) => {
     let clientSecret = process.env.clientSecret
 
    
-    for (let { messageId, body } of event.Records) {
-        console.log('SQS message %s: %j', messageId, body);
-        console.log(body);
-        let jsonBody = JSON.stringify(body)
-        jsonBody = jsonBody.split(':')
-        jsonBody = jsonBody[1].split(',')
-        jsonBody = jsonBody[0].replaceAll("'", "")
-        console.log("json body after stringify" + jsonBody)
-        fileId = jsonBody;
-    }
+    fileId = event.fileId;
   
-
     const encoded = Buffer.from(clientName + ':' + clientSecret).toString('base64');
 
     let tokenConfig = {
@@ -131,14 +121,6 @@ exports.handler = async (event) => {
           fs.unlinkSync("/tmp/" + fileName);
           fs.unlinkSync(jsonDataFilePath);
 
-          // with the converted succesfully converted, the original can be deleted
-          let deleteResponse = await deleteOriginalImage(apiURL, bearerToken, fileId);
-
-          if (deleteResponse !== '') {
-            console.log("failed to delete original image with fileId: " + fileId)
-          } else {
-            console.log("deleted original image with fileId: " + fileId)
-          }
         }
       }
     }
@@ -150,33 +132,10 @@ exports.handler = async (event) => {
   }
 
 
-   }
-
-
-async function deleteOriginalImage(url, bearerToken, fileId) {
-
-  const axios = require('axios');
-
-  let config = {
-    method: 'delete',
-    maxBodyLength: Infinity,
-    url: url + fileId,
-    headers: {
-      'Authorization': 'Bearer ' + bearerToken
-    }
-  };
-
-  return Axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-      return response.data
-    })
-    .catch((error) => {
-      console.log(error);
-      return error;
-    });
-
 }
+
+
+
 
 async function postImage(url, filePath, jsonDataFilePath, bearerToken) {
   try {

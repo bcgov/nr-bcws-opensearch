@@ -91,6 +91,34 @@ public class GetFileFromWFDMAPI {
     return metaUpdateResponse.getStatus() == 200;
   }
 
+public static void setImageConversionMetadata(String accessToken, String fileId, String versionNumber,
+  JSONObject fileDetails, String conversionStatus) throws UnirestException {
+JSONArray metaArray = fileDetails.getJSONArray("metadata");
+// Locate any existing scan meta and remove
+for (int i = 0; i < metaArray.length(); i++) {
+  String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+  if (metadataName.equalsIgnoreCase("WFDMConversionStatus-" + versionNumber)) {
+    metaArray.remove(i);
+    break;
+  }
+}
+
+// inject scan meta
+JSONObject meta = new JSONObject();
+meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+meta.put("metadataName", "WFDMConversionStatus-" + versionNumber);
+meta.put("metadataValue", conversionStatus);
+metaArray.put(meta);
+
+// PUT the changes
+HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
+    .header("Content-Type", "application/json")
+    .header("Authorization", "Bearer " + accessToken)
+    .body(fileDetails.toString())
+    .asString();
+
+}
+
   /**
    * Fetch the bytes for a WFDM File resource. This will return a
    * BufferedInputStream
