@@ -83,6 +83,32 @@ exports.handler = async (event) => {
 
         let stats = fs.statSync("/tmp/" + fileName);
         let fileSizeInBytes = stats.size;
+        
+        let metadata = [];
+        let metadataConversionStatusName = 'WFDMConversionStatus-' + fileInfo.data.versionNumber;
+        let metadataConversionStatusValue = 'Image conversion successful';
+        let fileConversionStatusMetadata = {
+          '@type': 'http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource',
+          'metadataName': metadataConversionStatusName,
+          'metadataType': 'STRING',
+          'metadataValue' : metadataConversionStatusValue
+        }
+        if (fileInfo.data.metadata.length != 0) {
+          let imageConversionMetaUpdated = false;
+          metadata = fileInfo.data.metadata;
+          for (let i = 0; i < fileInfo.data.metadata.length; i++){
+            if (fileInfo.data.metadata[i].metadataName == metadataConversionStatusName) {
+              fileInfo.data.metadata[i].metadataValue = metadataConversionStatusValue
+              imageConversionMetaUpdated = true;
+              break;
+            }
+          }
+          if (!imageConversionMetaUpdated) {
+            metadata.push(fileConversionStatusMetadata);
+          }
+        } else {
+          metadata.push(fileConversionStatusMetadata);
+        }
 
         // create the json data that a file is created with
         let jsonData = {
@@ -97,7 +123,7 @@ exports.handler = async (event) => {
           "fileType": "DOCUMENT",
           "filePath": fileName,
           "security": [],
-          "metadata": [],
+          "metadata": metadata,
           "fileCheckout": null,
           "lockedInd": null,
           "uploadedOnTimestamp": null
