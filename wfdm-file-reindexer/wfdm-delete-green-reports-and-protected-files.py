@@ -71,14 +71,11 @@ def delete_restricted_file(document_id, page, row_count):
             # Pull out the fileId, this is our parent for WFDM
             deleteFile = False
             changedMetadata = False
-            isGreenReport = False
+            
             doc_json = wfdm_doc_response.json()
             del wfdm_doc_response
            
-            # Delete any GreenReport from the file index, they may not have security classification set 
-            if "GreenReport-" in doc_json["filePath"]:
-                deleteFile = True
-                isGreenReport = True
+           
 
             # delete from the index any file with a security classification of Protected B or Protected C
             for positionInMetaArr, meta in enumerate(doc_json['metadata']):
@@ -88,22 +85,9 @@ def delete_restricted_file(document_id, page, row_count):
                 if name == "SecurityClassification" and (value == "Protected B" or value == "Protected C"):
                     deleteFile = True
                     break
-                # Green Reports should have a Security Classification of Protected B or Protected C, if they don't update it for them
-                if isGreenReport and name == "SecurityClassification" and value != "Protected B" and value != "Protected C":
-                        doc_json['metadata'][positionInMetaArr]['metadataValue'] = "Protected B"
-                        changedMetadata = True
-                        break
+                
                         
-            # update the metadata for green reports
-            if (changedMetadata):
-                # Now that they type is updated, we can push in an update
-                wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
-                    doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
-                # verify 200
-                if wfdm_put_response.status_code != 200:
-                    print(wfdm_put_response)
-                    # Don't fail out here, just cary on
-                del wfdm_put_response
+            
 
             if (deleteFile):
                 # Now that they type is updated, we can push in an update
