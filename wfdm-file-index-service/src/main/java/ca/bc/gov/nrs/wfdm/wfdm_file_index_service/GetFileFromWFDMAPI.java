@@ -111,7 +111,6 @@ public class GetFileFromWFDMAPI {
         uploadedByIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
 
-
       if (!creatorExists) creatorExists = metadataName.equals("Creator");
       if (!uploadedByExists) uploadedByExists = metadataName.equals("UploadedBy");
       if (!titleExists) titleExists = metadataName.equals("Title");
