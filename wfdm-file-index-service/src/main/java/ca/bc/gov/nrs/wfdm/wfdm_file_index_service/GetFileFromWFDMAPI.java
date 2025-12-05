@@ -1,5 +1,9 @@
 package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -7,10 +11,6 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Static handler for WFDM API Access.
@@ -111,6 +111,7 @@ public class GetFileFromWFDMAPI {
         uploadedByIsNull = metaArray.getJSONObject(i).getString("metadataValue").equals("null");
       }
 
+
       if (!creatorExists) creatorExists = metadataName.equals("Creator");
       if (!uploadedByExists) uploadedByExists = metadataName.equals("UploadedBy");
       if (!titleExists) titleExists = metadataName.equals("Title");
@@ -137,9 +138,27 @@ public class GetFileFromWFDMAPI {
       metaArray.put(addMeta("UploadedBy", uploadedBy));
     }
 
+    if (!dateCreatedExists) {
+      String dateCreatedValue = "null";
+
+      // Always try to derive DateCreated from version 1 in the versions array
+      if (fileDetails.has("versions") && !fileDetails.isNull("versions")) {
+          JSONArray versions = fileDetails.getJSONArray("versions");
+
+          for (int i = 0; i < versions.length(); i++) {
+            JSONObject version = versions.getJSONObject(i);
+            int vNum = version.getInt("versionNumber");
+
+            if (vNum == 1 && version.has("uploadedOnTimestamp") && !version.isNull("uploadedOnTimestamp")) {
+              dateCreatedValue = version.getString("uploadedOnTimestamp");
+              break; 
+            }
+          }
+        }
+        metaArray.put(addMeta("DateCreated", dateCreatedValue));
+    }
 
     if (!titleExists) metaArray.put(addMeta("Title", "null"));
-    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", "null"));
     if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
     if (!descriptionExists) metaArray.put(addMeta("Description", "null"));
     if (!formatExists) metaArray.put(addMeta("Format", "null"));
