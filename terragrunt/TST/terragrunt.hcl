@@ -9,7 +9,7 @@ locals {
   env_lowercase = "tst"
   env_full = "TEST"
   document_api_url = "https://t1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
-  document_token_url = "https://testapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
+  document_token_url = "https://wfappst.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackTST"
   clamstackQueue = "WfdmClamavStackTST-wfdmClamscanQueuetstAF294E61-P6JScScVrkzs"
   opensearch_password = get_env("opensearch_password")
