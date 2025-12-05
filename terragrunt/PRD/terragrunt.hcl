@@ -9,7 +9,7 @@ locals {
   env_lowercase = "prd"
   env_full = "PRODUCTION"
   document_api_url = "https://bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
-  document_token_url = "https://apps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
+  document_token_url = "https://wfapps.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackPRD"
   clamstackQueue = "WfdmClamavStackPRD-wfdmClamscanQueueprdBFC4209A-SB0Y4rvaR7PT"
   opensearch_password = get_env("opensearch_password")
