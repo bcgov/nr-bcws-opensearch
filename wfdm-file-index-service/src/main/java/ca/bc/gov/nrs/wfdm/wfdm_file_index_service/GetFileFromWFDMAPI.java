@@ -137,9 +137,27 @@ public class GetFileFromWFDMAPI {
       metaArray.put(addMeta("UploadedBy", uploadedBy));
     }
 
+    if (!dateCreatedExists) {
+      String dateCreatedValue = "null";
+
+      // Always try to derive DateCreated from version 1 in the versions array
+      if (fileDetails.has("versions") && !fileDetails.isNull("versions")) {
+          JSONArray versions = fileDetails.getJSONArray("versions");
+
+          for (int i = 0; i < versions.length(); i++) {
+            JSONObject version = versions.getJSONObject(i);
+            int vNum = version.getInt("versionNumber");
+
+            if (vNum == 1 && version.has("uploadedOnTimestamp") && !version.isNull("uploadedOnTimestamp")) {
+              dateCreatedValue = version.getString("uploadedOnTimestamp");
+              break; 
+            }
+          }
+        }
+        metaArray.put(addMeta("DateCreated", dateCreatedValue));
+    }
 
     if (!titleExists) metaArray.put(addMeta("Title", "null"));
-    if (!dateCreatedExists) metaArray.put(addMeta("DateCreated", "null"));
     if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
     if (!descriptionExists) metaArray.put(addMeta("Description", "null"));
     if (!formatExists) metaArray.put(addMeta("Format", "null"));
