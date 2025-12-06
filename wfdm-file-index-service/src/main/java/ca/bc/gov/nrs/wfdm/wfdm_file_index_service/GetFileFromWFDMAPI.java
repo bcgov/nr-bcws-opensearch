@@ -10,6 +10,8 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import java.text.Format;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
@@ -138,7 +140,10 @@ public class GetFileFromWFDMAPI {
     }
 
     if (!dateCreatedExists) {
+      // store date in metadata standard format yyyy-MM-dd HH:mm:ss
       String dateCreatedValue = "null";
+      DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"); 
+      DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
       // Always try to derive DateCreated from version 1 in the versions array
       if (fileDetails.has("versions") && !fileDetails.isNull("versions")) {
@@ -149,8 +154,15 @@ public class GetFileFromWFDMAPI {
             int vNum = version.getInt("versionNumber");
 
             if (vNum == 1 && version.has("uploadedOnTimestamp") && !version.isNull("uploadedOnTimestamp")) {
-              dateCreatedValue = version.getString("uploadedOnTimestamp");
-              break; 
+              try {
+                    String raw = version.getString("uploadedOnTimestamp");
+                    LocalDateTime parsed = LocalDateTime.parse(raw, inputFormatter);
+                    dateCreatedValue = parsed.format(outputFormatter);
+                } catch (Exception e) {
+                    // fallback - store raw value instead of failing
+                    dateCreatedValue = version.getString("uploadedOnTimestamp");
+                }
+                break;
             }
           }
         }
