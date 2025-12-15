@@ -82,10 +82,13 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         // aren't in a cache slowly getting stale. Could be replaced by a check token
         // and
         // a cached token
+        logger.log("Retrieving access token");
         String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
         if (wfdmToken == null)
           throw new Exception("Could not authorize access for WFDM");
+        logger.log("Retrieved access token: " + wfdmToken);
 
+        logger.log("Retrieving file " + fileId);
         String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
 
         if (fileInfo == null) {
