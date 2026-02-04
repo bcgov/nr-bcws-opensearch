@@ -4,6 +4,7 @@ from requests.auth import HTTPBasicAuth
 import sys
 import os
 import json
+import threading
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -38,7 +39,7 @@ print('-------------------------------------------------------')
 print('')
 
 # Define our Recursive function
-def enforce_createDate(document_id, page, row_count):
+def enforce_createDate(document_id, page, row_count, threadDepth=0):
   # REMEMBER: There are fetch size limits, so we'll need to be paging data
   # For whatever reason, the page is not a zero-based index
   # This will be recursive, so there's always a stack overflow risk here
@@ -89,7 +90,16 @@ def enforce_createDate(document_id, page, row_count):
 
       # then, if this is a directory, jump into it and update the documents it contains
       if document['fileType'] == 'DIRECTORY':
-        enforce_createDate(document['fileId'], 1, row_count)
+        if threadDepth == 0:
+          threads = []
+          t = threading.Thread(target = enforce_createDate, args=(document['fileId'], 1, row_count, threadDepth + 1))
+          threads.append(t)
+          for t in threads:
+            t.start()
+          for t in threads:
+            t.join()
+        else:
+          enforce_createDate(document['fileId'], 1, row_count, 1)
         print('Need to enter directory')
 
   # check if we need to page
