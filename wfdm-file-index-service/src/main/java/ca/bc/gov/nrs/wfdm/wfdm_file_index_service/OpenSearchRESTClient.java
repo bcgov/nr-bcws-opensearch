@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
