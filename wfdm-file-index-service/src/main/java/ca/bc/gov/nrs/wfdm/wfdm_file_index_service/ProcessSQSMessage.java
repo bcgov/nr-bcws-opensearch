@@ -192,7 +192,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
         if (!skipIndexing) {
 
-          restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
+          addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
           // Push ID onto SQS for clamAV
           logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
@@ -208,7 +208,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
           fileDetailsJson = new JSONObject(fileInfo);
 
-          restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
+          addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
 
         }
       }
@@ -237,6 +237,31 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
     logger.log("\nInfo: Close Handler");
     return "Closed";
+  }
+
+    // Explicit timeouts set to avoid hanging on stale connections.
+    // Default ApacheHttpClient has a 30s socket timeout with no idle connection cleanup,
+    // which causes SocketTimeoutExceptions when Lambda reuses a warm instance with a
+    // dead connection to OpenSearch.
+    private void addIndexWithRetry(OpenSearchRESTClient restClient, String content, String fileName,
+                                    JSONObject fileDetailsJson, String scanStatus, LambdaLogger logger) throws OpenSearchException {
+      int maxRetries = 3;
+      for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          restClient.addIndex(content, fileName, fileDetailsJson, scanStatus);
+          return;   
+        } catch (OpenSearchException e) {
+          logger.log("\nWarn: OpenSearch addIndex attempt " + attempt + " of " + maxRetries
+              + " failed: " + e.getLocalizedMessage());
+          if (attempt == maxRetries) throw e;
+          try {
+            Thread.sleep(2000L * attempt);
+          } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new OpenSearchException(ie);
+          }
+        }
+      }
   }
   
 }
