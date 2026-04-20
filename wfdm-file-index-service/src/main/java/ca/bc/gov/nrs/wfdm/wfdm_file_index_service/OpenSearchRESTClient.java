@@ -2,6 +2,7 @@ package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -244,7 +245,15 @@ public class OpenSearchRESTClient {
 	}
 	
 	public OpenSearchClient openSearchClient(String openSearchEndpoint, String serviceName, Region region) {
-		httpClient = ApacheHttpClient.builder().build();
+		// Explicit timeouts set to avoid hanging on stale connections (socketTimeout 60s).
+		// Default ApacheHttpClient has a 30s socket timeout with no idle connection cleanup,
+		// which causes SocketTimeoutExceptions when Lambda reuses a warm instance with dead connection to OpenSearch.
+		httpClient = ApacheHttpClient.builder()
+                .socketTimeout(Duration.ofSeconds(60))
+                .connectionTimeout(Duration.ofSeconds(10))
+                .connectionMaxIdleTime(Duration.ofSeconds(5))
+                .useIdleConnectionReaper(true)
+                .build();
 		OpenSearchClient client = new OpenSearchClient(
 				new AwsSdk2Transport(
 						httpClient, 
