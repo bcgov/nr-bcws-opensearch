@@ -359,6 +359,11 @@ resource "aws_iam_role_policy_attachment" "policy_attach_clamav_sqs" {
   policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_vpc_execution" {
+  role       = aws_iam_role.lambda_clamav_role.name
+  policy_arn = data.aws_iam_policy.lambda-vpc-access-execution.arn
+}
+
 
 resource "aws_iam_role" "opensearch_sqs_role" {
   name = "${var.application}-iam-role-opensearch-sqs-${var.env}"
@@ -651,6 +656,10 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
       WFDM_DOCUMENT_FILE_SIZE_SCAN_LIMIT       = "${var.file_scan_size_limit}"
     }
   }
+  vpc_config {
+    subnet_ids = [data.aws_subnet.private_subnet.id]
+    security_group_ids = [aws_security_group.es.id]
+  }
   depends_on = [
     aws_lambda_layer_version.aws-java-base-layer-terraform
   ]
@@ -687,6 +696,10 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
 
     }
   }
+  vpc_config {
+    subnet_ids = [data.aws_subnet.private_subnet.id]
+    security_group_ids = [aws_security_group.es.id]
+  }
   depends_on = [
     aws_lambda_layer_version.aws-java-base-layer-terraform
   ]
@@ -719,6 +732,10 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
       WFDM_SNS_VIRUS_ALERT         = var.virus_alert
       WFDM_DOCUMENT_SECRET_MANAGER = "${var.secret_manager_name}"
     }
+  }
+  vpc_config {
+    subnet_ids = [data.aws_subnet.private_subnet.id]
+    security_group_ids = [aws_security_group.es.id]
   }
   depends_on = [
     aws_lambda_layer_version.aws-java-base-layer-terraform
@@ -758,6 +775,17 @@ resource "aws_security_group" "es" {
 
     cidr_blocks = [
       var.private_subnet_block
+    ]
+
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0"
     ]
 
   }
