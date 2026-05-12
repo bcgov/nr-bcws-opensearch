@@ -3,6 +3,7 @@ from requests.auth import HTTPBasicAuth
 import sys
 import os
 import json
+import time
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -17,6 +18,7 @@ wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
 row_count = os.getenv('QUERY_ROW_COUNT')
+max_retries = 3
 
 print('')
 print('-------------------------------------------------------')
@@ -25,6 +27,20 @@ print('WFDM Paging: ' + str(row_count) + ' rows')
 print('Connect to WFDM API: ' + wfdm_api)
 print('-------------------------------------------------------')
 print('')
+
+def request_with_retry(method, url, **kwargs):
+  kwargs.setdefault('timeout', 120)
+  for attempt in range(max_retries):
+    try:
+      response = requests.request(method, url, **kwargs)
+      return response
+    except requests.exceptions.Timeout:
+      print(f'Timeout on attempt {attempt + 1} of {max_retries} for {url}')
+      if attempt < max_retries - 1:
+        time.sleep(5)
+      else:
+        print(f'All retries exhausted for {url}, skipping...')
+        return None
 
 def reindex_wfdm(document_id, page, row_count):
   print('Re-indexing documents in the folder ' + document_id)
@@ -43,16 +59,16 @@ def reindex_wfdm(document_id, page, row_count):
       reindex_wfdm(document['fileId'], 1, row_count)
     else:
       print('Fetching bytes for document ' + document['fileId'] + '...')
-      wfdm_bytes_response = requests.get(
+      wfdm_bytes_response =  request_with_retry('GET',
         docs_endpoint + '/' + document['fileId'] + '/bytes',
         headers={'Authorization': 'Bearer ' + token}
       )
-      if wfdm_bytes_response.status_code != 200:
-        print('Failed to fetch bytes for document ' + document['fileId'] + ': ' + str(wfdm_bytes_response.status_code))
+      if wfdm_bytes_response is None or wfdm_bytes_response.status_code != 200:
+        print('Failed to fetch bytes for document ' + document['fileId'] + ', skipping...')
         continue
 
       print('Updating document ' + document['fileId'] + '...')
-      wfdm_put_response = requests.put(
+      wfdm_put_response = request_with_retry('PUT',
         docs_endpoint + '/' + document['fileId'],
         files={
           'resource': (None, json.dumps(document), 'application/json'),
@@ -62,8 +78,9 @@ def reindex_wfdm(document_id, page, row_count):
       )
       del wfdm_bytes_response
 
-      if wfdm_put_response.status_code != 200:
-        print('Failed to update document ' + document['fileId'] + ': ' + str(wfdm_put_response.status_code))
+      if wfdm_put_response is None or wfdm_put_response.status_code != 200:
+        status = wfdm_put_response.status_code if wfdm_put_response else 'timeout'
+        print('Failed to update document ' + document['fileId'] + ': ' + str(status))
       else:
         print('Successfully updated document ' + document['fileId'])
       del wfdm_put_response
