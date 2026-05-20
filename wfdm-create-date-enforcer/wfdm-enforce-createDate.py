@@ -4,7 +4,6 @@ from requests.auth import HTTPBasicAuth
 import sys
 import os
 import json
-import threading
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -51,8 +50,8 @@ def enforce_createDate(document_id, page, row_count):
   wfdm_docs_response = requests.get(url, headers={'Authorization': 'Bearer ' + token})
   # verify 200
   if wfdm_docs_response.status_code != 200:
-    print(wfdm_docs_response)
-    sys.exit("Failed to fetch from WFDM. Response code was: " + str(wfdm_docs_response.status_code))
+    print(f'Failed to fetch folder {document_id} page {page}: {wfdm_docs_response.status_code}, skipping...')
+    return 0
 
   wfdm_docs = wfdm_docs_response.json()
   del wfdm_docs_response
@@ -102,19 +101,11 @@ def enforce_createDate(document_id, page, row_count):
 
       # then, if this is a directory, jump into it and update the documents it contains
       if document['fileType'] == 'DIRECTORY':
-        if threading.active_count() < 15:
-          threads = []
-          t = threading.Thread(target = enforce_createDate, args=(document['fileId'], 1, row_count))
-          threads.append(t)
-          for t in threads:
-            t.start()
-        else:
           enforce_createDate(document['fileId'], 1, row_count)
 
   # check if we need to page
   if wfdm_docs['totalPageCount'] > page:
     # Indeed we do
-    print('Thread count is ' + str(threading.active_count()))
     enforce_createDate(document_id, page + 1, row_count)
 
   # Completed updates and exiting
