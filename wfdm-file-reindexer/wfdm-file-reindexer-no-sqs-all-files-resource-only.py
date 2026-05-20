@@ -3,8 +3,6 @@ from requests.auth import HTTPBasicAuth
 import sys
 import os
 import time
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -20,12 +18,8 @@ doc_root = '?parentId='
 # Some default process settings
 row_count = os.getenv('QUERY_ROW_COUNT')
 max_retries = 3
-MAX_WORKERS = 5
 
 token = None
-token_fetched_at = None
-TOKEN_REFRESH_SECONDS = 7200
-token_lock = threading.Lock()
 
 print('')
 print('-------------------------------------------------------')
@@ -36,21 +30,14 @@ print('-------------------------------------------------------')
 print('')
 
 def get_token():
-    global token, token_fetched_at
+    global token
     print('Fetching a token from OAUTH...')
     r = requests.get(token_service, auth=HTTPBasicAuth(client_name, client_secret))
     if r.status_code != 200:
         sys.exit("Failed to fetch token. Response code was: " + str(r.status_code))
     token = r.json()['access_token']
-    token_fetched_at = time.time()
-
-def ensure_token():
-    with token_lock:
-        if token is None or (time.time() - token_fetched_at) > TOKEN_REFRESH_SECONDS:
-            get_token()
 
 def auth_headers():
-    ensure_token()
     return {'Authorization': 'Bearer ' + token}
 
 def request_with_retry(method, url, **kwargs):
@@ -67,7 +54,7 @@ def request_with_retry(method, url, **kwargs):
                 print(f'All retries exhausted for {url}, skipping...')
                 return None
 
-def reindex_wfdm(document_id, page, row_count, executor, futures_list, futures_lock):
+def reindex_wfdm(document_id, page, row_count):
     print('Re-indexing documents in the folder ' + document_id)
     url = docs_endpoint + doc_root + document_id + '&pageNumber=' + str(page) + '&pageRowCount=' + str(row_count) + '&orderBy=default%20ASC'
     wfdm_docs_response = request_with_retry('GET', url, headers=auth_headers())
@@ -82,9 +69,7 @@ def reindex_wfdm(document_id, page, row_count, executor, futures_list, futures_l
     print('Found ' + str(len(wfdm_docs['collection'])) + ' documents, page ' + str(page) + ' of ' + str(wfdm_docs['totalPageCount']))
     for document in wfdm_docs['collection']:
         if document['fileType'] == 'DIRECTORY':
-            f = executor.submit(reindex_wfdm, document['fileId'], 1, row_count, executor, futures_list, futures_lock)
-            with futures_lock:
-                futures_list.append(f)
+            reindex_wfdm(document['fileId'], 1, row_count)
         else:
             print('Updating document ' + document['fileId'] + '...')
             wfdm_put_response = request_with_retry('PUT',
@@ -100,7 +85,7 @@ def reindex_wfdm(document_id, page, row_count, executor, futures_list, futures_l
             del wfdm_put_response
 
     if wfdm_docs['totalPageCount'] > page:
-        reindex_wfdm(document_id, page + 1, row_count, executor, futures_list, futures_lock)
+        reindex_wfdm(document_id, page + 1, row_count)
 
     return 0
 
@@ -116,28 +101,7 @@ root_id = wfdm_root_response.json()['fileId']
 del wfdm_root_response
 print('... Done! Starting re-indexing process from root document ' + str(root_id))
 
-futures_list = []
-futures_lock = threading.Lock()
-
-with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-    root_future = executor.submit(reindex_wfdm, root_id, 1, row_count, executor, futures_list, futures_lock)
-    with futures_lock:
-        futures_list.append(root_future)
-
-    seen = set()
-    while True:
-        with futures_lock:
-            current = list(futures_list)
-        new_futures = [f for f in current if id(f) not in seen]
-        if not new_futures:
-            break
-        for f in as_completed(new_futures):
-            seen.add(id(f))
-            try:
-                f.result()
-            except Exception as e:
-                print(f'Error in thread: {e}, continuing...')
-        time.sleep(0.1)
+reindex_wfdm(root_id, 1, row_count)
 
 print('')
 print('-------------------------------------------------------')
