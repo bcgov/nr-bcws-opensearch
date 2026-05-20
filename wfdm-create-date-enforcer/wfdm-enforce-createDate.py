@@ -6,6 +6,7 @@ import os
 import json
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -21,6 +22,7 @@ doc_root = '?parentId='
 # Some default process settings
 row_count = row_count = os.getenv('QUERY_ROW_COUNT')
 max_retries = 3
+MAX_WORKERS = 5
 
 token = None
 token_fetched_at = None
@@ -74,7 +76,7 @@ def createDate_formatter(unformatted_date):
   return unformatted_date.replace("T", " ").split(".")[0]
 
 # Define our Recursive function
-def enforce_createDate(document_id, page, row_count):
+def enforce_createDate(document_id, page, row_count , executor):
   # REMEMBER: There are fetch size limits, so we'll need to be paging data
   # For whatever reason, the page is not a zero-based index
   # This will be recursive, so there's always a stack overflow risk here
@@ -140,20 +142,13 @@ def enforce_createDate(document_id, page, row_count):
 
       # then, if this is a directory, jump into it and update the documents it contains
       if document['fileType'] == 'DIRECTORY':
-        if threading.active_count() < 15:
-          threads = []
-          t = threading.Thread(target = enforce_createDate, args=(document['fileId'], 1, row_count))
-          threads.append(t)
-          for t in threads:
-            t.start()
-        else:
-          enforce_createDate(document['fileId'], 1, row_count)
+         executor.submit(enforce_createDate, document['fileId'], 1, row_count, executor)
 
   # check if we need to page
   if wfdm_docs['totalPageCount'] > page:
     # Indeed we do
     print('Thread count is ' + str(threading.active_count()))
-    enforce_createDate(document_id, page + 1, row_count)
+    enforce_createDate(document_id, page + 1, row_count , executor)
   
   # Completed updates and exiting
   return 0
@@ -172,7 +167,7 @@ root_id = wfdm_root_response.json()['fileId']
 del wfdm_root_response
 # start the metadata update
 print('... Done! Starting createDate append from root document ' + str(root_id))
-#enforce_createDate(root_id, 1, row_count)
-enforce_createDate(root_id, 1, row_count)
+with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    enforce_createDate(root_id, 1, row_count, executor)
 
 
