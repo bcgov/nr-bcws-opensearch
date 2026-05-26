@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "5.6.0"
+      version = "5.40.0"
     }
   }
   required_version = ">= 1.1.0"
@@ -617,7 +617,7 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   s3_bucket           = data.aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key              = var.layer_file_name
   description         = "Common layer with java jars files"
-  compatible_runtimes = ["java17"]
+  compatible_runtimes = ["java21"]
 }
 
 
@@ -630,7 +630,7 @@ resource "aws_lambda_function" "terraform_wfdm_indexing_function" {
   role          = aws_iam_role.lambda_role.arn
   handler       = var.lambda_function_handler
   source_code_hash = "${data.aws_s3_bucket_object.indexing_function_hash.body}"
-  runtime     = "java17"
+  runtime     = "java21"
   layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
   timeout     = var.timeout_length
@@ -673,7 +673,7 @@ resource "aws_lambda_function" "terraform_indexing_initializer_function" {
   role          = aws_iam_role.lambda_initializer_role.arn
   handler       = var.indexing_function_handler
   source_code_hash = "${data.aws_s3_bucket_object.indexing_initializer_hash.body}"
-  runtime     = "java17"
+  runtime     = "java21"
   layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
   timeout     = var.timeout_length_large
@@ -713,7 +713,7 @@ resource "aws_lambda_function" "lambda_clamav_handler" {
   role          = aws_iam_role.lambda_clamav_role.arn
   handler       = var.clamav_function_handler
   source_code_hash = "${data.aws_s3_bucket_object.clamav_function_hash.body}"
-  runtime     = "java17"
+  runtime     = "java21"
   layers      = ["${aws_lambda_layer_version.aws-java-base-layer-terraform.arn}"]
   memory_size = var.memory_size
   timeout     = 30
