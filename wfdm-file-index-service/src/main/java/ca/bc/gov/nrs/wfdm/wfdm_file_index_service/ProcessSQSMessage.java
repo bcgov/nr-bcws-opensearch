@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.mashape.unirest.http.HttpResponse;
+
 import javax.xml.transform.TransformerConfigurationException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -103,13 +105,16 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         throw new Exception("Could not authorize access for WFDM");
 
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
-      String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+      HttpResponse<String> fileResponse = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
 
-      logger.log("\nInfo: fileInfo is: " + fileInfo);
+      logger.log("\nInfo: fileResponse.getBody() is: " + fileResponse.getBody());
 
-      if (fileInfo == null) {
+      if (fileResponse == null) {
         throw new Exception("File not found!");
       } else {
+        String fileInfo = fileResponse.getBody();
+        String etag = fileResponse.getHeaders().getFirst("ETag");
+
         // replace the passed-in file details with the details fetched
         fileDetailsJson = new JSONObject(fileInfo);
 
@@ -197,7 +202,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
           // update metadata
-          boolean metaAdded = GetFileFromWFDMAPI.setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson);
+          boolean metaAdded = GetFileFromWFDMAPI.setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, etag);
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?
@@ -205,8 +210,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           }
 
           // after updating metadata, get file info again and update index
-          fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
-          fileDetailsJson = new JSONObject(fileInfo);
+          fileResponse = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+          fileDetailsJson = new JSONObject(fileResponse.getBody());
 
           addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
 

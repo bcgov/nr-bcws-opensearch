@@ -21,6 +21,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.http.HttpResponse;
 
 /**
  * Processor for the received SQS messages. As messages are placed onto the Queue
@@ -86,17 +87,19 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         if (wfdmToken == null)
           throw new Exception("Could not authorize access for WFDM");
 
-        String fileInfo = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+        HttpResponse<String>fileResponse = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
 
-        if (fileInfo == null) {
+        if (fileResponse == null) {
           throw new Exception("File not found!");
         } else {
+          String fileInfo = fileResponse.getBody();
+          String etag = fileResponse.getHeaders().getFirst("ETag");
           JSONObject fileDetailsJson = new JSONObject(fileInfo);
 
           logger.log("\nInfo: File found on WFDM: " + fileInfo);
           // Update Virus scan metadata
           // Note, current user likely lacks access to update metadata so we'll need to update webade
-          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, status);
+          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, status, etag);
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?

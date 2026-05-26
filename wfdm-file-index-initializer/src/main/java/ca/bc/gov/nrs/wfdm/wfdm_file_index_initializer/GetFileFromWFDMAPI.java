@@ -50,20 +50,22 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getFileInformation(String accessToken, String fileId) throws UnirestException {
+  public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
 
     if (detailsResponse.getStatus() == 200) {
-      return detailsResponse.getBody();
+      return detailsResponse;
     } else {
       return null;
     }
   }
 
   public static boolean setVirusScanMetadata(String accessToken, String fileId, String versionNumber,
-      JSONObject fileDetails) throws UnirestException {
+      JSONObject fileDetails, String Etag) throws UnirestException {
+
+    
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
@@ -85,6 +87,7 @@ public class GetFileFromWFDMAPI {
     HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Content-Type", "application/json")
         .header("Authorization", "Bearer " + accessToken)
+        .header("If-Match", Etag) 
         .body(fileDetails.toString())
         .asString();
 
@@ -92,7 +95,7 @@ public class GetFileFromWFDMAPI {
   }
 
 public static void setImageConversionMetadata(String accessToken, String fileId, String versionNumber,
-  JSONObject fileDetails, String conversionStatus) throws UnirestException {
+  JSONObject fileDetails, String conversionStatus, String Etag) throws UnirestException {
 JSONArray metaArray = fileDetails.getJSONArray("metadata");
 // Locate any existing scan meta and remove
 for (int i = 0; i < metaArray.length(); i++) {
@@ -114,6 +117,7 @@ metaArray.put(meta);
 HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
     .header("Content-Type", "application/json")
     .header("Authorization", "Bearer " + accessToken)
+    .header("If-Match", Etag) 
     .body(fileDetails.toString())
     .asString();
 
