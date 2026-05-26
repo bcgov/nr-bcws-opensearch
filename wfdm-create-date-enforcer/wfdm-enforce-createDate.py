@@ -80,7 +80,7 @@ def enforce_createDate(document_id, page, row_count):
         }
         doc_json['metadata'].append(date_created_values)
         # Now that they type is updated, we can push in an update
-        wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
+        wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json), params={'metadataUpdate': 'true'}, headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
         # verify 200
         if wfdm_put_response.status_code != 200:
           print(wfdm_put_response)
@@ -92,7 +92,7 @@ def enforce_createDate(document_id, page, row_count):
             print(doc_json['metadata'][idx]['metadataValue'])
             doc_json['metadata'][idx]['metadataValue'] = createDate_formatter(doc_json['uploadedOnTimestamp'])
             print(doc_json['metadata'][idx]['metadataValue'])
-            wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
+            wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json), params={'metadataUpdate': 'true'}, headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
         # verify 200
             if wfdm_put_response.status_code != 200:
               print(wfdm_put_response)
