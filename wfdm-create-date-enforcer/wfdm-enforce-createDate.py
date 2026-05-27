@@ -40,6 +40,13 @@ print('')
 def createDate_formatter(unformatted_date):
   return unformatted_date.replace("T", " ").split(".")[0]
 
+
+def get_original_timestamp(doc_json):
+    for v in doc_json.get('versions', []):
+        if v.get('versionNumber') == 1 and v.get('uploadedOnTimestamp'):
+            return v['uploadedOnTimestamp']
+    return None
+
 # Define our Recursive function
 def enforce_createDate(document_id, page, row_count):
   # REMEMBER: There are fetch size limits, so we'll need to be paging data
@@ -72,10 +79,12 @@ def enforce_createDate(document_id, page, row_count):
       # First, update the metadata records
       if doc_json['uploadedOnTimestamp'] != None and not any(x['metadataName'] == "DateCreated" for x in doc_json['metadata']):
         print("Adding DateCreated to file " + doc_json['fileId'])
+        original_ts = get_original_timestamp(doc_json)
+
         date_created_values = {
           "@type": "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource",
           "metadataName": "DateCreated",
-          "metadataValue": createDate_formatter(doc_json['uploadedOnTimestamp']),
+          "metadataValue": createDate_formatter(original_ts),
           "metadataType": "STRING"
         }
         doc_json['metadata'].append(date_created_values)
@@ -90,7 +99,8 @@ def enforce_createDate(document_id, page, row_count):
         for idx, metadata_item in enumerate(doc_json['metadata']):
           if metadata_item['metadataName'] == 'DateCreated' and doc_json['uploadedOnTimestamp']:
             print(doc_json['metadata'][idx]['metadataValue'])
-            doc_json['metadata'][idx]['metadataValue'] = createDate_formatter(doc_json['uploadedOnTimestamp'])
+            original_ts = get_original_timestamp(doc_json)
+            doc_json['metadata'][idx]['metadataValue'] = createDate_formatter(original_ts)
             print(doc_json['metadata'][idx]['metadataValue'])
             wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json), params={'metadataUpdate': 'true'}, headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
         # verify 200
