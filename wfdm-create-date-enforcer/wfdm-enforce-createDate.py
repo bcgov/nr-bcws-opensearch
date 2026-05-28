@@ -75,14 +75,6 @@ def api_request(method, url, **kwargs):
 
     except requests.exceptions.RequestException as e:
         raise e  
-    
-def save_checkpoint(document_id, page):
-    with open("checkpoint.json", "w") as f:
-        json.dump({
-            "document_id": document_id,
-            "page": page
-        }, f)
-
 
 
 
@@ -190,8 +182,6 @@ def enforce_createDate(document_id, page, row_count):
 
   # check if we need to page
   if wfdm_docs['totalPageCount'] > page:
-    # use the values from this instead of root_id and 1 at the first instance of enforce_createDate to allow recovery
-    save_checkpoint(document_id, page)
     # Indeed we do
     enforce_createDate(document_id, page + 1, row_count)
 
@@ -216,6 +206,5 @@ del wfdm_root_response
 # start the metadata update
 print('... Done! Starting createDate append from root document ' + str(root_id))
 #enforce_createDate(root_id, 1, row_count)
-# if script crashes update root_id and 1 with the document id and page number to resume from
 enforce_createDate(root_id, 1, row_count)
 
