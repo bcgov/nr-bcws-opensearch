@@ -15,3 +15,5 @@ To adjust what image you're creating edit wfdm-clamav.js with the environment
 You may need to delete the stack if the current policy changes do not allow you to update buckets
 
 To update versions you can set the specfic clamav verison in the dockerfile if AWS has it, just the generic clamav verison will be outdated.
+
+If you had to fully delete the stack, you'll need to update the clamscan sqs queue in terragrunt.hcl
