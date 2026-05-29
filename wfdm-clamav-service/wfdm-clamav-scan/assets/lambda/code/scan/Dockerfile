@@ -9,9 +9,9 @@ ARG CACHE_DATE=1
 
 RUN dnf update -y \
  && dnf install -y \
-    clamav \
-    clamav-update \
-    clamd \
+    clamav1.4 \
+    clamav1.4-update \
+    clamd1.4 \
     p7zip \
  && dnf clean all
 

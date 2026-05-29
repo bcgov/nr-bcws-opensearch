@@ -214,12 +214,12 @@ class ServerlessClamscan extends constructs_1.Construct {
                 },
             },
         }));
-        defs_bucket.addToResourcePolicy(new aws_iam_1.PolicyStatement({
-            effect: aws_iam_1.Effect.DENY,
-            actions: ['s3:PutBucketPolicy', 's3:DeleteBucketPolicy'],
-            resources: [defs_bucket.bucketArn],
-            notPrincipals: [new aws_iam_1.AccountRootPrincipal()],
-        }));
+       // defs_bucket.addToResourcePolicy(new aws_iam_1.PolicyStatement({
+        //    effect: aws_iam_1.Effect.DENY,
+       //     actions: ['s3:PutBucketPolicy', 's3:DeleteBucketPolicy'],
+       //     resources: [defs_bucket.bucketArn],
+       //     notPrincipals: [new aws_iam_1.AccountRootPrincipal()],
+      //  }));
         this._s3Gw.addToPolicy(new aws_iam_1.PolicyStatement({
             effect: aws_iam_1.Effect.ALLOW,
             actions: ['s3:GetObject', 's3:ListBucket'],

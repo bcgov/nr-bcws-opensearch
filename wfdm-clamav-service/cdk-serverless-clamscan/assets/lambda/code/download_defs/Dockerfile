@@ -6,9 +6,9 @@ ARG CACHE_DATE=1
 
 RUN dnf update -y \
  && dnf install -y \
-    clamav \
-    clamav-update \
-    clamd \
+    clamav1.4 \
+    clamav1.4-update \
+    clamd1.4 \
  && dnf clean all
 
 RUN pip3 install --no-cache-dir \
