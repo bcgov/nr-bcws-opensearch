@@ -19,9 +19,9 @@ wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
 row_count = row_count = os.getenv('QUERY_ROW_COUNT')
-
 token = None
 token_expiry = 0
+top_level_folder_id = os.getenv('TOP_LEVEL_FOLDER_ID')
 
 def createDate_formatter(unformatted_date):
   return unformatted_date.replace("T", " ").split(".")[0]
@@ -66,7 +66,7 @@ def api_request(method, url, **kwargs):
 
         if response.status_code == 401:
             print("Token expired, refreshing and retrying...")
-            token = None  
+            token = None
 
             headers['Authorization'] = 'Bearer ' + get_token()
             response = requests.request(method, url, timeout=30, **kwargs)
@@ -74,7 +74,7 @@ def api_request(method, url, **kwargs):
         return response
 
     except requests.exceptions.RequestException as e:
-        raise e  
+        raise e
 
 
 
@@ -104,7 +104,7 @@ def enforce_createDate(document_id, page, row_count):
     if wfdm_docs_response.status_code != 200:
       print(f'Failed to fetch folder {document_id} page {page}: {wfdm_docs_response.status_code}, skipping...')
       return 0
-  
+
   except requests.exceptions.RequestException as e:
       print(f"GET failed for folder {document_id} page {page}: {e}")
       return 0
@@ -147,7 +147,7 @@ def enforce_createDate(document_id, page, row_count):
           del wfdm_put_response
         except requests.exceptions.RequestException as e:
                 print(f"PUT failed for file {document['fileId']}: {e}")
-                continue 
+                continue
       elif doc_json['fileType'] != 'DIRECTORY' and any(x['metadataName'] == "DateCreated" for x in doc_json['metadata']):
         for idx, metadata_item in enumerate(doc_json['metadata']):
           if metadata_item['metadataName'] == 'DateCreated':
@@ -169,10 +169,10 @@ def enforce_createDate(document_id, page, row_count):
               if wfdm_put_response.status_code != 200:
                 print(wfdm_put_response)
               print('Formatted ' + doc_json['fileId'] + ' dateCreated value')
-            
+
             except requests.exceptions.RequestException as e:
                 print(f"PUT failed for file {document['fileId']}: {e}")
-                continue 
+                continue
             break
 
 
@@ -190,21 +190,30 @@ def enforce_createDate(document_id, page, row_count):
 
 # Step #2, now that we have a nice shiny new token, lets go fetch from WFDM why not
 # First though, we need to know our Root ID
-print('Fetching The WFDM Root Document...')
-try:
-  wfdm_root_response = api_request("GET", doc_endpoint + wfdm_root)
-  if wfdm_root_response.status_code != 200:
-    print(wfdm_root_response)
-    sys.exit("Failed to fetch from WFDM. Response code was: " + str(wfdm_root_response.status_code))
-    
-except requests.exceptions.RequestException as e:
-    sys.exit(f"Root fetch failed: {e}")
+# Root ID can be provided to run the script against a certain parent folder e.g. WFDM, WFFIN, WFHR, WFIM, WFPREV, WFRM, WFWX
+# Fallback to running against every file if Root ID is not provided
+if top_level_folder_id:
+    verify_response = api_request("GET", docs_endpoint + '/' + top_level_folder_id)
+    if verify_response.status_code != 200:
+        sys.exit(f"TOP_LEVEL_FOLDER_ID {top_level_folder_id} not found: {verify_response.status_code}")
+    print(f'Starting from folder {top_level_folder_id}')
+    enforce_createDate(top_level_folder_id, 1, row_count)
+else:
+    print('Fetching The WFDM Root Document...')
+    try:
+      wfdm_root_response = api_request("GET", doc_endpoint + wfdm_root)
+      if wfdm_root_response.status_code != 200:
+        print(wfdm_root_response)
+        sys.exit("Failed to fetch from WFDM. Response code was: " + str(wfdm_root_response.status_code))
 
-# Pull out the fileId, this is our parent for WFDM
-root_id = wfdm_root_response.json()['fileId']
-del wfdm_root_response
-# start the metadata update
-print('... Done! Starting createDate append from root document ' + str(root_id))
-#enforce_createDate(root_id, 1, row_count)
-enforce_createDate(root_id, 1, row_count)
+    except requests.exceptions.RequestException as e:
+        sys.exit(f"Root fetch failed: {e}")
+
+    # Pull out the fileId, this is our parent for WFDM
+    root_id = wfdm_root_response.json()['fileId']
+    del wfdm_root_response
+    # start the metadata update
+    print('... Done! Starting createDate append from root document ' + str(root_id))
+    #enforce_createDate(root_id, 1, row_count)
+    enforce_createDate(root_id, 1, row_count)
 
