@@ -4,6 +4,7 @@
 from posixpath import join
 import boto3
 import botocore
+import time
 import glob
 import json
 import os
@@ -25,6 +26,7 @@ ERROR = "ERROR"
 SKIP = "N/A"
 
 MAX_BYTES = 4000000000
+ONE_DAY_SECONDS = 86400
 
 
 class ClamAVException(Exception):
@@ -112,6 +114,11 @@ def copy_defs_from_s3_to_efs(definitions_path):
 
     for key in definition_files:
         target_path = f"{definitions_path}/{key}"
+        
+        if not is_older_than_one_day(target_path):
+            print(f"{key} is fresh (<24h), skipping download")
+            continue
+
         try:
             print(f"Downloading {key} to {target_path}")
             s3_client.download_file(DEFS_BUCKET, key, target_path)
@@ -120,8 +127,28 @@ def copy_defs_from_s3_to_efs(definitions_path):
         except Exception as e:
             print(f"ERROR downloading {key}: {e}")
 
+    missing = [
+        f for f in definition_files
+        if not os.path.exists(f"{definitions_path}/{f}")
+    ]
+
+    if missing:
+        raise Exception(f"Missing required definitions: {missing}")
+
     print(f"Final contents of definitions dir: {os.listdir(definitions_path)}")
     print("=== DONE COPYING DEFINITIONS ===")
+
+
+def is_older_than_one_day(file_path):
+    if not os.path.exists(file_path):
+        return True
+
+    last_modified = os.path.getmtime(file_path)
+    age = time.time() - last_modified
+    print(f" file {file_path} last modified at {last_modified}")
+
+    return age > ONE_DAY_SECONDS
+
 
 
 def set_status(bucket, key, status):
