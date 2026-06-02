@@ -6,9 +6,7 @@ import boto3
 import botocore
 import glob
 import json
-import logging
 import os
-import pwd
 import subprocess
 import shutil
 from urllib.parse import unquote_plus
@@ -83,9 +81,7 @@ def lambda_handler(event, context):
             bucket_info["object"]["size"],
         )
         create_dir(input_bucket, input_key, definitions_path)
-        freshclam_update(
-            input_bucket, input_key, payload_path, definitions_path
-        )
+        copy_defs_from_s3_to_efs(definitions_path)
         summary = scan(
             input_bucket, input_key, payload_path, definitions_path, tmp_path
         )
@@ -101,6 +97,31 @@ def lambda_handler(event, context):
         }
     logger.info(summary)
     return summary
+
+def copy_defs_from_s3_to_efs(definitions_path):
+    print("=== COPYING DEFINITIONS FROM S3 TO EFS ===")
+
+    DEFS_BUCKET = os.environ["DEFS_BUCKET"]
+
+    # These are the required ClamAV files
+    definition_files = [
+        "main.cvd",
+        "daily.cvd",
+        "bytecode.cvd"
+    ]
+
+    for key in definition_files:
+        target_path = f"{definitions_path}/{key}"
+        try:
+            print(f"Downloading {key} to {target_path}")
+            s3_client.download_file(DEFS_BUCKET, key, target_path)
+            size = os.path.getsize(target_path)
+            print(f"Downloaded {key}, size={size} bytes")
+        except Exception as e:
+            print(f"ERROR downloading {key}: {e}")
+
+    print(f"Final contents of definitions dir: {os.listdir(definitions_path)}")
+    print("=== DONE COPYING DEFINITIONS ===")
 
 
 def set_status(bucket, key, status):
@@ -191,40 +212,6 @@ def expand_if_large_archive(input_bucket, input_key, download_path, byte_size):
             report_failure(input_bucket, input_key, download_path, e.message)
     else:
         return
-
-
-def freshclam_update(input_bucket, input_key, download_path, definitions_path):
-    """Points freshclam to the local database files and the S3 Definitions bucket.
-    Creates the database path on EFS if it does not already exist"""
-    conf = "/tmp/freshclam.conf"
-    # will already exist when Lambdas are running in same execution context
-    if not os.path.exists(conf):
-        with open(conf, "a") as f:
-            f.write(f"\nPrivateMirror {os.environ['DEFS_URL']}")
-    try:
-        command = [
-            "freshclam",
-            f"--config-file={conf}",
-            "--stdout",
-            "-u",
-            f"{pwd.getpwuid(os.getuid()).pw_name}",
-            f"--datadir={definitions_path}",
-        ]
-        update_summary = subprocess.run(
-            command,
-            stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE,
-        )
-        if update_summary.returncode != 0:
-            raise ClamAVException(
-                f"FreshClam exited with unexpected code: {update_summary.returncode}"
-                f"\nOutput: {update_summary.stdout.decode('utf-8')}"
-            )
-    except subprocess.CalledProcessError as e:
-        report_failure(input_bucket, input_key, download_path, str(e.stderr))
-    except ClamAVException as e:
-        report_failure(input_bucket, input_key, download_path, e.message)
-    return
 
 
 def scan(input_bucket, input_key, download_path, definitions_path, tmp_path):
