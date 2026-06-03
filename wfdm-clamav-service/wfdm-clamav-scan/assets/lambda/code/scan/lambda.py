@@ -101,8 +101,6 @@ def lambda_handler(event, context):
     return summary
 
 def copy_defs_from_s3_to_efs(definitions_path):
-    print("=== COPYING DEFINITIONS FROM S3 TO EFS ===")
-
     DEFS_BUCKET = os.environ["DEFS_BUCKET"]
 
     # These are the required ClamAV files
@@ -120,7 +118,6 @@ def copy_defs_from_s3_to_efs(definitions_path):
             continue
 
         try:
-            print(f"Downloading {key} to {target_path}")
             s3_client.download_file(DEFS_BUCKET, key, target_path)
             size = os.path.getsize(target_path)
             print(f"Downloaded {key}, size={size} bytes")
@@ -135,8 +132,6 @@ def copy_defs_from_s3_to_efs(definitions_path):
     if missing:
         raise Exception(f"Missing required definitions: {missing}")
 
-    print(f"Final contents of definitions dir: {os.listdir(definitions_path)}")
-    print("=== DONE COPYING DEFINITIONS ===")
 
 
 def is_older_than_one_day(file_path):
