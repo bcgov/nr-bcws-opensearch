@@ -6,7 +6,7 @@
     "repository": "github:bcgov/nr-bcws-opensearch",
     "dependencies": {
         "heic-convert": "2.1.0",
-        "axios": "1.6.8",
+        "axios": "1.16.0",
         "form-data": "4.7.9"
     }
 }
