@@ -193,40 +193,6 @@ def expand_if_large_archive(input_bucket, input_key, download_path, byte_size):
         return
 
 
-def freshclam_update(input_bucket, input_key, download_path, definitions_path):
-    """Points freshclam to the local database files and the S3 Definitions bucket.
-    Creates the database path on EFS if it does not already exist"""
-    conf = "/tmp/freshclam.conf"
-    # will already exist when Lambdas are running in same execution context
-    if not os.path.exists(conf):
-        with open(conf, "a") as f:
-            f.write(f"\nPrivateMirror {os.environ['DEFS_URL']}")
-    try:
-        command = [
-            "freshclam",
-            f"--config-file={conf}",
-            "--stdout",
-            "-u",
-            f"{pwd.getpwuid(os.getuid()).pw_name}",
-            f"--datadir={definitions_path}",
-        ]
-        update_summary = subprocess.run(
-            command,
-            stderr=subprocess.STDOUT,
-            stdout=subprocess.PIPE,
-        )
-        if update_summary.returncode != 0:
-            raise ClamAVException(
-                f"FreshClam exited with unexpected code: {update_summary.returncode}"
-                f"\nOutput: {update_summary.stdout.decode('utf-8')}"
-            )
-    except subprocess.CalledProcessError as e:
-        report_failure(input_bucket, input_key, download_path, str(e.stderr))
-    except ClamAVException as e:
-        report_failure(input_bucket, input_key, download_path, e.message)
-    return
-
-
 def scan(input_bucket, input_key, download_path, definitions_path, tmp_path):
     """Scans the object from S3"""
     # Max file size support by ClamAV

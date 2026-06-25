@@ -252,7 +252,7 @@ class ServerlessClamscan extends constructs_1.Construct {
             environment: {
                 EFS_MOUNT_PATH: this._efsMountPath,
                 EFS_DEF_PATH: this._efsDefsPath,
-                DEFS_URL: defs_bucket.virtualHostedUrlForObject(),
+                DEFS_BUCKET: defs_bucket.bucketName,
                 POWERTOOLS_METRICS_NAMESPACE: 'serverless-clamscan',
                 POWERTOOLS_SERVICE_NAME: 'virus-scan',
             },

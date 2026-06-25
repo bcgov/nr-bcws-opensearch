@@ -4,7 +4,7 @@ from requests.auth import HTTPBasicAuth
 import sys
 import os
 import json
-import threading
+import time
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -19,16 +19,68 @@ wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
 row_count = row_count = os.getenv('QUERY_ROW_COUNT')
+token = None
+token_expiry = 0
+top_level_folder_id = os.getenv('TOP_LEVEL_FOLDER_ID')
+
+def createDate_formatter(unformatted_date):
+  return unformatted_date.replace("T", " ").split(".")[0]
+
+
+def get_original_timestamp(doc_json):
+    for v in doc_json.get('versions', []):
+        if v.get('versionNumber') == 1 and v.get('uploadedOnTimestamp'):
+            return v['uploadedOnTimestamp']
+    return None
+
+
+def get_token():
+    global token, token_expiry
+
+    if token and time.time() < token_expiry - 60:
+        return token
+
+    print("Refreshing token...")
+    response = requests.get(token_service, auth=HTTPBasicAuth(client_name, client_secret))
+
+    if response.status_code != 200:
+        sys.exit("Failed to fetch token")
+
+    data = response.json()
+    token = data['access_token']
+
+    expires_in = data.get('expires_in', 3600)
+    token_expiry = time.time() + expires_in
+
+    return token
+
+def api_request(method, url, **kwargs):
+    global token
+
+    headers = kwargs.get('headers', {})
+    headers['Authorization'] = 'Bearer ' + get_token()
+    kwargs['headers'] = headers
+
+    try:
+        response = requests.request(method, url, timeout=30, **kwargs)
+
+        if response.status_code == 401:
+            print("Token expired, refreshing and retrying...")
+            token = None  
+
+            headers['Authorization'] = 'Bearer ' + get_token()
+            response = requests.request(method, url, timeout=30, **kwargs)
+
+        return response
+
+    except requests.exceptions.RequestException as e:
+        raise e  
+
+
 
 # Step #1, lets go get a token for the API
 print('Fetching a token from OAUTH...')
-token_response = requests.get(token_service, auth=HTTPBasicAuth(client_name, client_secret))
-# verify 200
-if token_response.status_code != 200:
-  sys.exit("Failed to fetch a token for WFDM. Response code was: " + str(token_response.status_code)) 
-
-token = token_response.json()['access_token']
-del token_response
+get_token()
 
 print('')
 print('-------------------------------------------------------')
@@ -38,8 +90,6 @@ print('Connect to WFDM API: ' + wfdm_api)
 print('-------------------------------------------------------')
 print('')
 
-def createDate_formatter(unformatted_date):
-  return unformatted_date.replace("T", " ").split(".")[0]
 
 # Define our Recursive function
 def enforce_createDate(document_id, page, row_count):
@@ -48,11 +98,16 @@ def enforce_createDate(document_id, page, row_count):
   # This will be recursive, so there's always a stack overflow risk here
   #print('Updating documents in the folder ' + document_id)
   url = docs_endpoint + doc_root + document_id + '&pageNumber=' + str(page) + '&pageRowCount=' + str(row_count) + '&orderBy=default%20ASC'
-  wfdm_docs_response = requests.get(url, headers={'Authorization': 'Bearer ' + token})
-  # verify 200
-  if wfdm_docs_response.status_code != 200:
-    print(wfdm_docs_response)
-    sys.exit("Failed to fetch from WFDM. Response code was: " + str(wfdm_docs_response.status_code))
+  try:
+    wfdm_docs_response = api_request("GET", url)
+    # verify 200
+    if wfdm_docs_response.status_code != 200:
+      print(f'Failed to fetch folder {document_id} page {page}: {wfdm_docs_response.status_code}, skipping...')
+      return 0
+  
+  except requests.exceptions.RequestException as e:
+      print(f"GET failed for folder {document_id} page {page}: {e}")
+      return 0
 
   wfdm_docs = wfdm_docs_response.json()
   del wfdm_docs_response
@@ -62,77 +117,103 @@ def enforce_createDate(document_id, page, row_count):
   for document in wfdm_docs['collection']:
     # Reload the document so we know we have a valid etag and meta records
     # print('Fetching Document ' + document['fileId'] + '...')
-    wfdm_doc_response = requests.get(docs_endpoint + '/' + document['fileId'], headers={'Authorization': 'Bearer ' + token})
+    wfdm_doc_response = api_request("GET", docs_endpoint + '/' + document['fileId'])
     # verify 200
     if wfdm_doc_response.status_code != 200:
       print(wfdm_doc_response)
-    else :  
+    else :
       # Pull out the fileId, this is our parent for WFDM
       doc_json = wfdm_doc_response.json()
       del wfdm_doc_response
-      # First, update the metadata records    
-      if doc_json['uploadedOnTimestamp'] != None and not any(x['metadataName'] == "DateCreated" for x in doc_json['metadata']):
+      # First, update the metadata records
+      if doc_json['fileType'] != 'DIRECTORY' and doc_json['uploadedOnTimestamp'] != None and not any(x['metadataName'] == "DateCreated" for x in doc_json['metadata']):
         print("Adding DateCreated to file " + doc_json['fileId'])
+        original_ts = get_original_timestamp(doc_json)
+
         date_created_values = {
           "@type": "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource",
           "metadataName": "DateCreated",
-          "metadataValue": createDate_formatter(doc_json['uploadedOnTimestamp']),
+          "metadataValue": createDate_formatter(original_ts),
           "metadataType": "STRING"
         }
         doc_json['metadata'].append(date_created_values)
         # Now that they type is updated, we can push in an update
-        wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
-        # verify 200
-        if wfdm_put_response.status_code != 200:
-          print(wfdm_put_response)
-          # Don't fail out here, just cary on
-        del wfdm_put_response
-      elif any(x['metadataName'] == "DateCreated" for x in doc_json['metadata']):
+        try:
+          wfdm_put_response = api_request("PUT", docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json), params={'metadataUpdate': 'true'}, headers={ 'content-type':'application/json'})
+          # verify 200
+          if wfdm_put_response.status_code != 200:
+            print(wfdm_put_response)
+            # Don't fail out here, just cary on
+          del wfdm_put_response
+        except requests.exceptions.RequestException as e:
+                print(f"PUT failed for file {document['fileId']}: {e}")
+                continue 
+      elif doc_json['fileType'] != 'DIRECTORY' and any(x['metadataName'] == "DateCreated" for x in doc_json['metadata']):
         for idx, metadata_item in enumerate(doc_json['metadata']):
-          if metadata_item['metadataName'] == 'DateCreated' and doc_json['uploadedOnTimestamp']:
+          if metadata_item['metadataName'] == 'DateCreated':
+            # use to compare the version 1 timestamp, to the date created metadata field
+            # if both exist and match we can skip updating
+            original_ts = get_original_timestamp(doc_json)
+            new_createdate_value = createDate_formatter(original_ts)
+            existing_createdate_value = metadata_item['metadataValue']
+
+            if existing_createdate_value == new_createdate_value:
+                        print(f"Skipping {doc_json['fileId']} (already correct)")
+                        break
+
+            doc_json['metadata'][idx]['metadataValue'] = new_createdate_value
             print(doc_json['metadata'][idx]['metadataValue'])
-            doc_json['metadata'][idx]['metadataValue'] = createDate_formatter(doc_json['uploadedOnTimestamp'])
-            print(doc_json['metadata'][idx]['metadataValue'])
-            wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
-        # verify 200
-            if wfdm_put_response.status_code != 200:
-              print(wfdm_put_response)
-            print('Formatted ' + doc_json['fileId'] + ' dateCreated value')
+            try:
+              wfdm_put_response = api_request("PUT", docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json), params={'metadataUpdate': 'true'}, headers={ 'content-type':'application/json'})
+              # verify 200
+              if wfdm_put_response.status_code != 200:
+                print(wfdm_put_response)
+              print('Formatted ' + doc_json['fileId'] + ' dateCreated value')
+            
+            except requests.exceptions.RequestException as e:
+                print(f"PUT failed for file {document['fileId']}: {e}")
+                continue 
+            break
 
 
       # then, if this is a directory, jump into it and update the documents it contains
       if document['fileType'] == 'DIRECTORY':
-        if threading.active_count() < 15:
-          threads = []
-          t = threading.Thread(target = enforce_createDate, args=(document['fileId'], 1, row_count))
-          threads.append(t)
-          for t in threads:
-            t.start()
-        else:
           enforce_createDate(document['fileId'], 1, row_count)
 
   # check if we need to page
   if wfdm_docs['totalPageCount'] > page:
     # Indeed we do
-    print('Thread count is ' + str(threading.active_count()))
     enforce_createDate(document_id, page + 1, row_count)
-  
+
   # Completed updates and exiting
   return 0
 
 # Step #2, now that we have a nice shiny new token, lets go fetch from WFDM why not
 # First though, we need to know our Root ID
-print('Fetching The WFDM Root Document...')
-wfdm_root_response = requests.get(doc_endpoint + wfdm_root, headers={'Authorization': 'Bearer ' + token})
-if wfdm_root_response.status_code != 200:
-  print(wfdm_root_response)
-  sys.exit("Failed to fetch from WFDM. Response code was: " + str(wfdm_root_response.status_code))
-# Pull out the fileId, this is our parent for WFDM
-root_id = wfdm_root_response.json()['fileId']
-del wfdm_root_response
-# start the metadata update
-print('... Done! Starting createDate append from root document ' + str(root_id))
-#enforce_createDate(root_id, 1, row_count)
-enforce_createDate(root_id, 1, row_count)
+# Root ID can be provided to run the script against a certain parent folder e.g. WFDM, WFFIN, WFHR, WFIM, WFPREV, WFRM, WFWX
+# Fallback to running against every file if Root ID is not provided
+if top_level_folder_id:
+    verify_response = api_request("GET", docs_endpoint + '/' + top_level_folder_id)
+    if verify_response.status_code != 200:
+        sys.exit(f"TOP_LEVEL_FOLDER_ID {top_level_folder_id} not found: {verify_response.status_code}")
+    print(f'Starting from folder {top_level_folder_id}')
+    enforce_createDate(top_level_folder_id, 1, row_count)
+else:
+    print('Fetching The WFDM Root Document...')
+    try:
+      wfdm_root_response = api_request("GET", doc_endpoint + wfdm_root)
+      if wfdm_root_response.status_code != 200:
+        print(wfdm_root_response)
+        sys.exit("Failed to fetch from WFDM. Response code was: " + str(wfdm_root_response.status_code))
 
+    except requests.exceptions.RequestException as e:
+        sys.exit(f"Root fetch failed: {e}")
+
+    # Pull out the fileId, this is our parent for WFDM
+    root_id = wfdm_root_response.json()['fileId']
+    del wfdm_root_response
+    # start the metadata update
+    print('... Done! Starting createDate append from root document ' + str(root_id))
+    #enforce_createDate(root_id, 1, row_count)
+    enforce_createDate(root_id, 1, row_count)
 

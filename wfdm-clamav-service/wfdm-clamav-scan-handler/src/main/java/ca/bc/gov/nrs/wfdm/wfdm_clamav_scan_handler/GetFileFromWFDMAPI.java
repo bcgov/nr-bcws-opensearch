@@ -51,20 +51,20 @@ public class GetFileFromWFDMAPI {
    * @return
    * @throws UnirestException
    */
-  public static String getFileInformation(String accessToken, String fileId) throws UnirestException {
+  public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
 
     if (detailsResponse.getStatus() == 200) {
-      return detailsResponse.getBody();
+      return detailsResponse;
     } else {
       return null;
     }
   }
 
   public static boolean setVirusScanMetadata(String accessToken, String fileId, String versionNumber,
-      JSONObject fileDetails, String status) throws UnirestException {
+      JSONObject fileDetails, String status, String Etag) throws UnirestException {
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
@@ -98,6 +98,7 @@ public class GetFileFromWFDMAPI {
     HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
         .header("Content-Type", "application/json")
         .header("Authorization", "Bearer " + accessToken)
+        .header("If-Match", Etag) 
         .body(fileDetails.toString())
         .asString();
 

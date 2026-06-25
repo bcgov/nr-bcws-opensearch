@@ -1,20 +1,27 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-FROM public.ecr.aws/lambda/python:3.8
+FROM public.ecr.aws/lambda/python:3.12
 LABEL name=lambda/python/clamav
-LABEL version=1.0
+LABEL version=2.0
 
 ARG CACHE_DATE=1
-RUN yum update -y \
-    && yum install -y amazon-linux-extras \
-    && PYTHON=python2 amazon-linux-extras install epel \
-    && yum -y install clamav clamd \
-    && yum clean all \
-    && pip3 install --no-cache-dir cffi awslambdaric boto3 requests aws-lambda-powertools \
-    && ln -s /etc/freshclam.conf /tmp/freshclam.conf
+
+RUN dnf update -y \
+ && dnf install -y \
+    clamav1.4 \
+    clamav1.4-update \
+    clamd1.4 \
+ && dnf clean all
+
+RUN pip3 install --no-cache-dir \
+    cffi \
+    awslambdaric \
+    boto3 \
+    requests \
+    aws-lambda-powertools
+
+RUN ln -s /etc/freshclam.conf /tmp/freshclam.conf
 
 COPY clamd.conf /etc/clamd.conf
 COPY lambda.py /var/task/lambda.py
+
 ENTRYPOINT [ "/var/lang/bin/python3", "-m", "awslambdaric" ]
 CMD [ "lambda.lambda_handler" ]
