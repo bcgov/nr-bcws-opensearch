@@ -12,6 +12,7 @@ locals {
   document_token_url = "https://wfappsi.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackDEV"
   clamstackQueue = "WfdmClamavStackDEV-wfdmClamscanQueuedev996064D1-S0cXn3C4pJK4"
+  reverse_proxy_ip = get_env("reverse_proxy_ip")
 }
 
 generate "backend" {
@@ -47,6 +48,7 @@ generate "inputs" {
   secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
   opensearch_user = "${local.opensearch_user}"
   opensearch_password = "${local.opensearch_password}"
+  reverse_proxy_ip = "${local.reverse_proxy_ip}"
   ElasticSearch_Version = "OpenSearch_2.5"
 EOF
 }

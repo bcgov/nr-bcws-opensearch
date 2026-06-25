@@ -14,6 +14,7 @@ locals {
   clamstackQueue = "WfdmClamavStackINT-wfdmClamscanQueueintC7DDA541-4i0O18IjJgs0"
   opensearch_password = get_env("opensearch_password")
   opensearch_user = get_env("opensearch_user")
+  reverse_proxy_ip = get_env("reverse_proxy_ip")
 }
 
 generate "backend" {
@@ -49,6 +50,7 @@ generate "inputs" {
   secret_manager_name = "WFDM_DOC_INDEX_ACCOUNT_PASSWORD_${local.target_env}"
   opensearch_user = "${local.opensearch_user}"
   opensearch_password = "${local.opensearch_password}"
+  reverse_proxy_ip = "${local.reverse_proxy_ip}"
   ElasticSearch_Version = "OpenSearch_2.5"
 EOF
 }

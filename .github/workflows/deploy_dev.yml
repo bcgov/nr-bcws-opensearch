@@ -98,4 +98,5 @@ jobs:
           app_image: ${{ env.IMAGE_ID }}:${{ github.event.workflow_run.head_branch}}
           opensearch_password: ${{ secrets.OPENSEARCH_PASSWORD_DEV }}
           opensearch_user: ${{ secrets.OPENSEARCH_USER_DEV }}
+          reverse_proxy_ip: ${{ vars.REVERSE_PROXY_IP}}
         run: terragrunt run-all apply --terragrunt-non-interactive
