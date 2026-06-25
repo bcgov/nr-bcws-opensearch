@@ -359,7 +359,7 @@ resource "aws_iam_role_policy_attachment" "policy_attach_clamav_sqs" {
   policy_arn = data.aws_iam_policy.sqs-full-access-policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "policy_attach_lambda_initializer_vpc_execution" {
+resource "aws_iam_role_policy_attachment" "policy_attach_lambda_clamav_vpc_execution" {
   role       = aws_iam_role.lambda_clamav_role.name
   policy_arn = data.aws_iam_policy.lambda-vpc-access-execution.arn
 }
