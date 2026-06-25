@@ -45,9 +45,9 @@
     "@types/node": "^18",
     "@typescript-eslint/eslint-plugin": "^5",
     "@typescript-eslint/parser": "^5",
-    "aws-cdk-lib": "2.12.0",
+    "aws-cdk-lib": "^2.246.0",
     "cdk-nag": "2.12.0",
-    "constructs": "10.0.5",
+    "constructs": "^10.6.0",
     "eslint": "^8",
     "eslint-import-resolver-node": "^0.3.6",
     "eslint-import-resolver-typescript": "^2.5.0",
@@ -58,14 +58,18 @@
     "jsii-diff": "^1.52.1",
     "jsii-docgen": "^1.8.110",
     "json-schema": "^0.4.0",
-    "npm-check-updates": "^12",
     "projen": "^0.52.21",
     "standard-version": "^9",
     "ts-jest": "^26.5.6",
     "typescript": "^3.9.10"
   },
-    "overrides": {
-    "form-data": "^4.0.0"
+  "overrides": {
+    "form-data": "^4.0.0",
+    "braces": "3.0.3",
+    "minimatch": "3.1.5",
+    "uuid": "11.1.1",
+    "js-yaml": "4.2.0",
+    "@tootallnate/once": "2.0.1"
   },
   "homepage": "https://github.com/awslabs/cdk-serverless-clamscan#readme",
   "jest": {
