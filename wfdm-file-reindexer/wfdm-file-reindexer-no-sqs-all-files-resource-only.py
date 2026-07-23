@@ -61,7 +61,7 @@ def reindex_wfdm(document_id, page, row_count):
     if wfdm_docs_response is None or wfdm_docs_response.status_code != 200:
         status = wfdm_docs_response.status_code if wfdm_docs_response else 'timeout'
         print(f'Failed to fetch folder {document_id} page {page}: {status}, skipping...')
-        return 0
+        return
 
     wfdm_docs = wfdm_docs_response.json()
     del wfdm_docs_response
@@ -86,8 +86,6 @@ def reindex_wfdm(document_id, page, row_count):
 
     if wfdm_docs['totalPageCount'] > page:
         reindex_wfdm(document_id, page + 1, row_count)
-
-    return 0
 
 get_token()
 
