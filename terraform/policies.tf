@@ -1,18 +1,3 @@
-resource "aws_iam_policy" "clamav-s3-permission" {
-  name   = "${var.application}-clamav-s3-permission-${var.env}"
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "s3:*",
-            "Resource": "*"
-        }
-    ]
-}
-  EOF
-}
 
 
 resource "aws_iam_policy" "elasticsearch-access" {
