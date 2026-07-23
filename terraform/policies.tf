@@ -58,11 +58,11 @@ resource "aws_iam_policy" "sns-publish" {
             "Action": [
                 "sns:*"
             ],
-            "Resource": "*"
+            "Resource": "arn:aws:sns:ca-central-1:${data.aws_caller_identity.current.account_id}:WFDM_CLAMAV_EMAIL_NOTIFICATION"
         }
     ]
-  }
-  EOF
+}
+EOF
 }
 
 resource "aws_iam_policy" "sqs-lambda-permission" {
