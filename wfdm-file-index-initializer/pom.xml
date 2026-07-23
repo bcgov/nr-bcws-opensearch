@@ -14,13 +14,36 @@
 	<maven.compiler.target>21</maven.compiler.target>
 	<aws.java.sdk.version>2.14.11</aws.java.sdk.version>
  </properties>
-	<dependencies>
-		<dependency>
-			<groupId>ca.bc.gov.nrs.wfdm</groupId>
-			<artifactId>aws-lambda-layer-base</artifactId>
-			<version>1.0</version>
-		</dependency>
-	</dependencies>
+<dependencies>
+    <dependency>
+        <groupId>ca.bc.gov.nrs.wfdm</groupId>
+        <artifactId>aws-lambda-layer-base</artifactId>
+        <version>1.0</version>
+    </dependency>
+
+    <!-- JUnit 5 -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.10.2</version>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- Mockito -->
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>5.11.0</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-inline</artifactId>
+        <version>5.2.0</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
 	<build>
 		<plugins>
 			<plugin>
@@ -30,6 +53,11 @@
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
 			</plugin>
 		</plugins>
 	</build>

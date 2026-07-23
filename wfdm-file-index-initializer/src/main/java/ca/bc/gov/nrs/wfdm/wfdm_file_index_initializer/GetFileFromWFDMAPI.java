@@ -62,14 +62,13 @@ public class GetFileFromWFDMAPI {
     }
   }
 
-  public static boolean setVirusScanMetadata(String accessToken, String fileId, String versionNumber,
-      JSONObject fileDetails, String Etag) throws UnirestException {
+  static void updateVirusScanMetadata(JSONObject fileDetails, String versionNumber) {
 
-    
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
       String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+
       if (metadataName.equalsIgnoreCase("WFDMScanStatus-" + versionNumber)) {
         metaArray.remove(i);
         break;
@@ -81,7 +80,39 @@ public class GetFileFromWFDMAPI {
     meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
     meta.put("metadataName", "WFDMScanStatus-" + versionNumber);
     meta.put("metadataValue", "PENDING");
+
     metaArray.put(meta);
+  }
+
+  static void updateImageConversionMetadata(JSONObject fileDetails, String versionNumber, String conversionStatus) {
+
+    JSONArray metaArray = fileDetails.getJSONArray("metadata");
+
+    // Locate any existing conversion meta and remove
+    for (int i = 0; i < metaArray.length(); i++) {
+      String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+
+      if (metadataName.equalsIgnoreCase("WFDMConversionStatus-" + versionNumber)) {
+        metaArray.remove(i);
+        break;
+      }
+    }
+
+    // inject conversion meta
+    JSONObject meta = new JSONObject();
+    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
+    meta.put("metadataName", "WFDMConversionStatus-" + versionNumber);
+    meta.put("metadataValue", conversionStatus);
+
+    metaArray.put(meta);
+  }
+
+
+
+  public static boolean setVirusScanMetadata(String accessToken, String fileId, String versionNumber,
+      JSONObject fileDetails, String Etag) throws UnirestException {
+
+    updateVirusScanMetadata(fileDetails, versionNumber);
 
     // PUT the changes
     HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
@@ -96,30 +127,16 @@ public class GetFileFromWFDMAPI {
 
 public static void setImageConversionMetadata(String accessToken, String fileId, String versionNumber,
   JSONObject fileDetails, String conversionStatus, String Etag) throws UnirestException {
-JSONArray metaArray = fileDetails.getJSONArray("metadata");
-// Locate any existing scan meta and remove
-for (int i = 0; i < metaArray.length(); i++) {
-  String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-  if (metadataName.equalsIgnoreCase("WFDMConversionStatus-" + versionNumber)) {
-    metaArray.remove(i);
-    break;
-  }
-}
 
-// inject scan meta
-JSONObject meta = new JSONObject();
-meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-meta.put("metadataName", "WFDMConversionStatus-" + versionNumber);
-meta.put("metadataValue", conversionStatus);
-metaArray.put(meta);
+  updateImageConversionMetadata(fileDetails, versionNumber, conversionStatus);
 
-// PUT the changes
-HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
-    .header("Content-Type", "application/json")
-    .header("Authorization", "Bearer " + accessToken)
-    .header("If-Match", Etag) 
-    .body(fileDetails.toString())
-    .asString();
+  // PUT the changes
+  HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
+      .header("Content-Type", "application/json")
+      .header("Authorization", "Bearer " + accessToken)
+      .header("If-Match", Etag) 
+      .body(fileDetails.toString())
+      .asString();
 
 }
 
