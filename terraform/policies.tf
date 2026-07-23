@@ -75,7 +75,10 @@ resource "aws_iam_policy" "sqs-lambda-permission" {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": "sqs:*",
-            "Resource": "*"
+            "Resource": [
+                "${aws_sqs_queue.queue.arn}",
+                "${aws_sqs_queue.deadletter.arn}"
+            ]
         }
     ]
 }
