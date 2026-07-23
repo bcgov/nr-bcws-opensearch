@@ -1,18 +1,3 @@
-resource "aws_iam_policy" "clamav-s3-permission" {
-  name   = "${var.application}-clamav-s3-permission-${var.env}"
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": "s3:*",
-            "Resource": "*"
-        }
-    ]
-}
-  EOF
-}
 
 
 resource "aws_iam_policy" "elasticsearch-access" {
@@ -25,7 +10,10 @@ resource "aws_iam_policy" "elasticsearch-access" {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": "es:*",
-            "Resource": "*"
+            "Resource": [
+                "${aws_elasticsearch_domain.main_elasticsearch_domain.arn}",
+                "${aws_elasticsearch_domain.main_elasticsearch_domain.arn}/*"
+            ]
         }
     ]
 }
@@ -70,11 +58,11 @@ resource "aws_iam_policy" "sns-publish" {
             "Action": [
                 "sns:*"
             ],
-            "Resource": "*"
+            "Resource": "arn:aws:sns:ca-central-1:${data.aws_caller_identity.current.account_id}:WFDM_CLAMAV_EMAIL_NOTIFICATION"
         }
     ]
-  }
-  EOF
+}
+EOF
 }
 
 resource "aws_iam_policy" "sqs-lambda-permission" {
@@ -87,7 +75,10 @@ resource "aws_iam_policy" "sqs-lambda-permission" {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": "sqs:*",
-            "Resource": "*"
+            "Resource": [
+                "${aws_sqs_queue.queue.arn}",
+                "${aws_sqs_queue.deadletter.arn}"
+            ]
         }
     ]
 }
