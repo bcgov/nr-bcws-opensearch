@@ -10,7 +10,10 @@ resource "aws_iam_policy" "elasticsearch-access" {
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": "es:*",
-            "Resource": "*"
+            "Resource": [
+                "${aws_elasticsearch_domain.main_elasticsearch_domain.arn}",
+                "${aws_elasticsearch_domain.main_elasticsearch_domain.arn}/*"
+            ]
         }
     ]
 }
