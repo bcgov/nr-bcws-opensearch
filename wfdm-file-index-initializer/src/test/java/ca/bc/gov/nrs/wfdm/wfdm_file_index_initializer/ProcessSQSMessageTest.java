@@ -38,7 +38,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldHandleNullEvent() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -53,7 +56,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldHandleNullRecords() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -71,7 +77,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldReturnNullForInvalidFileId() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -265,7 +274,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldAddBatchFailureWhenAccessTokenCannotBeRetrieved() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -307,7 +319,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldAddBatchFailureWhenFileInformationCannotBeRetrieved() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -355,7 +370,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldInvokeImageConverterForHeicFile() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -446,7 +464,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldAbortImageConversionForLargeHeicFileInHandler() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -543,7 +564,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldInvokeIndexingLambdaForMetaEvent() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
@@ -635,7 +659,10 @@ class ProcessSQSMessageTest {
     @Test
     void shouldProcessBytesEvent() {
 
-        ProcessSQSMessage handler = new ProcessSQSMessage();
+        ProcessSQSMessage handler = Mockito.spy(
+        new ProcessSQSMessage());
+
+        Mockito.doNothing().when(handler).delayProcessing();
 
         Context context = mock(Context.class);
         LambdaLogger logger = mock(LambdaLogger.class);
