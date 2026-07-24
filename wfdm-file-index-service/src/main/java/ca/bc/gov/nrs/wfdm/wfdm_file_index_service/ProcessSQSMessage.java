@@ -41,6 +41,49 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
+  protected String getBucketName() {
+    return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
+  }
+
+  protected String getSecretManagerName() {
+    return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
+  }
+
+  protected OpenSearchRESTClient createOpenSearchClient() {
+    return new OpenSearchRESTClient();
+  }
+
+  protected String retrieveSecret(String secretName) {
+    return RetrieveSecret.RetrieveSecretValue(secretName);
+  }
+
+  protected String getAccessToken(String clientId, String password)
+      throws Exception {
+    return GetFileFromWFDMAPI.getAccessToken(clientId, password);
+  }
+
+  protected HttpResponse<String> getFileInformation(
+      String token,
+      String fileId)
+      throws Exception {
+    return GetFileFromWFDMAPI.getFileInformation(token, fileId);
+  }
+
+  protected boolean setIndexedMetadata(
+      String token,
+      String fileId,
+      String versionNumber,
+      JSONObject fileDetailsJson,
+      String etag)
+      throws Exception {
+    return GetFileFromWFDMAPI.setIndexedMetadata(
+        token,
+        fileId,
+        versionNumber,
+        fileDetailsJson,
+        etag);
+  }
+
   @Override
   public String handleRequest(Map<String, Object> event, Context context) {
     LambdaLogger logger = context.getLogger();

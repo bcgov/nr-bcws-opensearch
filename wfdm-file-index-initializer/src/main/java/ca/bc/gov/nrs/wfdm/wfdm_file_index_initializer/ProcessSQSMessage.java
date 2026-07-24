@@ -43,6 +43,88 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
+  static boolean isValidFileId(String fileId) {
+    return fileId.chars().allMatch(Character::isDigit);
+  }
+
+  static String getEventType(JSONObject messageDetails) {
+    if (messageDetails.has("eventType")) {
+      return messageDetails.getString("eventType");
+    }
+
+    return "meta";
+  }
+
+  static boolean isHeicOrHeif(String fileExtension) {
+    return fileExtension.equals("HEIC") || fileExtension.equals("HEIF");
+  }
+
+  static String getMimeType(JSONObject fileDetailsJson) {
+    if (fileDetailsJson.has("mimeType")) {
+      return fileDetailsJson.get("mimeType").toString();
+    }
+
+    return "";
+  }
+
+  static String getFileExtension(JSONObject fileDetailsJson) {
+    if (fileDetailsJson.has("fileExtension")) {
+      return fileDetailsJson.get("fileExtension").toString().toUpperCase();
+    }
+
+    return "";
+  }
+
+  static boolean isFileTooLargeToConvert(JSONObject fileDetailsJson) {
+    if (!fileDetailsJson.has("fileSize")) {
+      return false;
+    }
+
+    int fileSize = Integer.parseInt(fileDetailsJson.get("fileSize").toString());
+
+    return fileSize > 10000000;
+  }
+
+  static boolean shouldAbortImageConversion(boolean fileTooLargeToConvert, boolean isHeicOrHeif) {
+    return fileTooLargeToConvert && isHeicOrHeif;
+  }
+
+  static boolean shouldInvokeImageConverter( boolean fileTooLargeToConvert, boolean isHeicOrHeif) {
+    return isHeicOrHeif && !fileTooLargeToConvert;
+  }
+
+  static AWSLambda createLambdaClient() {
+      return AWSLambdaAsyncClient.builder()
+              .withRegion(region)
+              .build();
+  }
+
+  static String getSecretManagerName() {
+    return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
+  }
+
+  static String getImageConverterLambdaName() {
+    return System.getenv(
+            "WFDM_IMAGE_CONVERTER_LAMBDA_NAME");
+  }
+
+  static String getIndexingLambdaName() {
+    return System.getenv("WFDM_INDEXING_LAMBDA_NAME");
+  }
+
+  static AmazonS3 createS3Client() {
+    return AmazonS3ClientBuilder
+            .standard()
+            .withCredentials(credentialsProvider)
+            .withRegion(region)
+            .build();
+  }
+
+  static String getClamAvBucketName() {
+    return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
+  }
+
+
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LambdaLogger logger = context.getLogger();
@@ -208,85 +290,5 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     return new SQSBatchResponse(batchItemFailures);
   }
 
-  static boolean isValidFileId(String fileId) {
-    return fileId.chars().allMatch(Character::isDigit);
-  }
-
-  static String getEventType(JSONObject messageDetails) {
-    if (messageDetails.has("eventType")) {
-      return messageDetails.getString("eventType");
-    }
-
-    return "meta";
-  }
-
-  static boolean isHeicOrHeif(String fileExtension) {
-    return fileExtension.equals("HEIC") || fileExtension.equals("HEIF");
-  }
-
-  static String getMimeType(JSONObject fileDetailsJson) {
-    if (fileDetailsJson.has("mimeType")) {
-      return fileDetailsJson.get("mimeType").toString();
-    }
-
-    return "";
-  }
-
-  static String getFileExtension(JSONObject fileDetailsJson) {
-    if (fileDetailsJson.has("fileExtension")) {
-      return fileDetailsJson.get("fileExtension").toString().toUpperCase();
-    }
-
-    return "";
-  }
-
-  static boolean isFileTooLargeToConvert(JSONObject fileDetailsJson) {
-    if (!fileDetailsJson.has("fileSize")) {
-      return false;
-    }
-
-    int fileSize = Integer.parseInt(fileDetailsJson.get("fileSize").toString());
-
-    return fileSize > 10000000;
-  }
-
-  static boolean shouldAbortImageConversion(boolean fileTooLargeToConvert, boolean isHeicOrHeif) {
-    return fileTooLargeToConvert && isHeicOrHeif;
-  }
-
-  static boolean shouldInvokeImageConverter( boolean fileTooLargeToConvert, boolean isHeicOrHeif) {
-    return isHeicOrHeif && !fileTooLargeToConvert;
-  }
-
-  static AWSLambda createLambdaClient() {
-      return AWSLambdaAsyncClient.builder()
-              .withRegion(region)
-              .build();
-  }
-
-  static String getSecretManagerName() {
-    return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
-  }
-
-  static String getImageConverterLambdaName() {
-    return System.getenv(
-            "WFDM_IMAGE_CONVERTER_LAMBDA_NAME");
-  }
-
-  static String getIndexingLambdaName() {
-    return System.getenv("WFDM_INDEXING_LAMBDA_NAME");
-  }
-
-  static AmazonS3 createS3Client() {
-    return AmazonS3ClientBuilder
-            .standard()
-            .withCredentials(credentialsProvider)
-            .withRegion(region)
-            .build();
-  }
-
-  static String getClamAvBucketName() {
-    return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
-  }
 
 }

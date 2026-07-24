@@ -29,7 +29,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static String getAccessToken(String client, String password) throws UnirestException {
-    HttpResponse<JsonNode> httpResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_TOKEN_URL").trim())
+    HttpResponse<JsonNode> httpResponse = Unirest.get(getTokenUrl().trim())
         .basicAuth(client, password)
         .asJson();
 
@@ -51,7 +51,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
-    HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
+    HttpResponse<String> detailsResponse = Unirest.get(getApiUrl().trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
 
@@ -115,7 +115,7 @@ public class GetFileFromWFDMAPI {
     updateVirusScanMetadata(fileDetails, versionNumber);
 
     // PUT the changes
-    HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
+    HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
         .header("Content-Type", "application/json")
         .header("Authorization", "Bearer " + accessToken)
         .header("If-Match", Etag) 
@@ -131,7 +131,7 @@ public static void setImageConversionMetadata(String accessToken, String fileId,
   updateImageConversionMetadata(fileDetails, versionNumber, conversionStatus);
 
   // PUT the changes
-  HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
+  HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
       .header("Content-Type", "application/json")
       .header("Authorization", "Bearer " + accessToken)
       .header("If-Match", Etag) 
@@ -151,8 +151,7 @@ public static void setImageConversionMetadata(String accessToken, String fileId,
    */
   public static BufferedInputStream getFileStream(String accessToken, String fileId, String versionNumber)
       throws UnirestException {
-    HttpResponse<InputStream> bytesResponse = Unirest
-        .get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId + "/bytes?versionNumber=" + versionNumber)
+    HttpResponse<InputStream> bytesResponse = Unirest.get(getApiUrl().trim() + fileId + "/bytes?versionNumber=" + versionNumber)
         .header("Accept", "*/*")
         .header("Authorization", "Bearer " + accessToken)
         .asBinary();
@@ -162,4 +161,13 @@ public static void setImageConversionMetadata(String accessToken, String fileId,
       return null;
     }
   }
+
+  static String getTokenUrl() {
+    return System.getenv("WFDM_DOCUMENT_TOKEN_URL");
+  }
+
+  static String getApiUrl() {
+      return System.getenv("WFDM_DOCUMENT_API_URL");
+  }
+
 }
