@@ -46,7 +46,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LambdaLogger logger = context.getLogger();
-    String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
+    
     List<SQSBatchResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();
     String messageBody = "";
 
@@ -74,24 +74,19 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         JSONObject messageDetails = new JSONObject(messageBody);
         String fileId = messageDetails.getString("fileId");
         
-        boolean isNumeric = fileId.chars().allMatch( Character::isDigit );
-        if(!isNumeric) {
+        if (!isValidFileId(fileId)){
         	logger.log("\nInfo: file id is not valid"+fileId);
         	return null;
         }
 
         // Where will we receive the event type? Message Body or attributes?
-        String eventType;
-        if (messageDetails.has("eventType")){
-          eventType = messageDetails.getString("eventType");
-        } else {
-          eventType = "meta";
-        }
+        String eventType = getEventType(messageDetails);
+
         logger.log("file id and event Type: "+fileId+" "+eventType);
 
         String versionNumber = messageDetails.getString("fileVersionNumber");
 
-        String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
+        String wfdmSecretName = getSecretManagerName().trim();
         String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
         String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
         String CLIENT_ID = secretCD[0];
@@ -116,43 +111,26 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         JSONObject fileDetailsJson = new JSONObject(fileInfo);
 
-        String mimeType;
-        if (fileDetailsJson.has("mimeType") ){
-          mimeType = fileDetailsJson.get("mimeType").toString();
-        } else {
-          mimeType = "";
-        }
+        String mimeType = getMimeType(fileDetailsJson);
         
-        String fileExtension;
-        if (fileDetailsJson.has("fileExtension")) {
-          fileExtension = fileDetailsJson.get("fileExtension").toString().toUpperCase();
-        } else {
-          fileExtension = "";
-        }
+        String fileExtension = getFileExtension(fileDetailsJson);
 
-        Integer fileSize;
-        boolean fileTooLargeToConvert = false;
-        if (fileDetailsJson.has("fileSize")) {
-          fileSize = Integer.parseInt(fileDetailsJson.get("fileSize").toString());
-          if (fileSize > 10000000) {
-            fileTooLargeToConvert = true;
-          }
-        }
-        boolean isHeicOrHeif = fileExtension.equals("HEIC") || fileExtension.equals("HEIF");
+        boolean fileTooLargeToConvert = isFileTooLargeToConvert(fileDetailsJson);
 
-        if (fileTooLargeToConvert && isHeicOrHeif) {
+        boolean isHeicOrHeif = isHeicOrHeif(fileExtension);
+
+        if (shouldAbortImageConversion( fileTooLargeToConvert, isHeicOrHeif)) {
           GetFileFromWFDMAPI.setImageConversionMetadata(wfdmToken, fileId, versionNumber,
           fileDetailsJson, "Image Conversion aborted due to file size", etag);
         }
         // if a file has a heic or heif mimetype it needs to be converted by the image
         // conversion lambda rather than processed
-        if (isHeicOrHeif && !fileTooLargeToConvert) {
+        if (shouldInvokeImageConverter(fileTooLargeToConvert, isHeicOrHeif)) {
           logger.log("\nInfo: File with mimeType of " + mimeType + " calling image conversion lambda");
-          AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+          AWSLambda client = createLambdaClient();
           InvokeRequest request = new InvokeRequest();
-          request.withFunctionName(System.getenv("WFDM_IMAGE_CONVERTER_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
+          request.withFunctionName(getImageConverterLambdaName().trim()).withPayload(fileDetailsJson.toString());
           InvokeResult invoke = client.invoke(request);
-
         } else {
 
           // Check the event type. If this is a BYTES event, write the bytes
@@ -176,6 +154,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
                 .build();
 
             Bucket clamavBucket = null;
+            String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
+
             List<Bucket> buckets = s3client.listBuckets();
             for (Bucket bucket : buckets) {
               if (bucket.getName().equalsIgnoreCase(bucketName)) {
@@ -199,19 +179,19 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           }
           //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
           else if (eventType.equalsIgnoreCase("meta") && (fileDetailsJson.get("mimeType").toString().equals("null"))) {
-            AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+            AWSLambda client = createLambdaClient();
             InvokeRequest request = new InvokeRequest();
-            request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim())
+            request.withFunctionName(getIndexingLambdaName().trim())
                 .withPayload(fileDetailsJson.toString());
             InvokeResult invoke = client.invoke(request);
 
           } else {
             // Meta only update, so fire a message to the Indexer Lambda
-            logger.log("Calling lambda name: " + System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim() + " lambda: "
+            logger.log("Calling lambda name: " + getIndexingLambdaName().trim() + " lambda: "
                 + messageBody);
-            AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+            AWSLambda client = createLambdaClient();
             InvokeRequest request = new InvokeRequest();
-            request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(messageBody);
+            request.withFunctionName(getIndexingLambdaName().trim()).withPayload(messageBody);
             InvokeResult invoke = client.invoke(request);
           }
         }
@@ -231,4 +211,74 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     logger.log("\nInfo: Close SQS batch");
     return new SQSBatchResponse(batchItemFailures);
   }
+
+  static boolean isValidFileId(String fileId) {
+    return fileId.chars().allMatch(Character::isDigit);
+  }
+
+  static String getEventType(JSONObject messageDetails) {
+    if (messageDetails.has("eventType")) {
+      return messageDetails.getString("eventType");
+    }
+
+    return "meta";
+  }
+
+  static boolean isHeicOrHeif(String fileExtension) {
+    return fileExtension.equals("HEIC") || fileExtension.equals("HEIF");
+  }
+
+  static String getMimeType(JSONObject fileDetailsJson) {
+    if (fileDetailsJson.has("mimeType")) {
+      return fileDetailsJson.get("mimeType").toString();
+    }
+
+    return "";
+  }
+
+  static String getFileExtension(JSONObject fileDetailsJson) {
+    if (fileDetailsJson.has("fileExtension")) {
+      return fileDetailsJson.get("fileExtension").toString().toUpperCase();
+    }
+
+    return "";
+  }
+
+  static boolean isFileTooLargeToConvert(JSONObject fileDetailsJson) {
+    if (!fileDetailsJson.has("fileSize")) {
+      return false;
+    }
+
+    int fileSize = Integer.parseInt(fileDetailsJson.get("fileSize").toString());
+
+    return fileSize > 10000000;
+  }
+
+  static boolean shouldAbortImageConversion(boolean fileTooLargeToConvert, boolean isHeicOrHeif) {
+    return fileTooLargeToConvert && isHeicOrHeif;
+  }
+
+  static boolean shouldInvokeImageConverter( boolean fileTooLargeToConvert, boolean isHeicOrHeif) {
+    return isHeicOrHeif && !fileTooLargeToConvert;
+  }
+
+  static AWSLambda createLambdaClient() {
+      return AWSLambdaAsyncClient.builder()
+              .withRegion(region)
+              .build();
+  }
+
+  static String getSecretManagerName() {
+    return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
+  }
+
+  static String getImageConverterLambdaName() {
+    return System.getenv(
+            "WFDM_IMAGE_CONVERTER_LAMBDA_NAME");
+  }
+
+  static String getIndexingLambdaName() {
+    return System.getenv("WFDM_INDEXING_LAMBDA_NAME");
+  }
+
 }
