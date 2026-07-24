@@ -36,6 +36,58 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
+  protected String getSecretManagerName() {
+    return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
+  }
+
+  protected String getIndexingLambdaName() {
+    return System.getenv("WFDM_INDEXING_LAMBDA_NAME");
+  }
+
+  protected String retrieveSecret(String secretName) {
+    return RetrieveSecret.RetrieveSecretValue(secretName);
+  }
+
+  protected String getAccessToken(String clientId, String password)
+      throws Exception {
+    return GetFileFromWFDMAPI.getAccessToken(clientId, password);
+  }
+
+  protected HttpResponse<String> getFileInformation(
+      String token,
+      String fileId)
+      throws Exception {
+    return GetFileFromWFDMAPI.getFileInformation(token, fileId);
+  }
+
+  protected boolean setVirusScanMetadata(
+      String token,
+      String fileId,
+      String versionNumber,
+      JSONObject fileDetailsJson,
+      String status,
+      String etag)
+      throws Exception {
+
+    return GetFileFromWFDMAPI.setVirusScanMetadata(
+        token,
+        fileId,
+        versionNumber,
+        fileDetailsJson,
+        status,
+        etag);
+  }
+
+  protected void publishVirusNotification(JSONObject messageDetails) {
+    SendSNSNotification.publicshMessagetoSNS(messageDetails);
+  }
+
+  protected AWSLambda createLambdaClient() {
+
+    return AWSLambdaAsyncClient.builder()
+        .withRegion(region)
+        .build();
+  }
 
   @Override
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
@@ -59,7 +111,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         String status = messageDetails.getJSONObject("responsePayload").getString("status");
         //if status is infected send an email to SNS topic
 		if (status.equals("INFECTED")) {
-			SendSNSNotification.publicshMessagetoSNS(messageDetails);
+			publishVirusNotification(messageDetails);
 		}
         
         if(!inputKey.contains("-")) {
@@ -72,8 +124,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
         // Should come for preferences, Client ID and secret for authentication with
         // WFDM
-        String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
-        String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
+        String wfdmSecretName = getSecretManagerName().trim();
+        String secret = retrieveSecret(wfdmSecretName);
         String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
   	  	String CLIENT_ID = secretCD[0];
   	  	String PASSWORD = secretCD[1];
@@ -83,11 +135,11 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         // aren't in a cache slowly getting stale. Could be replaced by a check token
         // and
         // a cached token
-        String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
+        String wfdmToken = getAccessToken(CLIENT_ID, PASSWORD);
         if (wfdmToken == null)
           throw new Exception("Could not authorize access for WFDM");
 
-        HttpResponse<String>fileResponse = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+        HttpResponse<String> fileResponse = getFileInformation(wfdmToken, fileId);
 
         if (fileResponse == null) {
           throw new Exception("File not found!");
@@ -99,7 +151,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           logger.log("\nInfo: File found on WFDM: " + fileInfo);
           // Update Virus scan metadata
           // Note, current user likely lacks access to update metadata so we'll need to update webade
-          boolean metaAdded = GetFileFromWFDMAPI.setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, status, etag);
+          boolean metaAdded = setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, status, etag);
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?
@@ -107,7 +159,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
           }
 
           // Meta only update, so fire a message to the Indexer Lambda
-          AWSLambda client = AWSLambdaAsyncClient.builder().withRegion(region).build();
+          AWSLambda client = createLambdaClient();
 
           // ensure the default eventType of "Bytes" is appended
           // so the tika parser lambda knows to check for data
@@ -117,9 +169,12 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
           fileDetailsJson.put("status", status);
           fileDetailsJson.put("message", summary);
-          logger.log("\n Calling lambda name: "+System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()+" Lambda. "+fileDetailsJson.toString());
+
+          logger.log("\n Calling lambda name: " + getIndexingLambdaName().trim() + " Lambda. " + fileDetailsJson.toString());
+          
           InvokeRequest request = new InvokeRequest();
-          request.withFunctionName(System.getenv("WFDM_INDEXING_LAMBDA_NAME").trim()).withPayload(fileDetailsJson.toString());
+
+          request.withFunctionName(getIndexingLambdaName().trim()).withPayload(fileDetailsJson.toString());
           InvokeResult invoke = client.invoke(request);
         }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {

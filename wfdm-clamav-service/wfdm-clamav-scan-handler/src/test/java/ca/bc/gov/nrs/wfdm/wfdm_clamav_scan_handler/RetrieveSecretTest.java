@@ -1,16 +1,14 @@
-package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
+package ca.bc.gov.nrs.wfdm.wfdm_clamav_scan_handler;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
+import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 
 class RetrieveSecretTest {
 
@@ -21,21 +19,20 @@ class RetrieveSecretTest {
                 mock(AWSSecretsManager.class);
 
         GetSecretValueResult result =
-                new GetSecretValueResult();
-
-        result.setSecretString("secret-value");
+                new GetSecretValueResult()
+                        .withSecretString("secret");
 
         when(client.getSecretValue(any()))
                 .thenReturn(result);
 
-        String secret =
+        String value =
                 RetrieveSecret.getValue(
                         client,
-                        "my-secret");
+                        "test");
 
         assertEquals(
-                "secret-value",
-                secret);
+                "secret",
+                value);
     }
 
     @Test
@@ -50,56 +47,28 @@ class RetrieveSecretTest {
         when(client.getSecretValue(any()))
                 .thenReturn(result);
 
-        String secret =
+        assertNull(
                 RetrieveSecret.getValue(
                         client,
-                        "my-secret");
-
-        assertNull(secret);
+                        "test"));
     }
 
     @Test
-    void shouldRetrieveSecretValue() {
+    void shouldThrowResourceNotFoundException() {
 
-        try (
-            MockedStatic<AWSSecretsManagerClientBuilder> builderMock =
-                mockStatic(AWSSecretsManagerClientBuilder.class);
-            MockedStatic<RetrieveSecret> secretMock =
-                mockStatic(
-                    RetrieveSecret.class,
-                    Mockito.CALLS_REAL_METHODS)
-        ) {
+        AWSSecretsManager client =
+                mock(AWSSecretsManager.class);
 
-            AWSSecretsManagerClientBuilder builder =
-                    mock(AWSSecretsManagerClientBuilder.class);
+        when(client.getSecretValue(any()))
+                .thenThrow(
+                        new ResourceNotFoundException(
+                                "missing"));
 
-            AWSSecretsManager client =
-                    mock(AWSSecretsManager.class);
-
-            builderMock.when(
-                    AWSSecretsManagerClientBuilder::standard)
-                    .thenReturn(builder);
-
-            when(builder.withRegion("ca-central-1"))
-                    .thenReturn(builder);
-
-            when(builder.build())
-                    .thenReturn(client);
-
-            secretMock.when(
-                    () -> RetrieveSecret.getValue(
-                            client,
-                            "secret"))
-                    .thenReturn("value");
-
-            String result =
-                    RetrieveSecret.RetrieveSecretValue(
-                            "secret");
-
-            assertEquals(
-                    "value",
-                    result);
-        }
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> RetrieveSecret.getValue(
+                        client,
+                        "test"));
     }
 
     @Test

@@ -18,11 +18,22 @@ public class SendSNSNotification {
 	static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 	private static String subject = "Virus Alert on WFDM-File-Indexing";
 
+	protected static String getTopicArn() {
+		return System.getenv("WFDM_SNS_VIRUS_ALERT");
+	}
+
+	protected static AmazonSNS createSnsClient() {
+		return AmazonSNSClient.builder()
+				.withRegion(region)
+				.withCredentials(credentialsProvider)
+				.build();
+	}
+
 	public static void publicshMessagetoSNS(JSONObject messageDetails) {
 		
-		String topicArn = System.getenv("WFDM_SNS_VIRUS_ALERT").trim();
+		String topicArn = getTopicArn().trim();
 
-		AmazonSNS snsClient = AmazonSNSClient.builder().withRegion(region).withCredentials(credentialsProvider).build();
+		AmazonSNS snsClient = createSnsClient();
 
 		final Map<String, MessageAttributeValue> attributes = new HashMap<String, MessageAttributeValue>();
 		attributes.put("subject", new MessageAttributeValue().withDataType("String").withStringValue(subject));
