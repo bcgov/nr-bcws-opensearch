@@ -147,14 +147,10 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
               logger.log("\nERROR: Failed to add metadata to file resource");
             }
 
-            AmazonS3 s3client = AmazonS3ClientBuilder
-                .standard()
-                .withCredentials(credentialsProvider)
-                .withRegion(region)
-                .build();
+            AmazonS3 s3client = createS3Client();
 
             Bucket clamavBucket = null;
-            String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
+            String bucketName = getClamAvBucketName().trim();
 
             List<Bucket> buckets = s3client.listBuckets();
             for (Bucket bucket : buckets) {
@@ -279,6 +275,18 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
   static String getIndexingLambdaName() {
     return System.getenv("WFDM_INDEXING_LAMBDA_NAME");
+  }
+
+  static AmazonS3 createS3Client() {
+    return AmazonS3ClientBuilder
+            .standard()
+            .withCredentials(credentialsProvider)
+            .withRegion(region)
+            .build();
+  }
+
+  static String getClamAvBucketName() {
+    return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
   }
 
 }
