@@ -1130,6 +1130,7 @@ resource "aws_route53_record" "opensearch-custom-url-redirect" {
 
 resource "aws_sns_topic" "clamav_virus" {
   name = "${var.application}-clamav-virus-topic-${var.env}"
+  kms_master_key_id = "alias/aws/sns"
   tags = {
     Application = var.application
     Customer    = var.customer

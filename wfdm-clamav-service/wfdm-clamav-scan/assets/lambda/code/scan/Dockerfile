@@ -17,11 +17,12 @@ RUN dnf update -y \
 
  
 RUN pip3 install --no-cache-dir \
-    cffi \
-    awslambdaric \
-    boto3 \
-    requests \
-    aws-lambda-powertools
+    --only-binary=:all: \
+    cffi==2.1.0 \
+    awslambdaric==4.0.1 \
+    boto3==1.42.97 \
+    requests==2.34.2 \
+    aws-lambda-powertools==3.31.1
 
 RUN ln -s /etc/freshclam.conf /tmp/freshclam.conf
 
