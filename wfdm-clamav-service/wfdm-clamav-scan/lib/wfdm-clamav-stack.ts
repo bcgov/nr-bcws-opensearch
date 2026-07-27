@@ -19,6 +19,7 @@ export class WfdmClamavStack extends Stack {
     })
 
     const bucket = new Bucket(this, 'wfdm-clamav-bucket'+ ((env) ? "-" + env : ""), {
+      enforceSSL: true,
       autoDeleteObjects: true, 
       removalPolicy: RemovalPolicy.DESTROY
     })
