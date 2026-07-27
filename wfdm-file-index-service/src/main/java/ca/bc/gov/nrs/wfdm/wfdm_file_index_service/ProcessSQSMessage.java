@@ -41,15 +41,60 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
+  protected String getBucketName() {
+    return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
+  }
+
+  protected String getSecretManagerName() {
+    return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
+  }
+
+  protected OpenSearchRESTClient createOpenSearchClient() {
+    return new OpenSearchRESTClient();
+  }
+
+  protected String retrieveSecret(String secretName) {
+    return RetrieveSecret.RetrieveSecretValue(secretName);
+  }
+
+  protected String getAccessToken(String clientId, String password)
+      throws Exception {
+    return GetFileFromWFDMAPI.getAccessToken(clientId, password);
+  }
+
+  protected HttpResponse<String> getFileInformation(
+      String token,
+      String fileId)
+      throws Exception {
+    return GetFileFromWFDMAPI.getFileInformation(token, fileId);
+  }
+
+  protected boolean setIndexedMetadata(
+      String token,
+      String fileId,
+      String versionNumber,
+      JSONObject fileDetailsJson,
+      String etag)
+      throws Exception {
+    return GetFileFromWFDMAPI.setIndexedMetadata(
+        token,
+        fileId,
+        versionNumber,
+        fileDetailsJson,
+        etag);
+  }
+
   @Override
   public String handleRequest(Map<String, Object> event, Context context) {
     LambdaLogger logger = context.getLogger();
-    String bucketName = System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET").trim();
+    
     // null check sqsEvents!
     if (event == null) {
       logger.log("\nInfo: No messages to handle\nInfo: Closeing");
       return "";
     }
+
+    String bucketName = getBucketName().trim();
 
     BufferedInputStream stream = null;
     try {
@@ -87,8 +132,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // Should come for preferences, Client ID and secret for authentication with
       // WFDM
       logger.log(eventType);
-      String wfdmSecretName = System.getenv("WFDM_DOCUMENT_SECRET_MANAGER").trim();
-      String secret = RetrieveSecret.RetrieveSecretValue(wfdmSecretName);
+      String wfdmSecretName = getSecretManagerName().trim();
+      String secret = retrieveSecret(wfdmSecretName);
       String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
       String CLIENT_ID = secretCD[0];
       String PASSWORD = secretCD[1];
@@ -99,13 +144,13 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // aren't in a cache slowly getting stale. Could be replaced by a check token
       // and
       // a cached token
-      String wfdmToken = GetFileFromWFDMAPI.getAccessToken(CLIENT_ID, PASSWORD);
+      String wfdmToken = getAccessToken( CLIENT_ID, PASSWORD);
       logger.log("wfdmToken :" + wfdmToken);
       if (wfdmToken == null)
         throw new Exception("Could not authorize access for WFDM");
 
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
-      HttpResponse<String> fileResponse = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+      HttpResponse<String> fileResponse =  getFileInformation(wfdmToken, fileId);
 
       logger.log("\nInfo: fileResponse.getBody() is: " + fileResponse.getBody());
 
@@ -180,7 +225,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         String filePath = fileDetailsJson.getString("filePath");
         String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
 
-        OpenSearchRESTClient restClient = new OpenSearchRESTClient();
+        OpenSearchRESTClient restClient = createOpenSearchClient();
 
         // We are disabling indexing of files with a security classification of Protected B or Protected C
         JSONArray metaArray = fileDetailsJson.getJSONArray("metadata");
@@ -202,7 +247,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
 
           // update metadata
-          boolean metaAdded = GetFileFromWFDMAPI.setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, etag);
+          boolean metaAdded = setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, etag);
           if (!metaAdded) {
             // We failed to apply the metadata regarding the virus scan status...
             // Should we continue to process the data from this point, or just choke?
@@ -210,7 +255,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           }
 
           // after updating metadata, get file info again and update index
-          fileResponse = GetFileFromWFDMAPI.getFileInformation(wfdmToken, fileId);
+          fileResponse = getFileInformation(wfdmToken, fileId);
           fileDetailsJson = new JSONObject(fileResponse.getBody());
 
           addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
@@ -248,7 +293,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     // Default ApacheHttpClient has a 30s socket timeout with no idle connection cleanup,
     // which causes SocketTimeoutExceptions when Lambda reuses a warm instance with a
     // dead connection to OpenSearch.
-    private void addIndexWithRetry(OpenSearchRESTClient restClient, String content, String fileName,
+    protected void addIndexWithRetry(OpenSearchRESTClient restClient, String content, String fileName,
                                     JSONObject fileDetailsJson, String scanStatus, LambdaLogger logger) throws OpenSearchException {
       int maxRetries = 3;
       for (int attempt = 1; attempt <= maxRetries; attempt++) {

@@ -39,6 +39,14 @@ public class OpenSearchRESTClient {
 	private OpenSearchClient openSearchClient;
 	private SdkHttpClient httpClient;
 
+	protected String getIndexName() {
+		return System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME");
+	}
+
+	protected String getDomainEndpoint() {
+		return System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT");
+	}
+
 	/**
 	 * Adds the provided content and metadata to the OpenSearch index
 	 * 
@@ -50,8 +58,8 @@ public class OpenSearchRESTClient {
 	 * @throws OpenSearchException
 	 */
 	public IndexResponse addIndex(String content, String fileName, JSONObject fileDetails, String scanStatus) throws OpenSearchException {
-		String indexName = System.getenv("WFDM_DOCUMENT_OPENSEARCH_INDEXNAME").trim();
-		String domainEndpoint = System.getenv("WFDM_DOCUMENT_OPENSEARCH_DOMAIN_ENDPOINT").trim();
+		String indexName = getIndexName().trim();
+		String domainEndpoint = getDomainEndpoint().trim();
 		logger.info(domainEndpoint);
 		openSearchClient = openSearchClient(domainEndpoint, serviceName, Region.CA_CENTRAL_1);
 		

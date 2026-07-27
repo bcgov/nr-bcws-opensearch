@@ -17,6 +17,14 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class GetFileFromWFDMAPI {
 
+  protected static String getTokenUrl() {
+    return System.getenv("WFDM_DOCUMENT_TOKEN_URL");
+  }
+
+  protected static String getApiUrl() {
+      return System.getenv("WFDM_DOCUMENT_API_URL");
+  }
+
   // Private constructor hides the implicit public constructor
   private GetFileFromWFDMAPI() {
     /* empty */ }
@@ -30,7 +38,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static String getAccessToken(String client, String password) throws UnirestException {
-    HttpResponse<JsonNode> httpResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_TOKEN_URL").trim())
+    HttpResponse<JsonNode> httpResponse = Unirest.get(getTokenUrl().trim())
         .basicAuth(client, password)
         .asJson();
 
@@ -52,7 +60,7 @@ public class GetFileFromWFDMAPI {
    * @throws UnirestException
    */
   public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
-    HttpResponse<String> detailsResponse = Unirest.get(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
+    HttpResponse<String> detailsResponse = Unirest.get(getApiUrl().trim() + fileId)
         .header("Authorization", "Bearer " + accessToken)
         .header("Content-Type", "application/json").asString();
 
@@ -95,13 +103,19 @@ public class GetFileFromWFDMAPI {
     metaArray.put(meta2);
 
     // PUT the changes
-    HttpResponse<String> metaUpdateResponse = Unirest.put(System.getenv("WFDM_DOCUMENT_API_URL").trim() + fileId)
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + accessToken)
-        .header("If-Match", Etag) 
-        .body(fileDetails.toString())
-        .asString();
+    HttpResponse<String> metaUpdateResponse = executeMetadataUpdate( accessToken, fileId, Etag, fileDetails);
 
     return metaUpdateResponse.getStatus() == 200;
+  }
+
+  protected static HttpResponse<String> executeMetadataUpdate( String accessToken, String fileId,
+        String etag, JSONObject fileDetails) throws UnirestException {
+
+      return Unirest.put(getApiUrl().trim() + fileId)
+              .header("Content-Type", "application/json")
+              .header("Authorization", "Bearer " + accessToken)
+              .header("If-Match", etag)
+              .body(fileDetails.toString())
+              .asString();
   }
 }
