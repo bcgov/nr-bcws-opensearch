@@ -7,6 +7,15 @@ import botocore
 import urllib3
 import json
 import time
+from botocore.config import Config
+
+BOTO_CONFIG = Config(
+    connect_timeout=5,
+    read_timeout=60,
+    retries={
+        "max_attempts": 3
+    }
+)
 
 
 logger = logging.getLogger()
@@ -15,8 +24,8 @@ http = urllib3.PoolManager()
 SUCCESS = "SUCCESS"
 FAILED = "FAILED"
 
-sfn_client = boto3.client("stepfunctions")
-lambda_client = boto3.client("lambda")
+sfn_client = boto3.client("stepfunctions", config=BOTO_CONFIG)
+lambda_client = boto3.client("lambda", config=BOTO_CONFIG)
 
 
 def lambda_handler(event, context):

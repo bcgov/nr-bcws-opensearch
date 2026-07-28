@@ -13,12 +13,21 @@ import subprocess
 import shutil
 from urllib.parse import unquote_plus
 from aws_lambda_powertools import Logger, Metrics
+from botocore.config import Config
+
+BOTO_CONFIG = Config(
+    connect_timeout=5,
+    read_timeout=60,
+    retries={
+        "max_attempts": 3
+    }
+)
 
 logger = Logger()
 metrics = Metrics()
 
-s3_resource = boto3.resource("s3")
-s3_client = boto3.client("s3")
+s3_resource = boto3.resource("s3", config=BOTO_CONFIG)
+s3_client = boto3.client("s3", config=BOTO_CONFIG)
 
 INPROGRESS = "IN PROGRESS"
 CLEAN = "CLEAN"
