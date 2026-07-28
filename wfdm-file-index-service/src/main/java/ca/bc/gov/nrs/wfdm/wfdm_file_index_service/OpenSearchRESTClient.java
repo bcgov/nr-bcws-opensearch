@@ -381,7 +381,7 @@ public class OpenSearchRESTClient {
 			factor = 1000;
 		}
 
-		return Double.valueOf(ret * Math.pow(factor, power)).longValue();
+		return (long) (ret * Math.pow(factor, power));
 	}
 	
 }
