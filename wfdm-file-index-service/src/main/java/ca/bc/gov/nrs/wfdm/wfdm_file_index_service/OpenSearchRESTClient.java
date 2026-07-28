@@ -29,6 +29,17 @@ import software.amazon.awssdk.regions.Region;
  * metadata into the OpenSearch/Elastic service for searching
  */
 public class OpenSearchRESTClient {
+	private static final String METADATA_NAME = "metadataName";
+    private static final String METADATA_VALUE = "metadataValue";
+	private static final String METADATA_DATE_VALUE = "metadataDateValue";
+	private static final String METADATA_BOOLEAN_VALUE = "metadataBooleanValue";
+	private static final String METADATA_NUMBER_VALUE = "metadataNumberValue";
+	private static final String MIME_TYPE = "mimeType";
+	private static final String FILE_SIZE = "fileSize";
+	private static final String UPLOADED_BY_PROPERTY = "uploadedBy";
+	private static final String SECURITY_KEY = "securityKey";
+	private static final String DISPLAY_LABEL = "displayLabel";
+	private static final String CAN_READ_OR_WRITE = "canReadorWrite";
 	
 	private static final Logger logger = LoggerFactory.getLogger(OpenSearchRESTClient.class);
 	
@@ -77,8 +88,8 @@ public class OpenSearchRESTClient {
 			searchDocumentResultsDto.setLastModified(fileDetails.get("lastUpdatedTimestamp").toString());
 		}
 
-		if(!fileDetails.isNull("uploadedBy")) {
-			searchDocumentResultsDto.setUploadedBy(fileDetails.get("uploadedBy").toString());
+		if(!fileDetails.isNull(UPLOADED_BY_PROPERTY)) {
+			searchDocumentResultsDto.setUploadedBy(fileDetails.get(UPLOADED_BY_PROPERTY).toString());
 		}
 		
 		if(!fileDetails.isNull("lastUpdatedBy")) {
@@ -86,10 +97,10 @@ public class OpenSearchRESTClient {
 		}
 		
 		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
-		if (fileDetails.get("mimeType") == "null") {
+		if (fileDetails.get(MIME_TYPE) == "null") {
 			searchDocumentResultsDto.setMimeType("DIRECTORY");
 		} else {
-			searchDocumentResultsDto.setMimeType(fileDetails.get("mimeType").toString());
+			searchDocumentResultsDto.setMimeType(fileDetails.get(MIME_TYPE).toString());
 		}
 		
 		if (fileDetails.get("fileType") != "null"  ){
@@ -120,8 +131,8 @@ public class OpenSearchRESTClient {
 		searchDocumentResultsDto.setFileLink(parentLinkObj.get("href").toString());
 		searchDocumentResultsDto.setFilePath(parent.getString("filePath"));
 		
-		if (!fileDetails.isNull("fileSize")) {
-			Long fileSizeLong = fileDetails.getLong("fileSize");
+		if (!fileDetails.isNull(FILE_SIZE)) {
+			Long fileSizeLong = fileDetails.getLong(FILE_SIZE);
 			String fileSize =  humanReadableByteCountBin(fileSizeLong.longValue());
 			searchDocumentResultsDto.setFileSize(fileSize);
 		} else {
@@ -131,31 +142,31 @@ public class OpenSearchRESTClient {
 		searchDocumentResultsDto.setFileSizeBytes(parsetoBytes(searchDocumentResultsDto.getFileSize()));
 
 		JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(), 
-				"metadataName", "metadataValue");
+				METADATA_NAME, METADATA_VALUE);
 
 		ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
 		JSONObject jsonOb = new JSONObject();
 		for (int i = 0 ; i < metadataArray.length() ; i++) {
 			Map<String, Object> metadataKeyVal = new HashMap<>();
 			jsonOb = metadataArray.getJSONObject(i);
-			metadataKeyVal.put("metadataName", jsonOb.get("metadataName"));
-			metadataKeyVal.put("metadataValue", jsonOb.get("metadataValue"));
+			metadataKeyVal.put(METADATA_NAME, jsonOb.get(METADATA_NAME));
+			metadataKeyVal.put(METADATA_VALUE, jsonOb.get(METADATA_VALUE));
 	
-			if (jsonOb.has("metadataDateValue") && jsonOb.get("metadataDateValue") != null) {
+			if (jsonOb.has(METADATA_DATE_VALUE) && jsonOb.get(METADATA_DATE_VALUE) != null) {
 			  // alter date string into an opensearch strict_date_optional_time format
 			  // example: “2019-03-23T21:34:46”
 	
-			  String dateValue = jsonOb.get("metadataDateValue").toString();
+			  String dateValue = jsonOb.get(METADATA_DATE_VALUE).toString();
 			  dateValue = dateValue.replace(" ", "T");
-			  metadataKeyVal.put("metadataDateValue", dateValue);
+			  metadataKeyVal.put(METADATA_DATE_VALUE, dateValue);
 			}
 	
-			if (jsonOb.has("metadataBooleanValue") && jsonOb.get("metadataBooleanValue") != null) {
-			  metadataKeyVal.put("metadataBooleanValue", jsonOb.get("metadataBooleanValue"));
+			if (jsonOb.has(METADATA_BOOLEAN_VALUE) && jsonOb.get(METADATA_BOOLEAN_VALUE) != null) {
+			  metadataKeyVal.put(METADATA_BOOLEAN_VALUE, jsonOb.get(METADATA_BOOLEAN_VALUE));
 			}
 	
-			if (jsonOb.has("metadataNumberValue") && jsonOb.get("metadataNumberValue") != null) {
-			  metadataKeyVal.put("metadataNumberValue", jsonOb.get("metadataNumberValue"));
+			if (jsonOb.has(METADATA_NUMBER_VALUE) && jsonOb.get(METADATA_NUMBER_VALUE) != null) {
+			  metadataKeyVal.put(METADATA_NUMBER_VALUE, jsonOb.get(METADATA_NUMBER_VALUE));
 			}
 	
 			metadataList.add(metadataKeyVal);
@@ -167,16 +178,16 @@ public class OpenSearchRESTClient {
 		JSONArray jsonArray = new JSONArray();
 		for (int i = 0; i < securityArray.length(); i++) {
 			JSONObject objects = securityArray.getJSONObject(i);
-			jsonArray.put(objects.get("securityKey"));
+			jsonArray.put(objects.get(SECURITY_KEY));
 		}
 
-		JSONArray jsonSecurityArray = filterDataFromFileDetails(jsonArray.toString(), "displayLabel", "securityKey");
+		JSONArray jsonSecurityArray = filterDataFromFileDetails(jsonArray.toString(), DISPLAY_LABEL, SECURITY_KEY);
 		ArrayList<Map<String, Object>> securityList = new ArrayList<>();
 		for (int i = 0; i < jsonSecurityArray.length(); i++) {
 			Map<String, Object> securityKeyVal = new HashMap<>();
 			jsonOb = jsonSecurityArray.getJSONObject(i);
-			securityKeyVal.put("displayLabel", jsonOb.get("displayLabel"));
-			securityKeyVal.put("securityKey", jsonOb.get("securityKey"));
+			securityKeyVal.put(DISPLAY_LABEL, jsonOb.get(DISPLAY_LABEL));
+			securityKeyVal.put(SECURITY_KEY, jsonOb.get(SECURITY_KEY));
 			securityList.add(securityKeyVal);
 		}
 		
@@ -186,10 +197,10 @@ public class OpenSearchRESTClient {
 		for (int i = 0; i < securityArray.length(); i++) {
 			JSONObject objects = securityArray.getJSONObject(i);
 			JSONObject scopeObj = new JSONObject() ;
-			jsonArray.put(objects.get("securityKey"));
+			jsonArray.put(objects.get(SECURITY_KEY));
 			scopeObj.put("Read", objects.get("readAccessInd"));
 			scopeObj.put("Write", objects.get("grantorAccessInd"));
-			scopeObj.put("displayLabel", jsonArray.toString());
+			scopeObj.put(DISPLAY_LABEL, jsonArray.toString());
 			JSONObject jsobObjects = filterSecurityScope(scopeObj);
 			scopeArray.put(jsobObjects);
 		}
@@ -198,8 +209,8 @@ public class OpenSearchRESTClient {
 		for (int i = 0; i < scopeArray.length(); i++) {
 			Map<String, Object> securityScopeKeyVal = new HashMap<>();
 			jsonOb = scopeArray.getJSONObject(i);
-			securityScopeKeyVal.put("displayLabel", jsonOb.get("displayLabel"));
-			securityScopeKeyVal.put("canReadorWrite", jsonOb.getBoolean("canReadorWrite"));
+			securityScopeKeyVal.put(DISPLAY_LABEL, jsonOb.get(DISPLAY_LABEL));
+			securityScopeKeyVal.put(CAN_READ_OR_WRITE, jsonOb.getBoolean(CAN_READ_OR_WRITE));
 			securityScopeList.add(securityScopeKeyVal);
 		}
 				
@@ -286,13 +297,13 @@ public class OpenSearchRESTClient {
 			if (json.has("metadataType")) {
 				switch (json.getString("metadataType")) {
 					case "BOOLEAN":
-						jobject.put("metadataBooleanValue", json.getString(metadataValue));
+						jobject.put(METADATA_BOOLEAN_VALUE, json.getString(metadataValue));
 						break;
 					case "NUMBER":
-						jobject.put("metadataNumberValue", json.getString(metadataValue));
+						jobject.put(METADATA_NUMBER_VALUE, json.getString(metadataValue));
 						break;
 					case "DATE":
-						jobject.put("metadataDateValue", json.getString(metadataValue));
+						jobject.put(METADATA_DATE_VALUE, json.getString(metadataValue));
 						break;
 				}
 			}
@@ -329,15 +340,15 @@ public class OpenSearchRESTClient {
 		boolean canRead = scopeObj.getBoolean("Read");
 		boolean canWrite = scopeObj.getBoolean("Write");
 		if (canRead || canWrite) {
-			jobject.put("canReadorWrite", "true");
+			jobject.put(CAN_READ_OR_WRITE, "true");
 		} else {
-			jobject.put("canReadorWrite", "false");
+			jobject.put(CAN_READ_OR_WRITE, "false");
 		}
 
-		JSONArray jsonArray = new JSONArray(scopeObj.getString("displayLabel"));
+		JSONArray jsonArray = new JSONArray(scopeObj.getString(DISPLAY_LABEL));
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject json = jsonArray.getJSONObject(i);
-			jobject.put("displayLabel", json.getString("displayLabel"));
+			jobject.put(DISPLAY_LABEL, json.getString(DISPLAY_LABEL));
 		}
 
 		return jobject;

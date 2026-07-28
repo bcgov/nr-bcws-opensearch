@@ -25,6 +25,8 @@ import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
 public class GetFileFromWFDMAPITest {
+        private static final String METADATA_NAME = "metadataName";
+    private static final String METADATA_VALUE = "metadataValue";
     
     @Test
     void shouldInstantiatePrivateConstructorViaReflection() throws Exception {
@@ -207,11 +209,11 @@ public class GetFileFromWFDMAPITest {
 
         assertEquals(
                 "Title",
-                result.getString("metadataName"));
+                result.getString(METADATA_NAME));
 
         assertEquals(
                 "Sample",
-                result.getString("metadataValue"));
+                result.getString(METADATA_VALUE));
 
         assertEquals(
                 "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource",
@@ -581,7 +583,7 @@ public class GetFileFromWFDMAPITest {
 
                 String metadataName =
                         metadataResult.getJSONObject(i)
-                                .getString("metadataName");
+                                .getString(METADATA_NAME);
 
                 if ("Creator".equals(metadataName)) {
                     foundCreator = true;

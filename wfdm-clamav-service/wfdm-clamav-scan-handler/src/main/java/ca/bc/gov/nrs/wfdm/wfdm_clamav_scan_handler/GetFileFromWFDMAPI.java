@@ -17,6 +17,12 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class GetFileFromWFDMAPI {
 
+  private static final String METADATA_NAME = "metadataName";
+  private static final String AUTHORIZATION = "Authorization";
+  private static final String BEARER = "Bearer ";
+  private static final String WFDM_RESOURCE_TYPE_URL = "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource";
+  private static final String TYPE = "@type";
+
   protected static String getTokenUrl() {
     return System.getenv("WFDM_DOCUMENT_TOKEN_URL");
   }
@@ -61,7 +67,7 @@ public class GetFileFromWFDMAPI {
    */
   public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(getApiUrl().trim() + fileId)
-        .header("Authorization", "Bearer " + accessToken)
+        .header(AUTHORIZATION, BEARER + accessToken)
         .header("Content-Type", "application/json").asString();
 
     if (detailsResponse.getStatus() == 200) {
@@ -77,7 +83,7 @@ public class GetFileFromWFDMAPI {
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
-      String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+      String metadataName = metaArray.getJSONObject(i).getString(METADATA_NAME);
       if (metadataName.equalsIgnoreCase("WFDMScanStatus-" + versionNumber)) {
         metaArray.remove(i);
         break;
@@ -90,14 +96,14 @@ public class GetFileFromWFDMAPI {
 
     // inject scan meta
     JSONObject meta = new JSONObject();
-    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "WFDMScanStatus-" + versionNumber);
+    meta.put(TYPE, WFDM_RESOURCE_TYPE_URL);
+    meta.put(METADATA_NAME, "WFDMScanStatus-" + versionNumber);
     meta.put("metadataValue", status);
     metaArray.put(meta);
 
     JSONObject meta2 = new JSONObject();
-    meta2.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta2.put("metadataName", "WFDMVirusScanDate-" + versionNumber);
+    meta2.put(TYPE, WFDM_RESOURCE_TYPE_URL);
+    meta2.put(METADATA_NAME, "WFDMVirusScanDate-" + versionNumber);
     Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     meta2.put("metadataValue", formatter.format(new Date().getTime()));
     metaArray.put(meta2);
@@ -113,7 +119,7 @@ public class GetFileFromWFDMAPI {
 
       return Unirest.put(getApiUrl().trim() + fileId)
               .header("Content-Type", "application/json")
-              .header("Authorization", "Bearer " + accessToken)
+              .header(AUTHORIZATION, BEARER + accessToken)
               .header("If-Match", etag)
               .body(fileDetails.toString())
               .asString();

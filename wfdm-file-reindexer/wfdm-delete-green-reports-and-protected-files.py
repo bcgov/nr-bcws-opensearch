@@ -22,6 +22,7 @@ wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
 row_count = 20
+PROTECTED_B = "Protected B"
 
 
 
@@ -85,12 +86,12 @@ def delete_restricted_file(document_id, page, row_count):
                 value = meta['metadataValue']
                 name = meta['metadataName']
                 
-                if name == "SecurityClassification" and (value == "Protected B" or value == "Protected C"):
+                if name == "SecurityClassification" and (value == PROTECTED_B or value == "Protected C"):
                     deleteFile = True
                     break
                 # Green Reports should have a Security Classification of Protected B or Protected C, if they don't update it for them
-                if isGreenReport and name == "SecurityClassification" and value != "Protected B" and value != "Protected C":
-                        doc_json['metadata'][positionInMetaArr]['metadataValue'] = "Protected B"
+                if isGreenReport and name == "SecurityClassification" and value != PROTECTED_B and value != "Protected C":
+                        doc_json['metadata'][positionInMetaArr]['metadataValue'] = PROTECTED_B
                         changedMetadata = True
                         break
                         

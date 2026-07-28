@@ -35,6 +35,7 @@ import com.mashape.unirest.http.HttpResponse;
 public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchResponse> {
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+  private static final String RESPONSE_PAYLOAD = "responsePayload";
 
   protected String getSecretManagerName() {
     return System.getenv("WFDM_DOCUMENT_SECRET_MANAGER");
@@ -107,8 +108,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         messageBody = message.getBody();
         logger.log("\nInfo: SQS Message Received: " + messageBody);
         JSONObject messageDetails = new JSONObject(messageBody);
-        String inputKey = messageDetails.getJSONObject("responsePayload").getString("input_key");
-        String status = messageDetails.getJSONObject("responsePayload").getString("status");
+        String inputKey = messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("input_key");
+        String status = messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("status");
         //if status is infected send an email to SNS topic
 		if (status.equals("INFECTED")) {
 			publishVirusNotification(messageDetails);
@@ -119,7 +120,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         }
         String fileId = inputKey.split("-")[0];
         String versionNumber = inputKey.split("-")[1];
-        String summary = messageDetails.getJSONObject("responsePayload").getString("message");
+        String summary = messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("message");
         logger.log("\nInfo: SQS Message Received: " + messageBody+summary);
 
         // Should come for preferences, Client ID and secret for authentication with

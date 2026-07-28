@@ -42,6 +42,8 @@ import com.mashape.unirest.http.HttpResponse;
 public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchResponse> {
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+  private static final String MIME_TYPE = "mimeType";
+  private static final String FILE_SIZE = "fileSize";
 
   static boolean isValidFileId(String fileId) {
     return fileId.chars().allMatch(Character::isDigit);
@@ -60,8 +62,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   }
 
   static String getMimeType(JSONObject fileDetailsJson) {
-    if (fileDetailsJson.has("mimeType")) {
-      return fileDetailsJson.get("mimeType").toString();
+    if (fileDetailsJson.has(MIME_TYPE)) {
+      return fileDetailsJson.get(MIME_TYPE).toString();
     }
 
     return "";
@@ -76,11 +78,11 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   }
 
   static boolean isFileTooLargeToConvert(JSONObject fileDetailsJson) {
-    if (!fileDetailsJson.has("fileSize")) {
+    if (!fileDetailsJson.has(FILE_SIZE)) {
       return false;
     }
 
-    int fileSize = Integer.parseInt(fileDetailsJson.get("fileSize").toString());
+    int fileSize = Integer.parseInt(fileDetailsJson.get(FILE_SIZE).toString());
 
     return fileSize > 10000000;
   }
@@ -253,14 +255,14 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
 
             ObjectMetadata meta = new ObjectMetadata();
             meta.setContentType(mimeType);
-            meta.setContentLength(Long.parseLong(fileDetailsJson.get("fileSize").toString()));
+            meta.setContentLength(Long.parseLong(fileDetailsJson.get(FILE_SIZE).toString()));
             meta.addUserMetadata("title", fileId + "-" + versionNumber);
             logger.log("putting into s3 bucket");
             s3client.putObject(new PutObjectRequest(clamavBucket.getName(),
                 fileDetailsJson.get("fileId").toString() + "-" + versionNumber, stream, meta));
           }
           //handling to allow folders to be added to opensearch bypassing the clamAv scan and sending them directly to the file index service
-          else if (eventType.equalsIgnoreCase("meta") && (fileDetailsJson.get("mimeType").toString().equals("null"))) {
+          else if (eventType.equalsIgnoreCase("meta") && (fileDetailsJson.get(MIME_TYPE).toString().equals("null"))) {
             AWSLambda client = createLambdaClient();
             InvokeRequest request = new InvokeRequest();
             request.withFunctionName(getIndexingLambdaName().trim())

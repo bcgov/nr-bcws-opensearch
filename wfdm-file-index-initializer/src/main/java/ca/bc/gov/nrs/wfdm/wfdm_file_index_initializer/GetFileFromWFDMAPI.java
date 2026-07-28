@@ -16,6 +16,13 @@ import com.mashape.unirest.http.exceptions.UnirestException;
  */
 public class GetFileFromWFDMAPI {
 
+  private static final String METADATA_NAME = "metadataName";
+  private static final String METADATA_VALUE = "metadataValue";
+  private static final String AUTHORIZATION = "Authorization";
+  private static final String BEARER = "Bearer ";
+  private static final String WFDM_RESOURCE_TYPE_URL = "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource";
+  private static final String TYPE = "@type";
+
   // Private constructor hides the implicit public constructor
   private GetFileFromWFDMAPI() {
     /* empty */ }
@@ -52,7 +59,7 @@ public class GetFileFromWFDMAPI {
    */
   public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(getApiUrl().trim() + fileId)
-        .header("Authorization", "Bearer " + accessToken)
+        .header(AUTHORIZATION, BEARER + accessToken)
         .header("Content-Type", "application/json").asString();
 
     if (detailsResponse.getStatus() == 200) {
@@ -67,7 +74,7 @@ public class GetFileFromWFDMAPI {
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
     // Locate any existing scan meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
-      String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+      String metadataName = metaArray.getJSONObject(i).getString(METADATA_NAME);
 
       if (metadataName.equalsIgnoreCase("WFDMScanStatus-" + versionNumber)) {
         metaArray.remove(i);
@@ -77,9 +84,9 @@ public class GetFileFromWFDMAPI {
 
     // inject scan meta
     JSONObject meta = new JSONObject();
-    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "WFDMScanStatus-" + versionNumber);
-    meta.put("metadataValue", "PENDING");
+    meta.put(TYPE, WFDM_RESOURCE_TYPE_URL);
+    meta.put(METADATA_NAME, "WFDMScanStatus-" + versionNumber);
+    meta.put(METADATA_VALUE, "PENDING");
 
     metaArray.put(meta);
   }
@@ -90,7 +97,7 @@ public class GetFileFromWFDMAPI {
 
     // Locate any existing conversion meta and remove
     for (int i = 0; i < metaArray.length(); i++) {
-      String metadataName = metaArray.getJSONObject(i).getString("metadataName");
+      String metadataName = metaArray.getJSONObject(i).getString(METADATA_NAME);
 
       if (metadataName.equalsIgnoreCase("WFDMConversionStatus-" + versionNumber)) {
         metaArray.remove(i);
@@ -100,9 +107,9 @@ public class GetFileFromWFDMAPI {
 
     // inject conversion meta
     JSONObject meta = new JSONObject();
-    meta.put("@type", "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource");
-    meta.put("metadataName", "WFDMConversionStatus-" + versionNumber);
-    meta.put("metadataValue", conversionStatus);
+    meta.put(TYPE, WFDM_RESOURCE_TYPE_URL);
+    meta.put(METADATA_NAME, "WFDMConversionStatus-" + versionNumber);
+    meta.put(METADATA_VALUE, conversionStatus);
 
     metaArray.put(meta);
   }
@@ -117,7 +124,7 @@ public class GetFileFromWFDMAPI {
     // PUT the changes
     HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
         .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + accessToken)
+        .header(AUTHORIZATION, BEARER + accessToken)
         .header("If-Match", Etag) 
         .body(fileDetails.toString())
         .asString();
@@ -133,7 +140,7 @@ public static void setImageConversionMetadata(String accessToken, String fileId,
   // PUT the changes
   HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
       .header("Content-Type", "application/json")
-      .header("Authorization", "Bearer " + accessToken)
+      .header(AUTHORIZATION, BEARER + accessToken)
       .header("If-Match", Etag) 
       .body(fileDetails.toString())
       .asString();
@@ -153,7 +160,7 @@ public static void setImageConversionMetadata(String accessToken, String fileId,
       throws UnirestException {
     HttpResponse<InputStream> bytesResponse = Unirest.get(getApiUrl().trim() + fileId + "/bytes?versionNumber=" + versionNumber)
         .header("Accept", "*/*")
-        .header("Authorization", "Bearer " + accessToken)
+        .header(AUTHORIZATION, BEARER + accessToken)
         .asBinary();
     if (bytesResponse.getStatus() == 200) {
       return new BufferedInputStream(bytesResponse.getBody());

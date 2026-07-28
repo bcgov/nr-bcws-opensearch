@@ -17,6 +17,8 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 
 class GetFileFromWFDMAPITest {
+    private static final String METADATA_NAME = "metadataName";
+    private static final String METADATA_VALUE = "metadataValue";
 
     @Test
     void shouldInstantiatePrivateConstructor()
@@ -141,11 +143,11 @@ class GetFileFromWFDMAPITest {
                 new JSONObject();
 
         existing.put(
-                "metadataName",
+                METADATA_NAME,
                 "WFDMScanStatus-1");
 
         existing.put(
-                "metadataValue",
+                METADATA_VALUE,
                 "OLD");
 
         metadata.put(existing);
@@ -199,11 +201,11 @@ class GetFileFromWFDMAPITest {
                 new JSONObject();
 
         existing.put(
-                "metadataName",
+                METADATA_NAME,
                 "WFDMVirusScanDate-1");
 
         existing.put(
-                "metadataValue",
+                METADATA_VALUE,
                 "OLD");
 
         metadata.put(existing);
@@ -293,11 +295,11 @@ class GetFileFromWFDMAPITest {
                 new JSONObject();
 
         existing.put(
-                "metadataName",
+                METADATA_NAME,
                 "SomeOtherMetadata");
 
         existing.put(
-                "metadataValue",
+                METADATA_VALUE,
                 "ABC");
 
         metadata.put(existing);

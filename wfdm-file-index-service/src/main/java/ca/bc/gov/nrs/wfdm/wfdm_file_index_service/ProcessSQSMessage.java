@@ -11,6 +11,7 @@ import javax.xml.transform.TransformerConfigurationException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.exception.TikaException;
+import org.bouncycastle.jcajce.provider.asymmetric.dsa.DSASigner.stdDSA;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.xml.sax.SAXException;
@@ -40,6 +41,9 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, String> {
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+  private static final String MIME_TYPE = "mimeType";
+  private static final String FILE_VERSION_NUMBER = "fileVersionNumber";
+  private static final String MESSAGE = "message";
 
   protected String getBucketName() {
     return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
@@ -106,11 +110,11 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       String fileId = fileDetailsJson.getString("fileId");
 
       String versionNumber;
-      if (fileDetailsJson.has("fileVersionNumber")) {
-        if (fileDetailsJson.getString("fileVersionNumber").equals("null")) {
+      if (fileDetailsJson.has(FILE_VERSION_NUMBER)) {
+        if (fileDetailsJson.getString(FILE_VERSION_NUMBER).equals("null")) {
           versionNumber = "1";
         } else {
-          versionNumber = fileDetailsJson.getString("fileVersionNumber");
+          versionNumber = fileDetailsJson.getString(FILE_VERSION_NUMBER);
         }
       } else {
         versionNumber = "1";
@@ -125,8 +129,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       }
 
       String scanStatus;
-      if (fileDetailsJson.has("message") && !fileDetailsJson.isNull("message"))
-        scanStatus = fileDetailsJson.getString("message");
+      if (fileDetailsJson.has(MESSAGE) && !fileDetailsJson.isNull(MESSAGE))
+        scanStatus = fileDetailsJson.getString(MESSAGE);
       else
         scanStatus = "-";
       // Should come for preferences, Client ID and secret for authentication with
@@ -138,7 +142,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       String CLIENT_ID = secretCD[0];
       String PASSWORD = secretCD[1];
 
-      //logger.log("message"+fileDetailsJson.getString("message"));
+      //logger.log(MESSAGE+fileDetailsJson.getString(MESSAGE));
       // Fetch an authentication token. We fetch this each time so the tokens
       // themselves
       // aren't in a cache slowly getting stale. Could be replaced by a check token
@@ -198,7 +202,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           // Tika Time! (If Necessary, check mime types)
           logger.log("\nInfo: Tika Parser...");
 
-          String mimeType = fileDetailsJson.get("mimeType").toString();
+          String mimeType = fileDetailsJson.get(MIME_TYPE).toString();
 
           if (mimeType.equalsIgnoreCase("text/plain") ||
               mimeType.equalsIgnoreCase("application/msword") ||
@@ -212,7 +216,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
           } else {
             // nothing to see here folks, we won't process this file. However
             // this isn't an error and we might want to handle metadata, etc.
-            logger.log("\nInfo: Mime type of " + fileDetailsJson.get("mimeType")
+            logger.log("\nInfo: Mime type of " + fileDetailsJson.get(MIME_TYPE)
                 + " is not processed for OpenSearch. Skipping Tika parse.");
           }
 
