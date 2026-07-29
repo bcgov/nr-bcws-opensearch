@@ -190,11 +190,11 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         boolean isHeicOrHeif = isHeicOrHeif(fileExtension);
 
         if (!processImageConversion(fileTooLargeToConvert, isHeicOrHeif, wfdmToken,
-          fileId, versionNumber, fileDetailsJson, etag, mimeType, logger)) {
+        fileId, versionNumber, fileDetailsJson, etag, mimeType, logger)) {
 
-        processEventType(eventType, wfdmToken, fileId, versionNumber, fileInfo,
-            fileDetailsJson, etag, mimeType, messageBody, logger);
-      }
+      processEventType(eventType, wfdmToken, fileId, versionNumber, fileInfo,
+          fileDetailsJson, etag, mimeType, messageBody, logger);
+    }
         
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
         logger.log("logged exception" + e);

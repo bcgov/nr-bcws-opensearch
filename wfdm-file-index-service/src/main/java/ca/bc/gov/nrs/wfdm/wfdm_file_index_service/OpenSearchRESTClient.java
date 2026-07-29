@@ -80,142 +80,17 @@ public class OpenSearchRESTClient {
 		logger.info("content" + content + "\n" + fileDetails+"\n status"+scanStatus);
 
 		SearchDocumentResultsDto searchDocumentResultsDto = new SearchDocumentResultsDto();
-		
-		searchDocumentResultsDto.setKey(fileName);
-		searchDocumentResultsDto.setAbsoluteFilePath(fileDetails.getString("filePath"));
-		
-		if(!fileDetails.isNull("lastUpdatedTimestamp")) {
-			searchDocumentResultsDto.setLastModified(fileDetails.get("lastUpdatedTimestamp").toString());
-		}
 
-		if(!fileDetails.isNull(UPLOADED_BY_PROPERTY)) {
-			searchDocumentResultsDto.setUploadedBy(fileDetails.get(UPLOADED_BY_PROPERTY).toString());
-		}
-		
-		if(!fileDetails.isNull("lastUpdatedBy")) {
-			searchDocumentResultsDto.setLastUpdatedBy(fileDetails.get("lastUpdatedBy").toString());
-		}
-		
-		//Directories/Folders will not have a mime type and it needs to be set to "" to be processed 
-		if (fileDetails.get(MIME_TYPE) == "null") {
-			searchDocumentResultsDto.setMimeType("DIRECTORY");
-		} else {
-			searchDocumentResultsDto.setMimeType(fileDetails.get(MIME_TYPE).toString());
-		}
-		
-		if (fileDetails.get("fileType") != "null"  ){
-			searchDocumentResultsDto.setFileType(fileDetails.get("fileType").toString());
-		}
+		populateSearchDocumentResultsDto(searchDocumentResultsDto, content, fileName, fileDetails);
 
-		searchDocumentResultsDto.setFileName(fileName);
-		
-		if (!fileDetails.isNull("fileExtension")) {
-			searchDocumentResultsDto.setFileExtension(fileDetails.get("fileExtension").toString());
-		} else if (fileName.contains(".")) {
-			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
-			searchDocumentResultsDto.setFileExtension(fileExtension);
-		}
-
-		if(!fileDetails.isNull("retention")) {
-			searchDocumentResultsDto.setFileRetention(fileDetails.get("retention").toString());
-		}
-
-		if (content != null && !content.isEmpty()) {
-			JSONObject jsonObj = new JSONObject(content);
-			searchDocumentResultsDto.setFileContent(jsonObj.getString("Text"));
-		}
-		
-		JSONObject parent = fileDetails.getJSONObject("parent");
-		JSONArray parentLinkArray = parent.getJSONArray("links");
-		JSONObject parentLinkObj = parentLinkArray.getJSONObject(0);
-		searchDocumentResultsDto.setFileLink(parentLinkObj.get("href").toString());
-		searchDocumentResultsDto.setFilePath(parent.getString("filePath"));
-		
-		if (!fileDetails.isNull(FILE_SIZE)) {
-			Long fileSizeLong = fileDetails.getLong(FILE_SIZE);
-			String fileSize =  humanReadableByteCountBin(fileSizeLong.longValue());
-			searchDocumentResultsDto.setFileSize(fileSize);
-		} else {
-			searchDocumentResultsDto.setFileSize(String.valueOf(0));
-		}
-
-		searchDocumentResultsDto.setFileSizeBytes(parsetoBytes(searchDocumentResultsDto.getFileSize()));
-
-		JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(), 
-				METADATA_NAME, METADATA_VALUE);
-
-		ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
-		JSONObject jsonOb = new JSONObject();
-		for (int i = 0 ; i < metadataArray.length() ; i++) {
-			Map<String, Object> metadataKeyVal = new HashMap<>();
-			jsonOb = metadataArray.getJSONObject(i);
-			metadataKeyVal.put(METADATA_NAME, jsonOb.get(METADATA_NAME));
-			metadataKeyVal.put(METADATA_VALUE, jsonOb.get(METADATA_VALUE));
-	
-			if (jsonOb.has(METADATA_DATE_VALUE) && jsonOb.get(METADATA_DATE_VALUE) != null) {
-			  // alter date string into an opensearch strict_date_optional_time format
-			  // example: “2019-03-23T21:34:46”
-	
-			  String dateValue = jsonOb.get(METADATA_DATE_VALUE).toString();
-			  dateValue = dateValue.replace(" ", "T");
-			  metadataKeyVal.put(METADATA_DATE_VALUE, dateValue);
-			}
-	
-			if (jsonOb.has(METADATA_BOOLEAN_VALUE) && jsonOb.get(METADATA_BOOLEAN_VALUE) != null) {
-			  metadataKeyVal.put(METADATA_BOOLEAN_VALUE, jsonOb.get(METADATA_BOOLEAN_VALUE));
-			}
-	
-			if (jsonOb.has(METADATA_NUMBER_VALUE) && jsonOb.get(METADATA_NUMBER_VALUE) != null) {
-			  metadataKeyVal.put(METADATA_NUMBER_VALUE, jsonOb.get(METADATA_NUMBER_VALUE));
-			}
-	
-			metadataList.add(metadataKeyVal);
-		}
-		
-		searchDocumentResultsDto.setMetadata(metadataList);
+		searchDocumentResultsDto.setMetadata(buildMetadataList(fileDetails));
 	    
 	  	JSONArray securityArray = fileDetails.getJSONArray("security");
-		JSONArray jsonArray = new JSONArray();
-		for (int i = 0; i < securityArray.length(); i++) {
-			JSONObject objects = securityArray.getJSONObject(i);
-			jsonArray.put(objects.get(SECURITY_KEY));
-		}
 
-		JSONArray jsonSecurityArray = filterDataFromFileDetails(jsonArray.toString(), DISPLAY_LABEL, SECURITY_KEY);
-		ArrayList<Map<String, Object>> securityList = new ArrayList<>();
-		for (int i = 0; i < jsonSecurityArray.length(); i++) {
-			Map<String, Object> securityKeyVal = new HashMap<>();
-			jsonOb = jsonSecurityArray.getJSONObject(i);
-			securityKeyVal.put(DISPLAY_LABEL, jsonOb.get(DISPLAY_LABEL));
-			securityKeyVal.put(SECURITY_KEY, jsonOb.get(SECURITY_KEY));
-			securityList.add(securityKeyVal);
-		}
-		
-		searchDocumentResultsDto.setSecurity(securityList);
-		
-		JSONArray scopeArray = new JSONArray();
-		for (int i = 0; i < securityArray.length(); i++) {
-			JSONObject objects = securityArray.getJSONObject(i);
-			JSONObject scopeObj = new JSONObject() ;
-			jsonArray.put(objects.get(SECURITY_KEY));
-			scopeObj.put("Read", objects.get("readAccessInd"));
-			scopeObj.put("Write", objects.get("grantorAccessInd"));
-			scopeObj.put(DISPLAY_LABEL, jsonArray.toString());
-			JSONObject jsobObjects = filterSecurityScope(scopeObj);
-			scopeArray.put(jsobObjects);
-		}
-		
-		ArrayList<Map<String, Object>> securityScopeList = new ArrayList<>();
-		for (int i = 0; i < scopeArray.length(); i++) {
-			Map<String, Object> securityScopeKeyVal = new HashMap<>();
-			jsonOb = scopeArray.getJSONObject(i);
-			securityScopeKeyVal.put(DISPLAY_LABEL, jsonOb.get(DISPLAY_LABEL));
-			securityScopeKeyVal.put(CAN_READ_OR_WRITE, jsonOb.getBoolean(CAN_READ_OR_WRITE));
-			securityScopeList.add(securityScopeKeyVal);
-		}
-				
-		searchDocumentResultsDto.setSecurityScope(securityScopeList);
-		
+		searchDocumentResultsDto.setSecurity(buildSecurityList(securityArray));
+
+		searchDocumentResultsDto.setSecurityScope(buildSecurityScopeList(securityArray));
+					
 		searchDocumentResultsDto.setScanStatus(scanStatus);
 
 		String id = fileDetails.getString("fileId");
@@ -238,29 +113,11 @@ public class OpenSearchRESTClient {
 		logger.info("create indexRequest");
 		logger.info(indexRequest.toString());
 
-		IndexResponse response = null;
 		try {
-			response = openSearchClient.index(indexRequest);
-			logger.info("Response:" + response);
-		} catch (Exception e) {
-			logger.error("Error indexing document into open search: {}", e.getMessage());
-			throw new OpenSearchException(e);
+			return executeIndexRequest(indexRequest);
 		} finally {
-			if (openSearchClient != null) {
-				try {
-					logger.debug("Closing open search connection");
-					if (httpClient != null) {
-						httpClient.close();
-						httpClient = null;
-					}
-					openSearchClient = null;
-				} catch (Exception e) {
-					logger.error("Error closing open search connection: {}", e.getMessage());
-				}
-			}
+			closeOpenSearchConnection();
 		}
-		
-		return response;
 	}
 	
 	public OpenSearchClient openSearchClient(String openSearchEndpoint, String serviceName, Region region) {
@@ -396,6 +253,217 @@ public class OpenSearchRESTClient {
 		}
 
 		return (long) (ret * Math.pow(factor, power));
+	}
+
+	private ArrayList<Map<String, Object>> buildMetadataList(JSONObject fileDetails) {
+
+		JSONArray metadataArray = filterDataFromFileDetailsMeta(fileDetails.getJSONArray("metadata").toString(),
+			METADATA_NAME, METADATA_VALUE);
+
+		ArrayList<Map<String, Object>> metadataList = new ArrayList<>();
+
+		for (int i = 0; i < metadataArray.length(); i++) {
+
+			JSONObject jsonOb = metadataArray.getJSONObject(i);
+
+			Map<String, Object> metadataKeyVal = new HashMap<>();
+
+			metadataKeyVal.put(METADATA_NAME, jsonOb.get(METADATA_NAME));
+			metadataKeyVal.put(METADATA_VALUE, jsonOb.get(METADATA_VALUE));
+
+			if (jsonOb.has(METADATA_DATE_VALUE) && jsonOb.get(METADATA_DATE_VALUE) != null) {
+			String dateValue = jsonOb.get(METADATA_DATE_VALUE).toString().replace(" ", "T");
+			metadataKeyVal.put(METADATA_DATE_VALUE, dateValue);
+			}
+
+			if (jsonOb.has(METADATA_BOOLEAN_VALUE) && jsonOb.get(METADATA_BOOLEAN_VALUE) != null) {
+			metadataKeyVal.put(METADATA_BOOLEAN_VALUE, jsonOb.get(METADATA_BOOLEAN_VALUE));
+			}
+
+			if (jsonOb.has(METADATA_NUMBER_VALUE) && jsonOb.get(METADATA_NUMBER_VALUE) != null) {
+			metadataKeyVal.put(METADATA_NUMBER_VALUE, jsonOb.get(METADATA_NUMBER_VALUE));
+			}
+
+			metadataList.add(metadataKeyVal);
+		}
+
+		return metadataList;
+	}
+
+	private ArrayList<Map<String, Object>> buildSecurityList(JSONArray securityArray) {
+		JSONArray jsonArray = new JSONArray();
+
+		for (int i = 0; i < securityArray.length(); i++) {
+			JSONObject objects = securityArray.getJSONObject(i);
+			jsonArray.put(objects.get(SECURITY_KEY));
+		}
+
+		JSONArray jsonSecurityArray = filterDataFromFileDetails(
+			jsonArray.toString(),
+			DISPLAY_LABEL,
+			SECURITY_KEY);
+
+		ArrayList<Map<String, Object>> securityList = new ArrayList<>();
+
+		for (int i = 0; i < jsonSecurityArray.length(); i++) {
+
+			JSONObject jsonOb = jsonSecurityArray.getJSONObject(i);
+
+			Map<String, Object> securityKeyVal = new HashMap<>();
+
+			securityKeyVal.put(DISPLAY_LABEL, jsonOb.get(DISPLAY_LABEL));
+			securityKeyVal.put(SECURITY_KEY, jsonOb.get(SECURITY_KEY));
+
+			securityList.add(securityKeyVal);
+		}
+
+		return securityList;
+	}
+
+	private ArrayList<Map<String, Object>> buildSecurityScopeList(JSONArray securityArray) {
+		JSONArray jsonArray = new JSONArray();
+		JSONArray scopeArray = new JSONArray();
+
+		for (int i = 0; i < securityArray.length(); i++) {
+
+			JSONObject objects = securityArray.getJSONObject(i);
+
+			JSONObject scopeObj = new JSONObject();
+
+			jsonArray.put(objects.get(SECURITY_KEY));
+
+			scopeObj.put("Read", objects.get("readAccessInd"));
+			scopeObj.put("Write", objects.get("grantorAccessInd"));
+			scopeObj.put(DISPLAY_LABEL, jsonArray.toString());
+
+			JSONObject scopeObjects = filterSecurityScope(scopeObj);
+
+			scopeArray.put(scopeObjects);
+		}
+
+		ArrayList<Map<String, Object>> securityScopeList = new ArrayList<>();
+
+		for (int i = 0; i < scopeArray.length(); i++) {
+
+			JSONObject jsonOb = scopeArray.getJSONObject(i);
+
+			Map<String, Object> securityScopeKeyVal = new HashMap<>();
+
+			securityScopeKeyVal.put(DISPLAY_LABEL, jsonOb.get(DISPLAY_LABEL));
+			securityScopeKeyVal.put(
+				CAN_READ_OR_WRITE,
+				jsonOb.getBoolean(CAN_READ_OR_WRITE));
+
+			securityScopeList.add(securityScopeKeyVal);
+		}
+
+		return securityScopeList;
+	}
+
+	private void populateSearchDocumentResultsDto(SearchDocumentResultsDto searchDocumentResultsDto,
+    String content, String fileName, JSONObject fileDetails) {
+
+		searchDocumentResultsDto.setKey(fileName);
+		searchDocumentResultsDto.setAbsoluteFilePath(fileDetails.getString("filePath"));
+
+		if (!fileDetails.isNull("lastUpdatedTimestamp")) {
+			searchDocumentResultsDto.setLastModified(fileDetails.get("lastUpdatedTimestamp").toString());
+		}
+
+		if (!fileDetails.isNull(UPLOADED_BY_PROPERTY)) {
+			searchDocumentResultsDto.setUploadedBy(fileDetails.get(UPLOADED_BY_PROPERTY).toString());
+		}
+
+		if (!fileDetails.isNull("lastUpdatedBy")) {
+			searchDocumentResultsDto.setLastUpdatedBy(fileDetails.get("lastUpdatedBy").toString());
+		}
+
+		if (fileDetails.get(MIME_TYPE) == "null") {
+			searchDocumentResultsDto.setMimeType("DIRECTORY");
+		} else {
+			searchDocumentResultsDto.setMimeType(fileDetails.get(MIME_TYPE).toString());
+		}
+
+		if (fileDetails.get("fileType") != "null") {
+			searchDocumentResultsDto.setFileType(fileDetails.get("fileType").toString());
+		}
+
+		searchDocumentResultsDto.setFileName(fileName);
+
+		if (!fileDetails.isNull("fileExtension")) {
+
+			searchDocumentResultsDto.setFileExtension(fileDetails.get("fileExtension").toString());
+
+		} else if (fileName.contains(".")) {
+
+			String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+
+			searchDocumentResultsDto.setFileExtension(fileExtension);
+		}
+
+		if (!fileDetails.isNull("retention")) {
+			searchDocumentResultsDto.setFileRetention(fileDetails.get("retention").toString());
+		}
+
+		if (content != null && !content.isEmpty()) {
+			JSONObject jsonObj = new JSONObject(content);
+			searchDocumentResultsDto.setFileContent(jsonObj.getString("Text"));
+		}
+
+		JSONObject parent = fileDetails.getJSONObject("parent");
+		JSONArray parentLinkArray = parent.getJSONArray("links");
+		JSONObject parentLinkObj = parentLinkArray.getJSONObject(0);
+
+		searchDocumentResultsDto.setFileLink(parentLinkObj.get("href").toString());
+
+		searchDocumentResultsDto.setFilePath(parent.getString("filePath"));
+
+		if (!fileDetails.isNull(FILE_SIZE)) {
+
+			Long fileSizeLong = fileDetails.getLong(FILE_SIZE);
+
+			String fileSize = humanReadableByteCountBin(fileSizeLong.longValue());
+
+			searchDocumentResultsDto.setFileSize(fileSize);
+
+		} else {
+			searchDocumentResultsDto.setFileSize(String.valueOf(0));
+		}
+
+		searchDocumentResultsDto.setFileSizeBytes( parsetoBytes(searchDocumentResultsDto.getFileSize()));
+	}
+
+	private void closeOpenSearchConnection() {
+
+		if (openSearchClient != null) {
+			try {
+				logger.debug("Closing open search connection");
+				if (httpClient != null) {
+					httpClient.close();
+					httpClient = null;
+				}
+				openSearchClient = null;
+			} catch (Exception e) {
+				logger.error(
+					"Error closing open search connection: {}",
+					e.getMessage());
+			}
+		}
+	}
+
+	private IndexResponse executeIndexRequest(IndexRequest<SearchDocumentResultsDto> indexRequest)
+		throws OpenSearchException {
+		try {
+			IndexResponse response = openSearchClient.index(indexRequest);
+			logger.info("Response:" + response);
+
+			return response;
+
+		} catch (Exception e) {
+			logger.error("Error indexing document into open search: {}", e.getMessage());
+
+			throw new OpenSearchException(e);
+		}
 	}
 	
 }
