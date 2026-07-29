@@ -80,142 +80,24 @@ public class GetFileFromWFDMAPI {
   public static boolean setIndexedMetadata(String accessToken, String fileId, String versionNumber,
       JSONObject fileDetails, String Etag) throws UnirestException {
 
-    // default fields we will need to add if they don't already exist
-
-    Boolean creatorExists = false;
-    Boolean titleExists = false;
-    Boolean dateCreatedExists = false;
-    Boolean dateModifiedExists = false;
-    Boolean descriptionExists = false;
-    Boolean formatExists = false;
-    Boolean uniqueIdentifierExists = false;
-    Boolean informationScheduleExists = false;
-    Boolean securityClassificationExists = false;
-    Boolean retentionScheduleExists = false;
-    Boolean oPRExists = false;
-    Boolean incidentNumberExists = false;
-    Boolean appAcronymExists = false;
-    Boolean uploadedByExists = false;
-
-    Boolean creatorIsNull = false;
-    Boolean uploadedByIsNull = false;
-
     // Add metadata to the File details to flag it as "Unscanned"
     JSONArray metaArray = fileDetails.getJSONArray("metadata");
-    // Locate any existing scan meta and remove
-    for (int i = 0; i < metaArray.length(); i++) {
-      String metadataName = metaArray.getJSONObject(i).getString(METADATA_NAME);
-      if ( i >= 0 && metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
-          || (metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber))) {
-        metaArray.remove(i);
-        i--;
-      }
-      if (i >= 0 && metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
-        metaArray.remove(i);
-        i--;
-      }
-
-      // By default the API inherits the parent folders meta value, 
-      //Creator needs to have a default value of uploadedBy,
-      // So if the parent folder creator is Null, we still want to set the default value
-      if (i >= 0 && metadataName.equals(CREATOR)) {
-        creatorIsNull = metaArray.getJSONObject(i).getString(METADATA_VALUE).equals("null");
-      }
-      if (i >= 0 && metadataName.equals(UPLOADED_BY_METADATA)) {
-        uploadedByIsNull = metaArray.getJSONObject(i).getString(METADATA_VALUE).equals("null");
-      }
-
-      if (!creatorExists) creatorExists = metadataName.equals(CREATOR);
-      if (!uploadedByExists) uploadedByExists = metadataName.equals(UPLOADED_BY_METADATA);
-      if (!titleExists) titleExists = metadataName.equals("Title");
-      if (!dateCreatedExists) dateCreatedExists = metadataName.equals("DateCreated");
-      if (!dateModifiedExists) dateModifiedExists = metadataName.equals("DateModified");
-      if (!descriptionExists) descriptionExists = metadataName.equals("Description");
-      if (!formatExists) formatExists = metadataName.equals("Format");
-      if (!uniqueIdentifierExists) uniqueIdentifierExists = metadataName.equals("UniqueIdentifier");
-      if (!informationScheduleExists)  informationScheduleExists = metadataName.equals("InformationSchedule");
-      if (!securityClassificationExists) securityClassificationExists = metadataName.equals("SecurityClassification");
-      if (!oPRExists)  oPRExists = metadataName.equals("OPR");      
-      if (!incidentNumberExists) incidentNumberExists = metadataName.equals("IncidentNumber");
-      if (!appAcronymExists) appAcronymExists = metadataName.equals("AppAcronym");
-
-    }
+    MetadataFlags flags = inspectMetadata(metaArray, versionNumber);
 
     // check for default metadata, if it exists do nothing
-    if (!creatorExists || creatorIsNull)  {
-      String uploadedBy = fileDetails.isNull(UPLOADED_BY_PROPERTY) ? "null" : fileDetails.getString(UPLOADED_BY_PROPERTY);
-      metaArray.put(addMeta(CREATOR, uploadedBy));
-    }
-    if (!uploadedByExists || uploadedByIsNull) {
-      String uploadedBy = fileDetails.isNull(UPLOADED_BY_PROPERTY) ? "null" : fileDetails.getString(UPLOADED_BY_PROPERTY);
-      metaArray.put(addMeta(UPLOADED_BY_METADATA, uploadedBy));
+    addDefaultCreatorMetadata(metaArray, fileDetails, flags);
+
+    if (!flags.dateCreatedExists) {
+      metaArray.put(addMeta("DateCreated", deriveDateCreated(fileDetails)));
     }
 
-    if (!dateCreatedExists) {
-      // store date in metadata standard format yyyy-MM-dd HH:mm:ss
-      String dateCreatedValue = "null";
-      DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"); 
-      DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-      // Always try to derive DateCreated from version 1 in the versions array
-      if (fileDetails.has(VERSIONS) && !fileDetails.isNull(VERSIONS)) {
-          JSONArray versions = fileDetails.getJSONArray(VERSIONS);
-
-          for (int i = 0; i < versions.length(); i++) {
-            JSONObject version = versions.getJSONObject(i);
-            int vNum = version.getInt("versionNumber");
-
-            if (vNum == 1 && version.has(UPLOADED_ON_TIMESTAMP) && !version.isNull(UPLOADED_ON_TIMESTAMP)) {
-              try {
-                    String raw = version.getString(UPLOADED_ON_TIMESTAMP);
-                    LocalDateTime parsed = LocalDateTime.parse(raw, inputFormatter);
-                    dateCreatedValue = parsed.format(outputFormatter);
-                } catch (Exception e) {
-                    // fallback - store raw value instead of failing
-                    dateCreatedValue = version.getString(UPLOADED_ON_TIMESTAMP);
-                }
-                break;
-            }
-          }
-        }
-        metaArray.put(addMeta("DateCreated", dateCreatedValue));
-    }
-
-    if (!titleExists) metaArray.put(addMeta("Title", "null"));
-    if (!dateModifiedExists) metaArray.put(addMeta("DateModified", "null"));
-    if (!descriptionExists) metaArray.put(addMeta("Description", "null"));
-    if (!formatExists) metaArray.put(addMeta("Format", "null"));
-    if (!uniqueIdentifierExists) metaArray.put(addMeta("UniqueIdentifier", "null"));
-    if (!informationScheduleExists) metaArray.put(addMeta("InformationSchedule", "null"));
-    if (!securityClassificationExists) metaArray.put(addMeta("SecurityClassification", "null"));
-    if (!oPRExists) metaArray.put(addMeta("OPR", "null"));
-    if (!incidentNumberExists) metaArray.put(addMeta("IncidentNumber", "null"));
-    if (!appAcronymExists) metaArray.put(addMeta("AppAcronym", "null"));
+    addMissingDefaultMetadata(metaArray, flags);
 
     // inject scan meta
-    JSONObject meta = new JSONObject();
-    meta.put(TYPE, WFDM_RESOURCE_TYPE_URL);
-    meta.put(METADATA_NAME, "WFDMIndexVersion-" + versionNumber);
-    meta.put(METADATA_VALUE, "true");
-    metaArray.put(meta);
-
-    JSONObject meta2 = new JSONObject();
-    meta2.put(TYPE, WFDM_RESOURCE_TYPE_URL);
-    meta2.put(METADATA_NAME, "WFDMIndexDate-" + versionNumber);
-    Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    meta2.put(METADATA_VALUE, formatter.format(new Date().getTime()));
-    metaArray.put(meta2);
+    addIndexMetadata(metaArray, versionNumber);
 
     // PUT the changes
-    String wfdmAPIUrl = PropertyLoader.getProperty("wfdm.document.api.url").trim();
-    HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
-        .header("Content-Type", "application/json")
-        .header(AUTHORIZATION, BEARER + accessToken)
-        .header("If-Match", Etag) 
-        .body(fileDetails.toString())
-        .asString();
-
-    return metaUpdateResponse.getStatus() == 200;
+    return updateMetadata(accessToken, fileId, Etag, fileDetails);
   }
 
   public static JSONObject addMeta(String metaName, String metaValue) {
@@ -233,5 +115,199 @@ public class GetFileFromWFDMAPI {
   static String getApiUrl() {
       return System.getenv("WFDM_DOCUMENT_API_URL");
   }
+  
+  private static class MetadataFlags {
+    boolean creatorExists;
+    boolean titleExists;
+    boolean dateCreatedExists;
+    boolean dateModifiedExists;
+    boolean descriptionExists;
+    boolean formatExists;
+    boolean uniqueIdentifierExists;
+    boolean informationScheduleExists;
+    boolean securityClassificationExists;
+    boolean oprExists;
+    boolean incidentNumberExists;
+    boolean appAcronymExists;
+    boolean uploadedByExists;
+
+    boolean creatorIsNull;
+    boolean uploadedByIsNull;
+  }
+
+  private static MetadataFlags inspectMetadata(JSONArray metaArray, String versionNumber) {
+
+    MetadataFlags flags = new MetadataFlags();
+
+    for (int i = 0; i < metaArray.length(); i++) {
+
+      String metadataName = metaArray.getJSONObject(i).getString(METADATA_NAME);
+
+      if (( metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber))
+          || metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber)) {
+        metaArray.remove(i);
+        i--;
+        continue;
+      }
+
+      if ( metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
+        metaArray.remove(i);
+        i--;
+        continue;
+      }
+
+      if ( metadataName.equals(CREATOR)) {
+        flags.creatorIsNull = metaArray.getJSONObject(i).getString(METADATA_VALUE).equals("null");
+      }
+
+      if ( metadataName.equals(UPLOADED_BY_METADATA)) {
+        flags.uploadedByIsNull =  metaArray.getJSONObject(i).getString(METADATA_VALUE).equals("null");
+      }
+
+      if (!flags.creatorExists) flags.creatorExists = metadataName.equals(CREATOR);
+      if (!flags.uploadedByExists) flags.uploadedByExists = metadataName.equals(UPLOADED_BY_METADATA);
+      if (!flags.titleExists) flags.titleExists = metadataName.equals("Title");
+      if (!flags.dateCreatedExists) flags.dateCreatedExists = metadataName.equals("DateCreated");
+      if (!flags.dateModifiedExists) flags.dateModifiedExists = metadataName.equals("DateModified");
+      if (!flags.descriptionExists) flags.descriptionExists = metadataName.equals("Description");
+      if (!flags.formatExists) flags.formatExists = metadataName.equals("Format");
+      if (!flags.uniqueIdentifierExists) flags.uniqueIdentifierExists = metadataName.equals("UniqueIdentifier");
+      if (!flags.informationScheduleExists) flags.informationScheduleExists = metadataName.equals("InformationSchedule");
+      if (!flags.securityClassificationExists) flags.securityClassificationExists = metadataName.equals("SecurityClassification");
+      if (!flags.oprExists) flags.oprExists = metadataName.equals("OPR");
+      if (!flags.incidentNumberExists) flags.incidentNumberExists = metadataName.equals("IncidentNumber");
+      if (!flags.appAcronymExists) flags.appAcronymExists = metadataName.equals("AppAcronym");
+    }
+
+    return flags;
+  }
+
+
+  private static String deriveDateCreated(JSONObject fileDetails) {
+
+    String dateCreatedValue = "null";
+
+    DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+
+    DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    if (!fileDetails.has(VERSIONS) || fileDetails.isNull(VERSIONS)) {
+      return dateCreatedValue;
+    }
+
+    JSONArray versions = fileDetails.getJSONArray(VERSIONS);
+
+    for (int i = 0; i < versions.length(); i++) {
+
+      JSONObject version = versions.getJSONObject(i);
+
+      if (version.getInt("versionNumber") != 1) {
+        continue;
+      }
+
+      if (!version.has(UPLOADED_ON_TIMESTAMP) || version.isNull(UPLOADED_ON_TIMESTAMP)) {
+        continue;
+      }
+
+      String raw = version.getString(UPLOADED_ON_TIMESTAMP);
+
+      try {
+        LocalDateTime parsed = LocalDateTime.parse(raw, inputFormatter);
+        return parsed.format(outputFormatter);
+      } catch (RuntimeException e) {
+        return raw;
+      }
+    }
+
+    return dateCreatedValue;
+  }
+
+  private static void addMissingDefaultMetadata(JSONArray metaArray, MetadataFlags flags) {
+    if (!flags.titleExists) {
+      metaArray.put(addMeta("Title", "null"));
+    }
+
+    if (!flags.dateModifiedExists) {
+      metaArray.put(addMeta("DateModified", "null"));
+    }
+
+    if (!flags.descriptionExists) {
+      metaArray.put(addMeta("Description", "null"));
+    }
+
+    if (!flags.formatExists) {
+      metaArray.put(addMeta("Format", "null"));
+    }
+
+    if (!flags.uniqueIdentifierExists) {
+      metaArray.put(addMeta("UniqueIdentifier", "null"));
+    }
+
+    if (!flags.informationScheduleExists) {
+      metaArray.put(addMeta("InformationSchedule", "null"));
+    }
+
+    if (!flags.securityClassificationExists) {
+      metaArray.put(addMeta("SecurityClassification", "null"));
+    }
+
+    if (!flags.oprExists) {
+      metaArray.put(addMeta("OPR", "null"));
+    }
+
+    if (!flags.incidentNumberExists) {
+      metaArray.put(addMeta("IncidentNumber", "null"));
+    }
+
+    if (!flags.appAcronymExists) {
+      metaArray.put(addMeta("AppAcronym", "null"));
+    }
+	}
+
+  private static void addIndexMetadata(JSONArray metaArray, String versionNumber) {
+    JSONObject versionMeta = new JSONObject();
+    versionMeta.put(TYPE, WFDM_RESOURCE_TYPE_URL);
+    versionMeta.put(METADATA_NAME, "WFDMIndexVersion-" + versionNumber);
+    versionMeta.put(METADATA_VALUE, "true");
+    metaArray.put(versionMeta);
+
+    JSONObject dateMeta = new JSONObject();
+    dateMeta.put(TYPE, WFDM_RESOURCE_TYPE_URL);
+    dateMeta.put(METADATA_NAME, "WFDMIndexDate-" + versionNumber);
+
+    Format formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    dateMeta.put(METADATA_VALUE, formatter.format(new Date().getTime()));
+
+    metaArray.put(dateMeta);
+  }
+
+  private static void addDefaultCreatorMetadata(JSONArray metaArray, JSONObject fileDetails, MetadataFlags flags) {
+
+    String uploadedBy = fileDetails.isNull(UPLOADED_BY_PROPERTY) ? "null" : fileDetails.getString(UPLOADED_BY_PROPERTY);
+
+    if (!flags.creatorExists || flags.creatorIsNull) {
+      metaArray.put(addMeta(CREATOR, uploadedBy));
+    }
+
+    if (!flags.uploadedByExists || flags.uploadedByIsNull) {
+      metaArray.put(addMeta(UPLOADED_BY_METADATA, uploadedBy));
+    }
+  }
+
+  private static boolean updateMetadata(String accessToken, String fileId,
+     String etag, JSONObject fileDetails) 
+     throws UnirestException {
+
+    HttpResponse<String> metaUpdateResponse =
+        Unirest.put(getApiUrl().trim() + fileId)
+            .header("Content-Type", "application/json")
+            .header(AUTHORIZATION, BEARER + accessToken)
+            .header("If-Match", etag)
+            .body(fileDetails.toString())
+            .asString();
+
+    return metaUpdateResponse.getStatus() == 200;
+  }
+
 
 }
