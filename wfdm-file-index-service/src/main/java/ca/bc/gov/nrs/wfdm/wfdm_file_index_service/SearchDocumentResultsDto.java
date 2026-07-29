@@ -33,7 +33,7 @@ public class SearchDocumentResultsDto {
     private String scanStatus;
 
     public SearchDocumentResultsDto() {
-
+          // Default constructor required for JSON deserialization.
     }
 
     public String getFileId() {

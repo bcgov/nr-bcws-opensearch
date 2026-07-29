@@ -305,6 +305,9 @@ public class OpenSearchRESTClient {
 					case "DATE":
 						jobject.put(METADATA_DATE_VALUE, json.getString(metadataValue));
 						break;
+					default:      
+						// Metadata stored as string via metadataValue below
+					 	break;
 				}
 			}
 			// setting a default metaDataValue so a string version is  always available for defaults

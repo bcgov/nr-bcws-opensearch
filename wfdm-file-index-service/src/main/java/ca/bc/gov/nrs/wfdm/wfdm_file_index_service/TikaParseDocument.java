@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
@@ -53,7 +54,7 @@ public class TikaParseDocument {
     String extractedContent = "";
 
     // Create a Transformer Handler for the Tika parser
-    SAXTransformerFactory factory = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+    SAXTransformerFactory factory = (SAXTransformerFactory) TransformerFactory.newInstance();
     TransformerHandler handler = factory.newTransformerHandler();
     handler.getTransformer().setOutputProperty(OutputKeys.METHOD, "text");
     handler.getTransformer().setOutputProperty(OutputKeys.INDENT, "yes");

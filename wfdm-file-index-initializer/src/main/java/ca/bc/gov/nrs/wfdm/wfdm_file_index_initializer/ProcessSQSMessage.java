@@ -13,7 +13,7 @@ import org.xml.sax.SAXException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.lambda.AWSLambda;
-import com.amazonaws.services.lambda.AWSLambdaAsyncClient;
+import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -96,7 +96,7 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   }
 
   static AWSLambda createLambdaClient() {
-      return AWSLambdaAsyncClient.builder()
+      return AWSLambdaClient.builder()
               .withRegion(region)
               .build();
   }
