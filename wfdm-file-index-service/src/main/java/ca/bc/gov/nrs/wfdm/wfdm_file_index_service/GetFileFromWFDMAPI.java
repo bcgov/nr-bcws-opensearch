@@ -143,40 +143,14 @@ public class GetFileFromWFDMAPI {
 
       String metadataName = metaArray.getJSONObject(i).getString(METADATA_NAME);
 
-      if (( metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber))
-          || metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber)) {
-        metaArray.remove(i);
+      if (removeIndexMetadata(metaArray, i, metadataName, versionNumber)) {
         i--;
         continue;
       }
 
-      if ( metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
-        metaArray.remove(i);
-        i--;
-        continue;
-      }
+      updateNullFlags(flags, metaArray, i, metadataName);
 
-      if ( metadataName.equals(CREATOR)) {
-        flags.creatorIsNull = metaArray.getJSONObject(i).getString(METADATA_VALUE).equals("null");
-      }
-
-      if ( metadataName.equals(UPLOADED_BY_METADATA)) {
-        flags.uploadedByIsNull =  metaArray.getJSONObject(i).getString(METADATA_VALUE).equals("null");
-      }
-
-      if (!flags.creatorExists) flags.creatorExists = metadataName.equals(CREATOR);
-      if (!flags.uploadedByExists) flags.uploadedByExists = metadataName.equals(UPLOADED_BY_METADATA);
-      if (!flags.titleExists) flags.titleExists = metadataName.equals("Title");
-      if (!flags.dateCreatedExists) flags.dateCreatedExists = metadataName.equals("DateCreated");
-      if (!flags.dateModifiedExists) flags.dateModifiedExists = metadataName.equals("DateModified");
-      if (!flags.descriptionExists) flags.descriptionExists = metadataName.equals("Description");
-      if (!flags.formatExists) flags.formatExists = metadataName.equals("Format");
-      if (!flags.uniqueIdentifierExists) flags.uniqueIdentifierExists = metadataName.equals("UniqueIdentifier");
-      if (!flags.informationScheduleExists) flags.informationScheduleExists = metadataName.equals("InformationSchedule");
-      if (!flags.securityClassificationExists) flags.securityClassificationExists = metadataName.equals("SecurityClassification");
-      if (!flags.oprExists) flags.oprExists = metadataName.equals("OPR");
-      if (!flags.incidentNumberExists) flags.incidentNumberExists = metadataName.equals("IncidentNumber");
-      if (!flags.appAcronymExists) flags.appAcronymExists = metadataName.equals("AppAcronym");
+      updateMetadataFlags(flags, metadataName);
     }
 
     return flags;
@@ -307,6 +281,50 @@ public class GetFileFromWFDMAPI {
             .asString();
 
     return metaUpdateResponse.getStatus() == 200;
+  }
+
+  private static void updateMetadataFlags(MetadataFlags flags, String metadataName) {
+
+    if (!flags.creatorExists) flags.creatorExists = metadataName.equals(CREATOR);
+    if (!flags.uploadedByExists) flags.uploadedByExists = metadataName.equals(UPLOADED_BY_METADATA);
+    if (!flags.titleExists) flags.titleExists = metadataName.equals("Title");
+    if (!flags.dateCreatedExists) flags.dateCreatedExists = metadataName.equals("DateCreated");
+    if (!flags.dateModifiedExists) flags.dateModifiedExists = metadataName.equals("DateModified");
+    if (!flags.descriptionExists) flags.descriptionExists = metadataName.equals("Description");
+    if (!flags.formatExists) flags.formatExists = metadataName.equals("Format");
+    if (!flags.uniqueIdentifierExists) flags.uniqueIdentifierExists = metadataName.equals("UniqueIdentifier");
+    if (!flags.informationScheduleExists) flags.informationScheduleExists = metadataName.equals("InformationSchedule");
+    if (!flags.securityClassificationExists) flags.securityClassificationExists = metadataName.equals("SecurityClassification");
+    if (!flags.oprExists) flags.oprExists = metadataName.equals("OPR");
+    if (!flags.incidentNumberExists) flags.incidentNumberExists = metadataName.equals("IncidentNumber");
+    if (!flags.appAcronymExists) flags.appAcronymExists = metadataName.equals("AppAcronym");
+  }
+
+  private static void updateNullFlags( MetadataFlags flags, JSONArray metaArray, int index, String metadataName) {
+
+    if (metadataName.equals(CREATOR)) {
+      flags.creatorIsNull = metaArray.getJSONObject(index).getString(METADATA_VALUE).equals("null");
+    }
+
+    if (metadataName.equals(UPLOADED_BY_METADATA)) {
+      flags.uploadedByIsNull = metaArray.getJSONObject(index).getString(METADATA_VALUE).equals("null");
+    }
+  }
+
+  private static boolean removeIndexMetadata(JSONArray metaArray, int index,String metadataName, String versionNumber) {
+
+    if (metadataName.equalsIgnoreCase("WFDMIndexVersion-" + versionNumber)
+    || metadataName.equalsIgnoreCase("wfdm-indexed-v" + versionNumber)) {
+      metaArray.remove(index);
+      return true;
+    }
+
+    if (metadataName.equalsIgnoreCase("WFDMIndexDate-" + versionNumber)) {
+      metaArray.remove(index);
+      return true;
+    }
+
+    return false;
   }
 
 

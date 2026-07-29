@@ -14,7 +14,6 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.amazonaws.services.lambda.model.InvokeRequest;
-import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -83,6 +82,13 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     SendSNSNotification.publicshMessagetoSNS(messageDetails);
   }
 
+  private static class MessageInfo {
+    String fileId;
+    String versionNumber;
+    String status;
+    String summary;
+  }
+
   protected AWSLambda createLambdaClient() {
 
     return AWSLambdaClient.builder()
@@ -94,7 +100,6 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
   public SQSBatchResponse handleRequest(SQSEvent sqsEvent, Context context) {
     LambdaLogger logger = context.getLogger();
     List<SQSBatchResponse.BatchItemFailure> batchItemFailures = new ArrayList<>();
-    String messageBody = "";
 
     // null check sqsEvents!
     if (sqsEvent == null || sqsEvent.getRecords() == null) {
@@ -105,79 +110,8 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     // Iterate the available messages
     for (SQSEvent.SQSMessage message : sqsEvent.getRecords()) {
       try {
-        messageBody = message.getBody();
-        logger.log("\nInfo: SQS Message Received: " + messageBody);
-        JSONObject messageDetails = new JSONObject(messageBody);
-        String inputKey = messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("input_key");
-        String status = messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("status");
-        //if status is infected send an email to SNS topic
-		if (status.equals("INFECTED")) {
-			publishVirusNotification(messageDetails);
-		}
-        
-        if(!inputKey.contains("-")) {
-        	logger.log("\nInfo: This is not a valid file name:" + inputKey+".\n Program might exit.");	
-        }
-        String fileId = inputKey.split("-")[0];
-        String versionNumber = inputKey.split("-")[1];
-        String summary = messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("message");
-        logger.log("\nInfo: SQS Message Received: " + messageBody+summary);
+        processMessage(message, logger);
 
-        // Should come for preferences, Client ID and secret for authentication with
-        // WFDM
-        String wfdmSecretName = getSecretManagerName().trim();
-        String secret = retrieveSecret(wfdmSecretName);
-        String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
-  	  	String CLIENT_ID = secretCD[0];
-  	  	String PASSWORD = secretCD[1];
-
-        // Fetch an authentication token. We fetch this each time so the tokens
-        // themselves
-        // aren't in a cache slowly getting stale. Could be replaced by a check token
-        // and
-        // a cached token
-        String wfdmToken = getAccessToken(CLIENT_ID, PASSWORD);
-        if (wfdmToken == null)
-          throw new Exception("Could not authorize access for WFDM");
-
-        HttpResponse<String> fileResponse = getFileInformation(wfdmToken, fileId);
-
-        if (fileResponse == null) {
-          throw new Exception("File not found!");
-        } else {
-          String fileInfo = fileResponse.getBody();
-          String etag = fileResponse.getHeaders().getFirst("ETag");
-          JSONObject fileDetailsJson = new JSONObject(fileInfo);
-
-          logger.log("\nInfo: File found on WFDM: " + fileInfo);
-          // Update Virus scan metadata
-          // Note, current user likely lacks access to update metadata so we'll need to update webade
-          boolean metaAdded = setVirusScanMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, status, etag);
-          if (!metaAdded) {
-            // We failed to apply the metadata regarding the virus scan status...
-            // Should we continue to process the data from this point, or just choke?
-            logger.log("\nERROR: Failed to add metadata to file resource");
-          }
-
-          // Meta only update, so fire a message to the Indexer Lambda
-          AWSLambda client = createLambdaClient();
-
-          // ensure the default eventType of "Bytes" is appended
-          // so the tika parser lambda knows to check for data
-          // and not just meta
-          fileDetailsJson.put("eventType", "bytes");
-          fileDetailsJson.put("fileVersionNumber", versionNumber);
-
-          fileDetailsJson.put("status", status);
-          fileDetailsJson.put("message", summary);
-
-          logger.log("\n Calling lambda name: " + getIndexingLambdaName().trim() + " Lambda. " + fileDetailsJson.toString());
-          
-          InvokeRequest request = new InvokeRequest();
-
-          request.withFunctionName(getIndexingLambdaName().trim()).withPayload(fileDetailsJson.toString());
-          InvokeResult invoke = client.invoke(request);
-        }
       } catch (UnirestException | TransformerConfigurationException | SAXException e) {
         logger.log("\nError: Failure to recieve file from WFDM: " + e.getLocalizedMessage());
         batchItemFailures.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
@@ -193,4 +127,127 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
     logger.log("\nInfo: Close SQS batch");
     return new SQSBatchResponse(batchItemFailures);
   }
+
+  private void invokeIndexer(JSONObject fileDetailsJson, String versionNumber,
+     String status, String summary,  LambdaLogger logger) {
+
+    AWSLambda client = createLambdaClient();
+
+    fileDetailsJson.put("eventType", "bytes");
+    fileDetailsJson.put("fileVersionNumber", versionNumber);
+    fileDetailsJson.put("status", status);
+    fileDetailsJson.put("message", summary);
+
+    logger.log("\n Calling lambda name: "
+            + getIndexingLambdaName().trim()
+            + " Lambda. "
+            + fileDetailsJson.toString());
+
+    InvokeRequest request = new InvokeRequest();
+
+    request.withFunctionName(getIndexingLambdaName().trim())
+        .withPayload(fileDetailsJson.toString());
+
+    client.invoke(request);
+  }
+
+  private String retrieveWFDMToken() throws Exception {
+    String wfdmSecretName = getSecretManagerName().trim();
+    String secret = retrieveSecret(wfdmSecretName);
+
+    String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+
+    String clientId = secretCD[0];
+    String password = secretCD[1];
+
+    String wfdmToken = getAccessToken(clientId, password);
+
+    if (wfdmToken == null) {
+      throw new Exception("Could not authorize access for WFDM");
+    }
+
+    return wfdmToken;
+  }
+
+  private MessageInfo parseMessage(
+    String messageBody,
+    LambdaLogger logger) {
+
+    JSONObject messageDetails = new JSONObject(messageBody);
+    JSONObject payload = messageDetails.getJSONObject(RESPONSE_PAYLOAD);
+
+    String inputKey = payload.getString("input_key");
+
+    MessageInfo info = new MessageInfo();
+
+    info.status = payload.getString("status");
+
+    if ("INFECTED".equals(info.status)) {
+      publishVirusNotification(messageDetails);
+    }
+
+    if (!inputKey.contains("-")) {
+      logger.log(
+          "\nInfo: This is not a valid file name:"
+          + inputKey
+          + ".\n Program might exit.");
+    }
+
+    info.fileId = inputKey.split("-")[0];
+    info.versionNumber = inputKey.split("-")[1];
+    info.summary = payload.getString("message");
+
+    logger.log(
+        "\nInfo: SQS Message Received: "
+        + messageBody
+        + info.summary);
+
+    return info;
+  }
+
+
+  private void processFile(String wfdmToken, String fileId, String versionNumber,
+      String status, String summary, LambdaLogger logger) throws Exception {
+
+    HttpResponse<String> fileResponse = getFileInformation(wfdmToken, fileId);
+
+    if (fileResponse == null) {
+      throw new Exception("File not found!");
+    }
+
+    String fileInfo = fileResponse.getBody();
+    String etag = fileResponse.getHeaders().getFirst("ETag");
+    JSONObject fileDetailsJson = new JSONObject(fileInfo);
+
+    logger.log("\nInfo: File found on WFDM: " + fileInfo);
+
+    boolean metaAdded = setVirusScanMetadata( wfdmToken, fileId, versionNumber,
+        fileDetailsJson, status, etag);
+
+    if (!metaAdded) {
+      logger.log("\nERROR: Failed to add metadata to file resource");
+    }
+
+    invokeIndexer(
+        fileDetailsJson,
+        versionNumber,
+        status,
+        summary,
+        logger);
+  }
+
+  private void processMessage(SQSEvent.SQSMessage message, LambdaLogger logger) throws Exception {
+
+    String messageBody = message.getBody();
+
+    logger.log("\nInfo: SQS Message Received: " + messageBody);
+
+    MessageInfo messageInfo = parseMessage(messageBody, logger);
+
+    String wfdmToken = retrieveWFDMToken();
+
+    processFile( wfdmToken, messageInfo.fileId, messageInfo.versionNumber,
+        messageInfo.status, messageInfo.summary, logger);
+  }
+
 }
