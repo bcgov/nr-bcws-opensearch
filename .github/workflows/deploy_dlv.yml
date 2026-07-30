@@ -98,5 +98,6 @@ jobs:
           opensearch_password: ${{ secrets.OPENSEARCH_PASSWORD_DLV }}
           opensearch_user: ${{ secrets.OPENSEARCH_USER_DLV }}
           reverse_proxy_ip: ${{ vars.REVERSE_PROXY_IP}}
+          api_gateway_key: ${{ secrets.API_GATEWAY_KEY_DLV }}
         run: terragrunt run-all apply --terragrunt-non-interactive
         #run: terragrunt run-all plan --terragrunt-non-interactive

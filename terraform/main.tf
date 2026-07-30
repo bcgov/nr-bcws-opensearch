@@ -985,11 +985,33 @@ resource "aws_api_gateway_request_validator" "sqs-api-gateway-validator" {
   validate_request_parameters = true
 }
 
+resource "aws_api_gateway_api_key" "sqs_api_key" {
+  name    = "${var.application}-sqs-api-key-${var.env}"
+  value   = var.api_gateway_key
+  enabled = true
+}
+
+resource "aws_api_gateway_usage_plan" "sqs_usage_plan" {
+  name = "${var.application}-sqs-usage-plan-${var.env}"
+
+  api_stages {
+    api_id = aws_api_gateway_rest_api.sqs-api-gateway.id
+    stage  = aws_api_gateway_deployment.sqs-api-gateway-deployment.stage_name
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "sqs_usage_plan_key" {
+  key_id        = aws_api_gateway_api_key.sqs_api_key.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.sqs_usage_plan.id
+}
+
 resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method   = "ANY"
   authorization = "NONE"
+  api_key_required = true
 
   request_parameters = {
     "method.request.path.proxy" = false
