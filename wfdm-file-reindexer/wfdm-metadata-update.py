@@ -72,7 +72,7 @@ def update_metadata(document_id, page, row_count):
           try:
             dateutil.parser.parse(value)
             is_date = True
-          except:
+          except Exception:
             is_date = False
 
           if is_date:

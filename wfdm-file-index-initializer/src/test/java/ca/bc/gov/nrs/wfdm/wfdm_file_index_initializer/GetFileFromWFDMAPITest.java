@@ -23,6 +23,8 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
 
 class GetFileFromWFDMAPITest {
+    private static final String METADATA_NAME = "metadataName";
+	private static final String METADATA_VALUE = "metadataValue";
 
     @Test
     void shouldInstantiatePrivateConstructorViaReflection() throws Exception {
@@ -51,19 +53,19 @@ class GetFileFromWFDMAPITest {
 
         assertEquals(
                 "WFDMScanStatus-1",
-                result.getString("metadataName"));
+                result.getString(METADATA_NAME));
 
         assertEquals(
                 "PENDING",
-                result.getString("metadataValue"));
+                result.getString(METADATA_VALUE));
     }
 
     @Test
     void shouldReplaceExistingVirusMetadata() {
 
         JSONObject existingMeta = new JSONObject();
-        existingMeta.put("metadataName", "WFDMScanStatus-1");
-        existingMeta.put("metadataValue", "FAILED");
+        existingMeta.put(METADATA_NAME, "WFDMScanStatus-1");
+        existingMeta.put(METADATA_VALUE, "FAILED");
 
         JSONArray metadata = new JSONArray();
         metadata.put(existingMeta);
@@ -81,11 +83,11 @@ class GetFileFromWFDMAPITest {
 
         assertEquals(
                 "WFDMScanStatus-1",
-                result.getString("metadataName"));
+                result.getString(METADATA_NAME));
 
         assertEquals(
                 "PENDING",
-                result.getString("metadataValue"));
+                result.getString(METADATA_VALUE));
     }
 
     @Test
@@ -107,19 +109,19 @@ class GetFileFromWFDMAPITest {
 
         assertEquals(
                 "WFDMConversionStatus-5",
-                result.getString("metadataName"));
+                result.getString(METADATA_NAME));
 
         assertEquals(
                 "UPDATED",
-                result.getString("metadataValue"));
+                result.getString(METADATA_VALUE));
     }
 
     @Test
     void shouldReplaceExistingImageConversionMetadata() {
 
         JSONObject existingMeta = new JSONObject();
-        existingMeta.put("metadataName", "WFDMConversionStatus-5");
-        existingMeta.put("metadataValue", "FAILED");
+        existingMeta.put(METADATA_NAME, "WFDMConversionStatus-5");
+        existingMeta.put(METADATA_VALUE, "FAILED");
 
         JSONArray metadata = new JSONArray();
         metadata.put(existingMeta);
@@ -140,19 +142,19 @@ class GetFileFromWFDMAPITest {
 
         assertEquals(
                 "WFDMConversionStatus-5",
-                result.getString("metadataName"));
+                result.getString(METADATA_NAME));
 
         assertEquals(
                 "UPDATED",
-                result.getString("metadataValue"));
+                result.getString(METADATA_VALUE));
     }
 
     @Test
     void shouldKeepExistingUnrelatedVirusMetadata() {
 
         JSONObject existingMeta = new JSONObject();
-        existingMeta.put("metadataName", "SomeOtherMetadata");
-        existingMeta.put("metadataValue", "ABC");
+        existingMeta.put(METADATA_NAME, "SomeOtherMetadata");
+        existingMeta.put(METADATA_VALUE, "ABC");
 
         JSONArray metadata = new JSONArray();
         metadata.put(existingMeta);
@@ -171,8 +173,8 @@ class GetFileFromWFDMAPITest {
     void shouldKeepExistingUnrelatedConversionMetadata() {
 
         JSONObject existingMeta = new JSONObject();
-        existingMeta.put("metadataName", "SomeOtherMetadata");
-        existingMeta.put("metadataValue", "ABC");
+        existingMeta.put(METADATA_NAME, "SomeOtherMetadata");
+        existingMeta.put(METADATA_VALUE, "ABC");
 
         JSONArray metadata = new JSONArray();
         metadata.put(existingMeta);

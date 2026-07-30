@@ -44,8 +44,8 @@ def lambda_handler(event, context):
                 logger.error(reason)
                 return send(event, context, FAILED, {}, reason=reason)
         except botocore.exceptions.ClientError as e:
-            logger.error(e)
-            return send(event, context, FAILED, {}, reason=e)
+            logger.exception(str(e))
+            return send(event, context, FAILED, {}, reason=str(e))
     else:
         reason = f"Nothing to do on {event_type}"
         logger.info(reason)

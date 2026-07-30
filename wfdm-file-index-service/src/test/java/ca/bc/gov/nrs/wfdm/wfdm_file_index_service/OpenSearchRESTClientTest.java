@@ -22,6 +22,10 @@ import org.opensearch.client.opensearch.core.IndexRequest;
 import software.amazon.awssdk.regions.Region;
 
 class OpenSearchRESTClientTest {
+	private static final String METADATA_NAME = "metadataName";
+    private static final String METADATA_VALUE = "metadataValue";
+	private static final String MIME_TYPE = "mimeType";
+	private static final String FILE_SIZE = "fileSize";
 
     @Test
     void shouldConvertBytesToHumanReadable() {
@@ -66,8 +70,8 @@ class OpenSearchRESTClientTest {
         JSONArray input = new JSONArray();
 
         JSONObject obj = new JSONObject();
-        obj.put("metadataName", "Flag");
-        obj.put("metadataValue", "true");
+        obj.put(METADATA_NAME, "Flag");
+        obj.put(METADATA_VALUE, "true");
         obj.put("metadataType", "BOOLEAN");
 
         input.put(obj);
@@ -85,8 +89,8 @@ class OpenSearchRESTClientTest {
                 (JSONArray) method.invoke(
                         null,
                         input.toString(),
-                        "metadataName",
-                        "metadataValue");
+                        METADATA_NAME,
+                        METADATA_VALUE);
 
         assertEquals(1, result.length());
 
@@ -95,7 +99,7 @@ class OpenSearchRESTClientTest {
 
         assertEquals(
                 "Flag",
-                returned.getString("metadataName"));
+                returned.getString(METADATA_NAME));
 
         assertEquals(
                 "true",
@@ -109,8 +113,8 @@ class OpenSearchRESTClientTest {
         JSONArray input = new JSONArray();
 
         JSONObject obj = new JSONObject();
-        obj.put("metadataName", "Count");
-        obj.put("metadataValue", "10");
+        obj.put(METADATA_NAME, "Count");
+        obj.put(METADATA_VALUE, "10");
         obj.put("metadataType", "NUMBER");
 
         input.put(obj);
@@ -128,8 +132,8 @@ class OpenSearchRESTClientTest {
                 (JSONArray) method.invoke(
                         null,
                         input.toString(),
-                        "metadataName",
-                        "metadataValue");
+                        METADATA_NAME,
+                        METADATA_VALUE);
 
         assertEquals(
                 "10",
@@ -144,8 +148,8 @@ class OpenSearchRESTClientTest {
         JSONArray input = new JSONArray();
 
         JSONObject obj = new JSONObject();
-        obj.put("metadataName", "Date");
-        obj.put("metadataValue", "2024-01-01");
+        obj.put(METADATA_NAME, "Date");
+        obj.put(METADATA_VALUE, "2024-01-01");
         obj.put("metadataType", "DATE");
 
         input.put(obj);
@@ -163,8 +167,8 @@ class OpenSearchRESTClientTest {
                 (JSONArray) method.invoke(
                         null,
                         input.toString(),
-                        "metadataName",
-                        "metadataValue");
+                        METADATA_NAME,
+                        METADATA_VALUE);
 
         assertEquals(
                 "2024-01-01",
@@ -312,8 +316,8 @@ class OpenSearchRESTClientTest {
 		JSONArray input = new JSONArray();
 
 		JSONObject obj = new JSONObject();
-		obj.put("metadataName", "Name");
-		obj.put("metadataValue", "Value");
+		obj.put(METADATA_NAME, "Name");
+		obj.put(METADATA_VALUE, "Value");
 
 		input.put(obj);
 
@@ -330,13 +334,13 @@ class OpenSearchRESTClientTest {
 				(JSONArray) method.invoke(
 						null,
 						input.toString(),
-						"metadataName",
-						"metadataValue");
+						METADATA_NAME,
+						METADATA_VALUE);
 
 		assertEquals(
 				"Value",
 				result.getJSONObject(0)
-						.getString("metadataValue"));
+						.getString(METADATA_VALUE));
 	}
 
 	@Test
@@ -346,8 +350,8 @@ class OpenSearchRESTClientTest {
 		JSONArray input = new JSONArray();
 
 		JSONObject obj = new JSONObject();
-		obj.put("metadataName", "Name");
-		obj.put("metadataValue", "Value");
+		obj.put(METADATA_NAME, "Name");
+		obj.put(METADATA_VALUE, "Value");
 		obj.put("metadataType", "TEXT");
 
 		input.put(obj);
@@ -365,8 +369,8 @@ class OpenSearchRESTClientTest {
 				(JSONArray) method.invoke(
 						null,
 						input.toString(),
-						"metadataName",
-						"metadataValue");
+						METADATA_NAME,
+						METADATA_VALUE);
 
 		assertEquals(1, result.length());
 	}
@@ -411,20 +415,20 @@ class OpenSearchRESTClientTest {
 
 		fileDetails.put("fileId", "123");
 		fileDetails.put("filePath", "/absolute/path");
-		fileDetails.put("mimeType", "text/plain");
+		fileDetails.put(MIME_TYPE, "text/plain");
 		fileDetails.put("fileType", "DOCUMENT");
 		fileDetails.put("fileExtension", "txt");
 		fileDetails.put("retention", "1 year");
 		fileDetails.put("uploadedBy", "user");
 		fileDetails.put("lastUpdatedBy", "user");
 		fileDetails.put("lastUpdatedTimestamp", "2024-01-01");
-		fileDetails.put("fileSize", 100L);
+		fileDetails.put(FILE_SIZE, 100L);
 
 		JSONArray metadata = new JSONArray();
 
 		JSONObject metadataObj = new JSONObject();
-		metadataObj.put("metadataName", "Title");
-		metadataObj.put("metadataValue", "Test");
+		metadataObj.put(METADATA_NAME, "Title");
+		metadataObj.put(METADATA_VALUE, "Test");
 
 		metadata.put(metadataObj);
 
@@ -502,7 +506,7 @@ class OpenSearchRESTClientTest {
 
 		fileDetails.put("fileId", "123");
 		fileDetails.put("filePath", "/path");
-		fileDetails.put("mimeType", "text/plain");
+		fileDetails.put(MIME_TYPE, "text/plain");
 		fileDetails.put("fileType", "DOCUMENT");
 
 		fileDetails.put("fileExtension", JSONObject.NULL);

@@ -40,6 +40,9 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, String> {
   private static String region = "ca-central-1";
   static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
+  private static final String MIME_TYPE = "mimeType";
+  private static final String FILE_VERSION_NUMBER = "fileVersionNumber";
+  private static final String MESSAGE = "message";
 
   protected String getBucketName() {
     return System.getenv("WFDM_DOCUMENT_CLAMAV_S3BUCKET");
@@ -84,6 +87,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         etag);
   }
 
+  private static class RequestInfo {
+    String versionNumber;
+    String eventType;
+    String scanStatus;
+  }
+
   @Override
   public String handleRequest(Map<String, Object> event, Context context) {
     LambdaLogger logger = context.getLogger();
@@ -105,49 +114,17 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
       String fileId = fileDetailsJson.getString("fileId");
 
-      String versionNumber;
-      if (fileDetailsJson.has("fileVersionNumber")) {
-        if (fileDetailsJson.getString("fileVersionNumber").equals("null")) {
-          versionNumber = "1";
-        } else {
-          versionNumber = fileDetailsJson.getString("fileVersionNumber");
-        }
-      } else {
-        versionNumber = "1";
-      }
-      //TODO:Update to correct event type from WFDM-API
-      String eventType;
-      if (fileDetailsJson.has("eventType")) {
-        eventType = fileDetailsJson.getString("eventType");
-      } else {
-        eventType = "meta";
-        logger.log("\nInfo: eventType key/value was not found, setting eventType to: " + eventType);
-      }
+      RequestInfo requestInfo = extractRequestInfo(fileDetailsJson, logger);
 
-      String scanStatus;
-      if (fileDetailsJson.has("message") && !fileDetailsJson.isNull("message"))
-        scanStatus = fileDetailsJson.getString("message");
-      else
-        scanStatus = "-";
-      // Should come for preferences, Client ID and secret for authentication with
-      // WFDM
+      String versionNumber = requestInfo.versionNumber;
+      String eventType = requestInfo.eventType;
+      String scanStatus = requestInfo.scanStatus;
+
+      // Should come for preferences, Client ID and secret for authentication with WFDM
       logger.log(eventType);
-      String wfdmSecretName = getSecretManagerName().trim();
-      String secret = retrieveSecret(wfdmSecretName);
-      String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
-      String CLIENT_ID = secretCD[0];
-      String PASSWORD = secretCD[1];
+      String wfdmToken = retrieveWFDMToken();
 
-      //logger.log("message"+fileDetailsJson.getString("message"));
-      // Fetch an authentication token. We fetch this each time so the tokens
-      // themselves
-      // aren't in a cache slowly getting stale. Could be replaced by a check token
-      // and
-      // a cached token
-      String wfdmToken = getAccessToken( CLIENT_ID, PASSWORD);
       logger.log("wfdmToken :" + wfdmToken);
-      if (wfdmToken == null)
-        throw new Exception("Could not authorize access for WFDM");
 
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
       HttpResponse<String> fileResponse =  getFileInformation(wfdmToken, fileId);
@@ -156,112 +133,57 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
       if (fileResponse == null) {
         throw new Exception("File not found!");
-      } else {
-        String fileInfo = fileResponse.getBody();
-        String etag = fileResponse.getHeaders().getFirst("ETag");
+      } 
 
-        // replace the passed-in file details with the details fetched
-        fileDetailsJson = new JSONObject(fileInfo);
+      String fileInfo = fileResponse.getBody();
+      String etag = fileResponse.getHeaders().getFirst("ETag");
 
-        logger.log("\nInfo: File found on WFDM: " + fileInfo);
+      // replace the passed-in file details with the details fetched
+      fileDetailsJson = new JSONObject(fileInfo);
 
-        String content = "";
-        // if this is a "bytes" event, we need to pull the bytes from
-        // the s3 bucket. ClamAV process will be finished now.
-        if (eventType.equalsIgnoreCase("bytes")) {
-          // Fetch the bytes from the bucket, not the WFDM API
-          AmazonS3 s3client = AmazonS3ClientBuilder
-              .standard()
-              .withCredentials(credentialsProvider)
-              .withRegion(region)
-              .build();
+      logger.log("\nInfo: File found on WFDM: " + fileInfo);
 
-          Bucket clamavBucket = null;
-          List<Bucket> buckets = s3client.listBuckets();
-          for (Bucket bucket : buckets) {
-            if (bucket.getName().equalsIgnoreCase(bucketName)) {
-              clamavBucket = bucket;
-            }
-          }
+      String content = "";
+      // if this is a "bytes" event, we need to pull the bytes from
+      // the s3 bucket. ClamAV process will be finished now.
+      if (eventType.equalsIgnoreCase("bytes")) {
+        // Fetch the bytes from the bucket, not the WFDM API
+        AmazonS3 s3client = AmazonS3ClientBuilder
+            .standard()
+            .withCredentials(credentialsProvider)
+            .withRegion(region)
+            .build();
 
-          // If the bucket doesn't exist, re-create it
-          // For some reason, calling doesBucketExistV2 returns false???
-          if (clamavBucket == null) {
-            throw new Exception("S3 Bucket " + bucketName + " does not exist. Virus scan will be skipped");
-          }
+        Bucket clamavBucket = getClamavBucket(s3client, bucketName);
 
-          logger.log("\nInfo: Fetching file bytes...");
+        logger.log("\nInfo: Fetching file bytes...");
 
-          S3Object scannedObject = s3client.getObject(new GetObjectRequest(bucketName, fileId + "-" + versionNumber));
-          stream = new BufferedInputStream(scannedObject.getObjectContent());
+        S3Object scannedObject = s3client.getObject(new GetObjectRequest(bucketName, fileId + "-" + versionNumber));
+        stream = new BufferedInputStream(scannedObject.getObjectContent());
 
-          // Tika Time! (If Necessary, check mime types)
-          logger.log("\nInfo: Tika Parser...");
+        // Tika Time! (If Necessary, check mime types)
+        logger.log("\nInfo: Tika Parser...");
 
-          String mimeType = fileDetailsJson.get("mimeType").toString();
+        content = parseFileContent(stream, fileDetailsJson, logger);
 
-          if (mimeType.equalsIgnoreCase("text/plain") ||
-              mimeType.equalsIgnoreCase("application/msword") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
-              mimeType.equalsIgnoreCase("application/pdf") ||
-              mimeType.equalsIgnoreCase("application/vnd.ms-excel.sheet.macroEnabled.12") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
-              mimeType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.presentationml.presentation") ) {
-            content = TikaParseDocument.parseStream(stream, mimeType);
-            logger.log("\nInfo: content after parsing " + content);
-          } else {
-            // nothing to see here folks, we won't process this file. However
-            // this isn't an error and we might want to handle metadata, etc.
-            logger.log("\nInfo: Mime type of " + fileDetailsJson.get("mimeType")
-                + " is not processed for OpenSearch. Skipping Tika parse.");
-          }
-
-          // We've finished with the file, delete the file from the s3 Bucket
-          s3client.deleteObject(new DeleteObjectRequest(clamavBucket.getName(), fileId + "-" + versionNumber));
-        }
-
-        // Push content and File meta up to our Opensearch Index
-        logger.log("\nInfo: Indexing with OpenSearch...");
-        String filePath = fileDetailsJson.getString("filePath");
-        String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-
-        OpenSearchRESTClient restClient = createOpenSearchClient();
-
-        // We are disabling indexing of files with a security classification of Protected B or Protected C
-        JSONArray metaArray = fileDetailsJson.getJSONArray("metadata");
-        boolean skipIndexing = false;
-        for (int i = 0; i < metaArray.length(); i++) {
-          String metadataName = metaArray.getJSONObject(i).getString("metadataName");
-          String metadataValue = metaArray.getJSONObject(i).getString("metadataValue");
-
-          if (metadataName.equals("SecurityClassification")
-              && (metadataValue.equals("Protected B") || metadataValue.equals("Protected C"))) {
-            skipIndexing = true;
-          }
-        }
-
-        if (!skipIndexing) {
-
-          addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
-          // Push ID onto SQS for clamAV
-          logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
-
-          // update metadata
-          boolean metaAdded = setIndexedMetadata(wfdmToken, fileId, versionNumber, fileDetailsJson, etag);
-          if (!metaAdded) {
-            // We failed to apply the metadata regarding the virus scan status...
-            // Should we continue to process the data from this point, or just choke?
-            logger.log("\nERROR: Failed to add metadata to file resource");
-          }
-
-          // after updating metadata, get file info again and update index
-          fileResponse = getFileInformation(wfdmToken, fileId);
-          fileDetailsJson = new JSONObject(fileResponse.getBody());
-
-          addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
-
-        }
+        // We've finished with the file, delete the file from the s3 Bucket
+        s3client.deleteObject(new DeleteObjectRequest(clamavBucket.getName(), fileId + "-" + versionNumber));
       }
+
+      // Push content and File meta up to our Opensearch Index
+      logger.log("\nInfo: Indexing with OpenSearch...");
+      String fileName = getFileName(fileDetailsJson);
+
+      OpenSearchRESTClient restClient = createOpenSearchClient();
+
+      // We are disabling indexing of files with a security classification of Protected B or Protected C
+      boolean skipIndexing = shouldSkipIndexing(fileDetailsJson);
+
+      if (!skipIndexing) {
+        processIndexing(restClient, content, fileName, fileDetailsJson,
+            scanStatus, logger, wfdmToken, fileId, versionNumber, etag);
+      }
+      
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());
     } catch (TikaException tex) {
@@ -271,18 +193,8 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     } catch (Exception ex) {
       logger.log("\nUnhandled Error: " + ex.getLocalizedMessage());
     } finally {
-      // Cleanup
       logger.log("\nInfo: Finalizing processing...");
-      // If the stream was fetched, but never passed to tika, it might still be open, so close it now
-      // we send a fresh stream for the bucket and it should already be closed by the s3client, but it
-      // never hurts to be sure!
-      if (stream != null) {
-        try {
-          stream.close();
-        } catch (IOException e) {
-          logger.log("\nError: File stream cleanup failed: " + e.getLocalizedMessage());
-        }
-      }
+      cleanupStream(stream, logger);
     }
 
     logger.log("\nInfo: Close Handler");
@@ -313,5 +225,176 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
         }
       }
   }
+
+  private boolean shouldSkipIndexing(JSONObject fileDetailsJson) {
+
+    JSONArray metaArray = fileDetailsJson.getJSONArray("metadata");
+
+    for (int i = 0; i < metaArray.length(); i++) {
+
+      JSONObject metadata = metaArray.getJSONObject(i);
+
+      String metadataName = metadata.getString("metadataName");
+      String metadataValue = metadata.getString("metadataValue");
+
+      if (metadataName.equals("SecurityClassification")
+          && ("Protected B".equals(metadataValue)
+              || "Protected C".equals(metadataValue))) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private RequestInfo extractRequestInfo(JSONObject fileDetailsJson, LambdaLogger logger) {
+    RequestInfo requestInfo = new RequestInfo();
+
+    if (fileDetailsJson.has(FILE_VERSION_NUMBER)) {
+      if (fileDetailsJson.getString(FILE_VERSION_NUMBER).equals("null")) {
+        requestInfo.versionNumber = "1";
+      } else {
+        requestInfo.versionNumber =
+            fileDetailsJson.getString(FILE_VERSION_NUMBER);
+      }
+    } else {
+      requestInfo.versionNumber = "1";
+    }
+
+    // TODO: Update to correct event type from WFDM-API
+    if (fileDetailsJson.has("eventType")) {
+      requestInfo.eventType = fileDetailsJson.getString("eventType");
+    } else {
+      requestInfo.eventType = "meta";
+
+      logger.log("\nInfo: eventType key/value was not found, setting eventType to: " + requestInfo.eventType);
+    }
+
+    if (fileDetailsJson.has(MESSAGE) && !fileDetailsJson.isNull(MESSAGE)) {
+      requestInfo.scanStatus = fileDetailsJson.getString(MESSAGE);
+    } else {
+      requestInfo.scanStatus = "-";
+    }
+
+    return requestInfo;
+  }
+
+  private String retrieveWFDMToken() throws Exception {
+    String wfdmSecretName = getSecretManagerName().trim();
+
+    String secret = retrieveSecret(wfdmSecretName);
+
+    String[] secretCD = StringUtils.substringsBetween(secret, "\"", "\"");
+
+    String clientId = secretCD[0];
+    String password = secretCD[1];
+
+    String wfdmToken = getAccessToken(clientId, password);
+
+    if (wfdmToken == null) {
+      throw new Exception("Could not authorize access for WFDM");
+    }
+
+    return wfdmToken;
+  }
   
+  private void processIndexing(OpenSearchRESTClient restClient, String content, String fileName,
+      JSONObject fileDetailsJson, String scanStatus, LambdaLogger logger,
+      String wfdmToken, String fileId, String versionNumber, String etag)
+      throws Exception {
+
+    addIndexWithRetry(restClient, content, fileName, fileDetailsJson, scanStatus, logger);
+
+    logger.log("\nInfo: File parsing complete. Schedule ClamAV scan.");
+
+    boolean metaAdded = setIndexedMetadata(
+        wfdmToken, fileId, versionNumber, fileDetailsJson, etag);
+
+    if (!metaAdded) {
+      logger.log("\nERROR: Failed to add metadata to file resource");
+    }
+
+    HttpResponse<String> fileResponse =
+        getFileInformation(wfdmToken, fileId);
+
+    addIndexWithRetry(restClient, content, fileName,
+        new JSONObject(fileResponse.getBody()), scanStatus,logger);
+  }
+
+  private Bucket getClamavBucket(AmazonS3 s3client, String bucketName)
+      throws Exception {
+
+    List<Bucket> buckets = s3client.listBuckets();
+
+    for (Bucket bucket : buckets) {
+      if (bucket.getName().equalsIgnoreCase(bucketName)) {
+        return bucket;
+      }
+    }
+
+    throw new Exception(
+        "S3 Bucket " + bucketName + " does not exist. Virus scan will be skipped");
+  }
+
+  private boolean isSupportedMimeType(String mimeType) {
+    return mimeType.equalsIgnoreCase("text/plain")
+        || mimeType.equalsIgnoreCase("application/msword")
+        || mimeType.equalsIgnoreCase(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        || mimeType.equalsIgnoreCase("application/pdf")
+        || mimeType.equalsIgnoreCase(
+            "application/vnd.ms-excel.sheet.macroEnabled.12")
+        || mimeType.equalsIgnoreCase(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        || mimeType.equalsIgnoreCase(
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation");
+  }
+
+  private String parseFileContent(
+      BufferedInputStream stream,
+      JSONObject fileDetailsJson,
+      LambdaLogger logger)
+      throws TransformerConfigurationException,
+            IOException,
+            SAXException,
+            TikaException {
+
+    String mimeType = fileDetailsJson.getString(MIME_TYPE);
+
+    if (!isSupportedMimeType(mimeType)) {
+      logger.log(
+          "\nInfo: Mime type of "
+              + mimeType
+              + " is not processed for OpenSearch. Skipping Tika parse.");
+
+      return "";
+    }
+
+    String content = TikaParseDocument.parseStream(stream, mimeType);
+
+    logger.log("\nInfo: content after parsing " + content);
+
+    return content;
+  }
+
+  private String getFileName(JSONObject fileDetailsJson) {
+    String filePath = fileDetailsJson.getString("filePath");
+
+    return filePath.substring(filePath.lastIndexOf("/") + 1);
+  }
+
+  private void cleanupStream(
+      BufferedInputStream stream,
+      LambdaLogger logger) {
+
+    if (stream != null) {
+      try {
+        stream.close();
+      } catch (IOException e) {
+        logger.log("\nError: File stream cleanup failed: "
+            + e.getLocalizedMessage());
+      }
+    }
+  }
+
 }

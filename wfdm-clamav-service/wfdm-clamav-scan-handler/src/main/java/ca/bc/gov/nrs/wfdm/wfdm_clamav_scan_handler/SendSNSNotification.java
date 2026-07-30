@@ -17,6 +17,7 @@ public class SendSNSNotification {
 	private static String region = "ca-central-1";
 	static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 	private static String subject = "Virus Alert on WFDM-File-Indexing";
+	private static final String RESPONSE_PAYLOAD = "responsePayload";
 
 	protected static String getTopicArn() {
 		return System.getenv("WFDM_SNS_VIRUS_ALERT");
@@ -38,11 +39,11 @@ public class SendSNSNotification {
 		final Map<String, MessageAttributeValue> attributes = new HashMap<String, MessageAttributeValue>();
 		attributes.put("subject", new MessageAttributeValue().withDataType("String").withStringValue(subject));
 
-		final String message = "The source " + messageDetails.getJSONObject("responsePayload").getString("source")
-				+ " found a file " + messageDetails.getJSONObject("responsePayload").getString("input_key")
-				+ " on S3 bucket " + messageDetails.getJSONObject("responsePayload").getString("input_bucket") + " at "
+		final String message = "The source " + messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("source")
+				+ " found a file " + messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("input_key")
+				+ " on S3 bucket " + messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("input_bucket") + " at "
 				+ messageDetails.getString("timestamp") + ".\n\n The scan status from ClamAv \n "
-				+ messageDetails.getJSONObject("responsePayload").getString("message");
+				+ messageDetails.getJSONObject(RESPONSE_PAYLOAD).getString("message");
 
 		
 		final PublishRequest publishRequest = new PublishRequest().withTopicArn(topicArn).withSubject(subject)
