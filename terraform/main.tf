@@ -1043,7 +1043,7 @@ resource "aws_api_gateway_rest_api_policy" "api-gateway-policy" {
         {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+                "AWS": "*"
             },
             "Action": "execute-api:Invoke",
             "Resource": [
