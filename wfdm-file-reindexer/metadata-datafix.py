@@ -22,6 +22,7 @@ wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
 row_count = row_count = os.getenv('QUERY_ROW_COUNT')
+BEARER = 'Bearer '
 
 
 
@@ -58,7 +59,7 @@ def update_metadata(document_id, page, row_count):
         str(page) + '&pageRowCount=' + \
         str(row_count) + '&orderBy=default%20ASC'
     wfdm_docs_response = requests.get(
-        url, headers={'Authorization': 'Bearer ' + token})
+        url, headers={'Authorization': BEARER + token})
     # verify 200
     if wfdm_docs_response.status_code != 200:
         print(wfdm_docs_response)
@@ -75,7 +76,7 @@ def update_metadata(document_id, page, row_count):
         # Reload the document so we know we have a valid etag and meta records
         print('Fetching Document ' + document['fileId'] + '...')
         wfdm_doc_response = requests.get(
-            docs_endpoint + '/' + document['fileId'], headers={'Authorization': 'Bearer ' + token})
+            docs_endpoint + '/' + document['fileId'], headers={'Authorization': BEARER + token})
         # verify 200
         if wfdm_doc_response.status_code != 200:
             print(wfdm_doc_response)
@@ -111,7 +112,7 @@ def update_metadata(document_id, page, row_count):
             if (changed):
                 # Now that they type is updated, we can push in an update
                 wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(
-                    doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type': 'application/json'})
+                    doc_json),  headers={'Authorization': BEARER + token, 'content-type': 'application/json'})
                 # verify 200
                 if wfdm_put_response.status_code != 200:
                     print(wfdm_put_response)
@@ -147,7 +148,7 @@ del token_response
 # First though, we need to know our Root ID
 print('Fetching The WFDM Root Document...')
 wfdm_root_response = requests.get(
-    doc_endpoint + wfdm_root, headers={'Authorization': 'Bearer ' + token})
+    doc_endpoint + wfdm_root, headers={'Authorization': BEARER + token})
 # verify 200
 if wfdm_root_response.status_code != 200:
     print(wfdm_root_response)
