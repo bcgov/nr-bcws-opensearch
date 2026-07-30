@@ -19,6 +19,7 @@ wfdm_root = '?filePath=%2F'
 doc_root = '?parentId='
 # Some default process settings
 row_count = row_count = os.getenv('QUERY_ROW_COUNT')
+BEARER = 'Bearer '
 
 print('')
 print('-------------------------------------------------------')
@@ -35,7 +36,7 @@ def update_metadata(document_id, page, row_count):
   # This will be recursive, so there's always a stack overflow risk here
   print('Updating documents in the folder ' + document_id)
   url = docs_endpoint + doc_root + document_id + '&pageNumber=' + str(page) + '&pageRowCount=' + str(row_count) + '&orderBy=default%20ASC'
-  wfdm_docs_response = requests.get(url, headers={'Authorization': 'Bearer ' + token})
+  wfdm_docs_response = requests.get(url, headers={'Authorization': BEARER + token})
   # verify 200
   if wfdm_docs_response.status_code != 200:
     print(wfdm_docs_response)
@@ -49,7 +50,7 @@ def update_metadata(document_id, page, row_count):
   for document in wfdm_docs['collection']:
     # Reload the document so we know we have a valid etag and meta records
     print('Fetching Document ' + document['fileId'] + '...')
-    wfdm_doc_response = requests.get(docs_endpoint + '/' + document['fileId'], headers={'Authorization': 'Bearer ' + token})
+    wfdm_doc_response = requests.get(docs_endpoint + '/' + document['fileId'], headers={'Authorization': BEARER + token})
     # verify 200
     if wfdm_doc_response.status_code != 200:
       print(wfdm_doc_response)
@@ -81,7 +82,7 @@ def update_metadata(document_id, page, row_count):
             meta['metadataType'] = 'String'
 
       # Now that they type is updated, we can push in an update
-      wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': 'Bearer ' + token, 'content-type':'application/json'})
+      wfdm_put_response = requests.put(docs_endpoint + '/' + document['fileId'], data=json.dumps(doc_json),  headers={'Authorization': BEARER + token, 'content-type':'application/json'})
       # verify 200
       if wfdm_put_response.status_code != 200:
         print(wfdm_put_response)
@@ -113,7 +114,7 @@ del token_response
 # Step #2, now that we have a nice shiny new token, lets go fetch from WFDM why not
 # First though, we need to know our Root ID
 print('Fetching The WFDM Root Document...')
-wfdm_root_response = requests.get(doc_endpoint + wfdm_root, headers={'Authorization': 'Bearer ' + token})
+wfdm_root_response = requests.get(doc_endpoint + wfdm_root, headers={'Authorization': BEARER + token})
 # verify 200
 if wfdm_root_response.status_code != 200:
   print(wfdm_root_response)

@@ -16,6 +16,7 @@ docs_endpoint = wfdm_api + 'documents'
 # File to reindex
 file_id = os.getenv('FILE_ID')
 max_retries = 3
+BEARER = 'Bearer '
 
 print('')
 print('-------------------------------------------------------')
@@ -48,7 +49,7 @@ token = token_response.json()['access_token']
 del token_response
 
 print('Fetching document ' + file_id + '...')
-wfdm_doc_response = requests.get(docs_endpoint + '/' + file_id, headers={'Authorization': 'Bearer ' + token})
+wfdm_doc_response = requests.get(docs_endpoint + '/' + file_id, headers={'Authorization': BEARER + token})
 if wfdm_doc_response.status_code != 200:
   sys.exit("Failed to fetch document from WFDM. Response code was: " + str(wfdm_doc_response.status_code))
 
@@ -58,7 +59,7 @@ del wfdm_doc_response
 print('Fetching bytes for document ' + file_id + '...')
 wfdm_bytes_response = request_with_retry('GET',
   docs_endpoint + '/' + file_id + '/bytes',
-  headers={'Authorization': 'Bearer ' + token}
+  headers={'Authorization': BEARER + token}
 )
 if wfdm_bytes_response is None or wfdm_bytes_response.status_code != 200:
   sys.exit('Failed to fetch bytes for document ' + file_id)
@@ -70,7 +71,7 @@ wfdm_put_response = request_with_retry('PUT',
     'resource': (None, json.dumps(document), 'application/json'),
     'file': (None, wfdm_bytes_response.content, wfdm_bytes_response.headers.get('Content-Type', 'application/octet-stream'))
   },
-  headers={'Authorization': 'Bearer ' + token}
+  headers={'Authorization': BEARER + token}
 )
 del wfdm_bytes_response
 

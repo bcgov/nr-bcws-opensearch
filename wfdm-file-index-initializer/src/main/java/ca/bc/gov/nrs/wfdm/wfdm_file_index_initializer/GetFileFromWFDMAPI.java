@@ -22,6 +22,8 @@ public class GetFileFromWFDMAPI {
   private static final String BEARER = "Bearer ";
   private static final String WFDM_RESOURCE_TYPE_URL = "http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource";
   private static final String TYPE = "@type";
+  private static final String APPLICATION_JSON = "application/json";
+  private static final String CONTENT_TYPE ="Content-Type";
 
   // Private constructor hides the implicit public constructor
   private GetFileFromWFDMAPI() {
@@ -60,7 +62,7 @@ public class GetFileFromWFDMAPI {
   public static HttpResponse<String> getFileInformation(String accessToken, String fileId) throws UnirestException {
     HttpResponse<String> detailsResponse = Unirest.get(getApiUrl().trim() + fileId)
         .header(AUTHORIZATION, BEARER + accessToken)
-        .header("Content-Type", "application/json").asString();
+        .header(CONTENT_TYPE, APPLICATION_JSON).asString();
 
     if (detailsResponse.getStatus() == 200) {
       return detailsResponse;
@@ -123,7 +125,7 @@ public class GetFileFromWFDMAPI {
 
     // PUT the changes
     HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
-        .header("Content-Type", "application/json")
+        .header(CONTENT_TYPE, APPLICATION_JSON)
         .header(AUTHORIZATION, BEARER + accessToken)
         .header("If-Match", Etag) 
         .body(fileDetails.toString())
@@ -139,7 +141,7 @@ public static void setImageConversionMetadata(String accessToken, String fileId,
 
   // PUT the changes
   HttpResponse<String> metaUpdateResponse = Unirest.put(getApiUrl().trim() + fileId)
-      .header("Content-Type", "application/json")
+      .header(CONTENT_TYPE, APPLICATION_JSON)
       .header(AUTHORIZATION, BEARER + accessToken)
       .header("If-Match", Etag) 
       .body(fileDetails.toString())
