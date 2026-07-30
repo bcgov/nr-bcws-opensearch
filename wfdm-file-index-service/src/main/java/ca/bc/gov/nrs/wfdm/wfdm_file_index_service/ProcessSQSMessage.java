@@ -129,11 +129,11 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // attempt to fetch the file from WFDM, as a verification that the file actually exists
       HttpResponse<String> fileResponse =  getFileInformation(wfdmToken, fileId);
 
-      logger.log("\nInfo: fileResponse.getBody() is: " + fileResponse.getBody());
-
       if (fileResponse == null) {
         throw new Exception("File not found!");
       } 
+
+      logger.log("\nInfo: fileResponse.getBody() is: " + fileResponse.getBody());
 
       String fileInfo = fileResponse.getBody();
       String etag = fileResponse.getHeaders().getFirst("ETag");
