@@ -989,7 +989,7 @@ resource "aws_api_gateway_method" "sqs-gateway-post-method" {
   rest_api_id   = aws_api_gateway_rest_api.sqs-api-gateway.id
   resource_id   = aws_api_gateway_rest_api.sqs-api-gateway.root_resource_id
   http_method   = "ANY"
-  authorization = "NONE"
+  authorization = "AWS_IAM"
 
   request_parameters = {
     "method.request.path.proxy" = false
@@ -1043,7 +1043,7 @@ resource "aws_api_gateway_rest_api_policy" "api-gateway-policy" {
         {
             "Effect": "Allow",
             "Principal": {
-                "AWS": "*"
+                "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
             },
             "Action": "execute-api:Invoke",
             "Resource": [
