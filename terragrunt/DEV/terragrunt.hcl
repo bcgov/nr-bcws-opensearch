@@ -13,7 +13,6 @@ locals {
   clamAVStackName = "WfdmClamavStackDEV"
   clamstackQueue = "WfdmClamavStackDEV-wfdmClamscanQueuedev996064D1-S0cXn3C4pJK4"
   reverse_proxy_ip = get_env("reverse_proxy_ip")
-  api_gateway_key = get_env("api_gateway_key")
 }
 
 generate "backend" {
@@ -51,6 +50,5 @@ generate "inputs" {
   opensearch_password = "${local.opensearch_password}"
   reverse_proxy_ip = "${local.reverse_proxy_ip}"
   ElasticSearch_Version = "OpenSearch_2.5"
-  api_gateway_key = "${local.api_gateway_key}"
 EOF
 }

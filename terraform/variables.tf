@@ -422,9 +422,3 @@ variable "reverse_proxy_ip" {
   type = string
 }
 
-variable "api_gateway_key" {
-  type        = string
-  description = "API Gateway key used by WFDM API"
-  sensitive   = true
-  default     = null
-}
