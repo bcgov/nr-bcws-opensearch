@@ -421,3 +421,4 @@ variable "opensearch_password" {
 variable "reverse_proxy_ip" {
   type = string
 }
+

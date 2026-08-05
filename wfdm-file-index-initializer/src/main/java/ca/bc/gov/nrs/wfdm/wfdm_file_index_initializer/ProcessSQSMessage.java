@@ -158,6 +158,11 @@ public class ProcessSQSMessage implements RequestHandler<SQSEvent, SQSBatchRespo
         logger.log("\nInfo: SQS Message Received on wfdm_file_index_initialize : " + messageBody);
 
         JSONObject messageDetails = new JSONObject(messageBody);
+
+        if (messageDetails.has("body-json")) {
+            messageDetails = messageDetails.getJSONObject("body-json");
+        }
+
         String fileId = messageDetails.getString("fileId");
         
         if (!isValidFileId(fileId)){
