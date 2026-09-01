@@ -110,6 +110,11 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       // messageBody is the complete file resource
       logger.log("\nInfo: Event Received on WFDM -open-search: " + event);
       JSONObject fileDetailsJson = new JSONObject(event);
+
+      if (fileDetailsJson.has("body-json")) {
+          fileDetailsJson = fileDetailsJson.getJSONObject("body-json");
+      }
+
       logger.log("fileDetailsJson" + fileDetailsJson.getString("fileId"));
 
       String fileId = fileDetailsJson.getString("fileId");
