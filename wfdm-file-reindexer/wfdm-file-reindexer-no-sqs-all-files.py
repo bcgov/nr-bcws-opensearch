@@ -68,6 +68,19 @@ def reindex_wfdm(document_id, page, row_count):
         print('Failed to fetch bytes for document ' + document['fileId'] + ', skipping...')
         continue
 
+      doc_response = request_with_retry(
+          'GET',
+          docs_endpoint + '/' + document['fileId'],
+          headers={'Authorization': BEARER + token}
+      )
+
+      if doc_response is None or doc_response.status_code != 200:
+          print('Failed to fetch metadata for document ' + document['fileId'])
+          continue
+
+      etag = doc_response.headers.get('ETag')
+
+
       print('Updating document ' + document['fileId'] + '...')
       wfdm_put_response = request_with_retry('PUT',
         docs_endpoint + '/' + document['fileId'],
@@ -75,7 +88,10 @@ def reindex_wfdm(document_id, page, row_count):
           'resource': (None, json.dumps(document), 'application/json'),
           'file': (None, wfdm_bytes_response.content, wfdm_bytes_response.headers.get('Content-Type', 'application/octet-stream'))
         },
-        headers={'Authorization': BEARER + token}
+        headers={
+            'Authorization': BEARER + token,
+            'If-Match': etag
+        }
       )
       del wfdm_bytes_response
 
