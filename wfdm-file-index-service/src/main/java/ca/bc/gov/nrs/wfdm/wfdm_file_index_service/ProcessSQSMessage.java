@@ -1,5 +1,7 @@
 package ca.bc.gov.nrs.wfdm.wfdm_file_index_service;
 
+import static org.junit.jupiter.api.DynamicTest.stream;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -168,6 +170,11 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
         // Tika Time! (If Necessary, check mime types)
         logger.log("\nInfo: Tika Parser...");
+        logger.log("\nInfo: S3 object key: " + fileId + "-" + versionNumber);
+
+        logger.log("\nInfo: S3 content length: "  + scannedObject.getObjectMetadata().getContentLength());
+
+        logger.log("\nInfo: MIME type from WFDM: " + fileDetailsJson.optString("mimeType"));
 
         content = parseFileContent(stream, fileDetailsJson, logger);
 
@@ -192,7 +199,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());
     } catch (TikaException tex) {
-      logger.log("\nTika Parsing Error: " + tex.getLocalizedMessage());
+        logger.log("\nTika Parsing Error: " + tex.getMessage());
+
+        for (StackTraceElement ste : tex.getStackTrace()) {
+            logger.log(ste.toString());
+        }
+      
     } catch (OpenSearchException e) {
       logger.log("\nOpen Search Error: " + e.getLocalizedMessage());
     } catch (Exception ex) {
