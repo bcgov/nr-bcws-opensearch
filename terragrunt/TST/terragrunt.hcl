@@ -11,7 +11,7 @@ locals {
   document_api_url = "https://t1bcwsapi.nrs.gov.bc.ca/wfdm-document-management-api/documents/"
   document_token_url = "https://wfappst.nrs.gov.bc.ca/pub/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials"
   clamAVStackName = "WfdmClamavStackTST"
-  clamstackQueue = "WfdmClamavStackTST-wfdmClamscanQueuetstAF294E61-P6JScScVrkzs"
+  clamstackQueue = "WfdmClamavStackTST-wfdmClamscanQueuetstAF294E61-uDJNttrayP6E"
   opensearch_password = get_env("opensearch_password")
   opensearch_user = get_env("opensearch_user")
   reverse_proxy_ip = get_env("reverse_proxy_ip")
