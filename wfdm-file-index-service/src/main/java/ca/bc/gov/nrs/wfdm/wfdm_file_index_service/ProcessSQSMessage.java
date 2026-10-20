@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import com.mashape.unirest.http.HttpResponse;
 
 import javax.xml.transform.TransformerConfigurationException;
@@ -192,7 +195,15 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());
     } catch (TikaException tex) {
+      logger.log("\nTika Exception Type: " + tex.getClass().getName());
       logger.log("\nTika Parsing Error: " + tex.getLocalizedMessage());
+
+      StringWriter sw = new StringWriter();
+      PrintWriter pw = new PrintWriter(sw);
+      tex.printStackTrace(pw);
+
+      logger.log("\nTika Full Stack Trace:\n" + sw.toString());
+
     } catch (OpenSearchException e) {
       logger.log("\nOpen Search Error: " + e.getLocalizedMessage());
     } catch (Exception ex) {
