@@ -70,7 +70,7 @@ public class TikaParseDocument {
     Parser parser = null;
     switch (mimeType) {
         case "text/plain":
-            parser = new AutoDetectParser();
+            parser = new TextAndCSVParser();
             break;
         case "application/msword":
             parser = new OfficeParser();
