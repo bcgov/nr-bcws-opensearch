@@ -204,6 +204,12 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
 
       logger.log("\nTika Full Stack Trace:\n" + sw.toString());
 
+      Throwable cause = tex;
+      while (cause != null) {
+        logger.log("\nCAUSE CLASS: " + cause.getClass().getName());
+        logger.log("\nCAUSE MESSAGE: " + cause.getMessage());
+        cause = cause.getCause();
+      }
     } catch (OpenSearchException e) {
       logger.log("\nOpen Search Error: " + e.getLocalizedMessage());
     } catch (Exception ex) {
@@ -386,17 +392,6 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       return "";
     }
 
-    logger.log("\nInfo: Mime Type = " + mimeType);
-
-    stream.mark(2048);
-
-    byte[] preview = stream.readNBytes(200);
-
-    logger.log( "\nInfo: First Bytes HEX = " + java.util.HexFormat.of().formatHex(preview) );
-
-    logger.log( "\nInfo: UTF-8 Preview = " + new String(preview, java.nio.charset.StandardCharsets.UTF_8));
-
-    stream.reset();
 
     String content = TikaParseDocument.parseStream(stream, mimeType);
 
