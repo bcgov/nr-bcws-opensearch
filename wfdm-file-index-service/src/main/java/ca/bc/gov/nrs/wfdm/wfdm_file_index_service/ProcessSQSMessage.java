@@ -386,6 +386,18 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
       return "";
     }
 
+    logger.log("\nInfo: Mime Type = " + mimeType);
+
+    stream.mark(2048);
+
+    byte[] preview = stream.readNBytes(200);
+
+    logger.log( "\nInfo: First Bytes HEX = " + java.util.HexFormat.of().formatHex(preview) );
+
+    logger.log( "\nInfo: UTF-8 Preview = " + new String(preview, java.nio.charset.StandardCharsets.UTF_8));
+
+    stream.reset();
+
     String content = TikaParseDocument.parseStream(stream, mimeType);
 
     logger.log("\nInfo: content after parsing " + content);

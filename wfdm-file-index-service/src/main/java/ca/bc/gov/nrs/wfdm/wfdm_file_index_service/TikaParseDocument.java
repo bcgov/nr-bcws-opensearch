@@ -92,6 +92,9 @@ public class TikaParseDocument {
     ParseContext parseContext = new ParseContext();
     parseContext.set(Parser.class, parser);
 
+    System.out.println("Mime Type: " + mimeType);
+    System.out.println("Parser: " + parser.getClass().getName());
+
     // Run the parse. This will populate the string writer with the resulting
     // content
     // and populate meta, parse context, etc.
