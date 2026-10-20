@@ -616,6 +616,7 @@ resource "aws_lambda_layer_version" "aws-java-base-layer-terraform" {
   layer_name          = "${var.application}-${var.java_layer_name}-${var.env}"
   s3_bucket           = data.aws_s3_bucket.terraform-s3-bucket.bucket
   s3_key              = var.layer_file_name
+  s3_object_version   = data.aws_s3_bucket_object.java_zip.version_id
   description         = "Common layer with java jars files"
   compatible_runtimes = ["java21"]
 }
