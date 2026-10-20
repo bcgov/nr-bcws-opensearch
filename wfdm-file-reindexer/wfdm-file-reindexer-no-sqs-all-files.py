@@ -4,6 +4,7 @@ import sys
 import os
 import json
 import time
+from datetime import datetime, UTC
 
 # Token service, for fetching a token
 token_service = os.getenv('TOKEN_SERVICE')
@@ -59,14 +60,7 @@ def reindex_wfdm(document_id, page, row_count):
     if document['fileType'] == 'DIRECTORY':
       reindex_wfdm(document['fileId'], 1, row_count)
     else:
-      print('Fetching bytes for document ' + document['fileId'] + '...')
-      wfdm_bytes_response =  request_with_retry('GET',
-        docs_endpoint + '/' + document['fileId'] + '/bytes',
-        headers={'Authorization': BEARER + token}
-      )
-      if wfdm_bytes_response is None or wfdm_bytes_response.status_code != 200:
-        print('Failed to fetch bytes for document ' + document['fileId'] + ', skipping...')
-        continue
+
 
       doc_response = request_with_retry(
           'GET',
@@ -80,20 +74,48 @@ def reindex_wfdm(document_id, page, row_count):
 
       etag = doc_response.headers.get('ETag')
 
+      document = doc_response.json()
+
+      reindex_date = datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')
+
+      metadata = document.get('metadata', [])
+
+      existing = next(
+          (m for m in metadata if m.get('metadataName') == 'WFDMReIndexDate'),
+          None
+      )
+
+      if existing:
+          existing['metadataValue'] = reindex_date
+      else:
+          metadata.append({
+              '@type': 'http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource',
+              'metadataName': 'WFDMReIndexDate',
+              'metadataValue': reindex_date,
+              'metadataType': 'DATE'
+          })
+
+      document['metadata'] = metadata
+
+
 
       print('Updating document ' + document['fileId'] + '...')
-      wfdm_put_response = request_with_retry('PUT',
-        docs_endpoint + '/' + document['fileId'],
-        files={
-          'resource': (None, json.dumps(document), 'application/json'),
-          'file': (None, wfdm_bytes_response.content, wfdm_bytes_response.headers.get('Content-Type', 'application/octet-stream'))
-        },
-        headers={
-            'Authorization': BEARER + token,
-            'If-Match': etag
-        }
+
+      wfdm_put_response = request_with_retry(
+          'PUT',
+          docs_endpoint + '/' + document['fileId'],
+          files={
+              'resource': (
+                  'blob',
+                  json.dumps(document),
+                  'application/json'
+              )
+          },
+          headers={
+              'Authorization': BEARER + token,
+              'If-Match': etag
+          }
       )
-      del wfdm_bytes_response
 
       if wfdm_put_response is None or wfdm_put_response.status_code != 200:
         status = wfdm_put_response.status_code if wfdm_put_response else 'timeout'
