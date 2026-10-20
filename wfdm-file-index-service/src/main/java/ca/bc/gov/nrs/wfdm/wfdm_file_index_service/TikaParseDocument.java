@@ -21,6 +21,7 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.txt.TXTParser;
 import org.apache.tika.parser.csv.TextAndCSVParser;
 import org.apache.tika.parser.microsoft.OfficeParser;
 import org.apache.tika.parser.microsoft.ooxml.OOXMLParser;
@@ -65,11 +66,15 @@ public class TikaParseDocument {
     Metadata tikaMetadata = new Metadata();
     // Use specific parser based on mime type. See
     // Tika's documentation for list of supported document formats and their corresponding parsers 
-    // https://tika.apache.org/2.7.0/formats.html
+    // https://tika.apache.org/3.3.0/formats.html
 
     Parser parser = null;
     switch (mimeType) {
         case "text/plain":
+            parser = new TXTParser();
+            break;
+        case "text/csv":
+        case "text/tsv":
             parser = new TextAndCSVParser();
             break;
         case "application/msword":
