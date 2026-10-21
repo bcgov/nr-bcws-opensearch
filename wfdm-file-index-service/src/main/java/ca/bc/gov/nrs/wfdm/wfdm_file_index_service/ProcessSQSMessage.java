@@ -195,21 +195,7 @@ public class ProcessSQSMessage implements RequestHandler<Map<String,Object>, Str
     } catch (UnirestException | TransformerConfigurationException | SAXException e) {
       logger.log("\nError: Failure to recieve file from WFDM" + e.getLocalizedMessage());
     } catch (TikaException tex) {
-      logger.log("\nTika Exception Type: " + tex.getClass().getName());
-      logger.log("\nTika Parsing Error: " + tex.getLocalizedMessage());
-
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      tex.printStackTrace(pw);
-
-      logger.log("\nTika Full Stack Trace:\n" + sw.toString());
-
-      Throwable cause = tex;
-      while (cause != null) {
-        logger.log("\nCAUSE CLASS: " + cause.getClass().getName());
-        logger.log("\nCAUSE MESSAGE: " + cause.getMessage());
-        cause = cause.getCause();
-      }
+      logger.log("\nTika Parsing Error: " + tex.getMessage());
     } catch (OpenSearchException e) {
       logger.log("\nOpen Search Error: " + e.getLocalizedMessage());
     } catch (Exception ex) {

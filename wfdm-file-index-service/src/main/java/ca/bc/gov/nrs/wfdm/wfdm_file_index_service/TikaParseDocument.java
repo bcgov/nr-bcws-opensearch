@@ -103,8 +103,6 @@ public class TikaParseDocument {
     // Run the parse. This will populate the string writer with the resulting
     // content
     // and populate meta, parse context, etc.
-    System.out.println("Available bytes before parse: " + stream.available());
-    System.out.println("Mark supported: " + stream.markSupported());
     parser.parse(stream, handler, tikaMetadata, parseContext);
     // Once the parse is complete, we want to clean and sanitze the output
     // For now, we'll remove small stop words from the text
