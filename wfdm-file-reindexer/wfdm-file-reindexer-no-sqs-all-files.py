@@ -89,7 +89,7 @@ def reindex_wfdm(document_id, page, row_count):
           existing['metadataValue'] = reindex_date
       else:
           metadata.append({
-              '@type': 'http://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource',
+              '@type': 'https://resources.wfdm.nrs.gov.bc.ca/fileMetadataResource',
               'metadataName': 'WFDMReIndexDate',
               'metadataValue': reindex_date,
               'metadataType': 'DATE'
