@@ -190,6 +190,106 @@ class ProcessSQSMessageTest {
                 result);
     }
 
+	@Test
+	void shouldHandleNullMessageValue()
+			throws Exception {
+
+		ProcessSQSMessage handler =
+				spy(new ProcessSQSMessage());
+
+		Context context =
+				mock(Context.class);
+
+		LambdaLogger logger =
+				mock(LambdaLogger.class);
+
+		when(context.getLogger())
+				.thenReturn(logger);
+
+		doReturn("bucket")
+				.when(handler)
+				.getBucketName();
+
+		doReturn("secret")
+				.when(handler)
+				.getSecretManagerName();
+
+		doReturn("\"client\" \"password\"")
+				.when(handler)
+				.retrieveSecret(anyString());
+
+		doReturn("token")
+				.when(handler)
+				.getAccessToken(anyString(), anyString());
+
+		HttpResponse<String> response =
+				mock(HttpResponse.class);
+
+		com.mashape.unirest.http.Headers headers =
+				mock(com.mashape.unirest.http.Headers.class);
+
+		when(response.getHeaders())
+				.thenReturn(headers);
+
+		when(headers.getFirst("ETag"))
+				.thenReturn("etag");
+
+		JSONObject fileDetails =
+				new JSONObject();
+
+		fileDetails.put("fileId", "123");
+		fileDetails.put("filePath", "/folder/test.txt");
+		fileDetails.put("metadata", new JSONArray());
+
+		when(response.getBody())
+				.thenReturn(fileDetails.toString());
+
+		doReturn(response)
+				.when(handler)
+				.getFileInformation(
+						anyString(),
+						anyString());
+
+		OpenSearchRESTClient restClient =
+				mock(OpenSearchRESTClient.class);
+
+		doReturn(restClient)
+				.when(handler)
+				.createOpenSearchClient();
+
+		doNothing()
+				.when(handler)
+				.addIndexWithRetry(
+						any(),
+						anyString(),
+						anyString(),
+						any(JSONObject.class),
+						anyString(),
+						any());
+
+		doReturn(true)
+				.when(handler)
+				.setIndexedMetadata(
+						anyString(),
+						anyString(),
+						anyString(),
+						any(JSONObject.class),
+						anyString());
+
+		Map<String, Object> event =
+				new HashMap<>();
+
+		event.put("fileId", "123");
+		event.put("message", JSONObject.NULL);
+
+		String result =
+				handler.handleRequest(
+						event,
+						context);
+
+		assertEquals("Closed", result);
+	}
+
     @Test
     void shouldSkipProtectedBFiles()
             throws Exception {
@@ -410,6 +510,103 @@ class ProcessSQSMessageTest {
                 result);
     }
 
+	@Test
+	void shouldLogWhenMetadataUpdateFails()
+			throws Exception {
+
+		ProcessSQSMessage handler =
+				spy(new ProcessSQSMessage());
+
+		Context context =
+				mock(Context.class);
+
+		LambdaLogger logger =
+				mock(LambdaLogger.class);
+
+		when(context.getLogger())
+				.thenReturn(logger);
+
+		doReturn("bucket")
+				.when(handler)
+				.getBucketName();
+
+		doReturn("secret")
+				.when(handler)
+				.getSecretManagerName();
+
+		doReturn("\"client\" \"password\"")
+				.when(handler)
+				.retrieveSecret(anyString());
+
+		doReturn("token")
+				.when(handler)
+				.getAccessToken(anyString(), anyString());
+
+		HttpResponse<String> response =
+				mock(HttpResponse.class);
+
+		com.mashape.unirest.http.Headers headers =
+				mock(com.mashape.unirest.http.Headers.class);
+
+		when(response.getHeaders())
+				.thenReturn(headers);
+
+		when(headers.getFirst("ETag"))
+				.thenReturn("etag");
+
+		JSONObject fileDetails =
+				new JSONObject();
+
+		fileDetails.put("fileId", "123");
+		fileDetails.put("filePath", "/folder/test.txt");
+		fileDetails.put("metadata", new JSONArray());
+
+		when(response.getBody())
+				.thenReturn(fileDetails.toString());
+
+		doReturn(response)
+				.when(handler)
+				.getFileInformation(
+						anyString(),
+						anyString());
+
+		OpenSearchRESTClient restClient =
+				mock(OpenSearchRESTClient.class);
+
+		doReturn(restClient)
+				.when(handler)
+				.createOpenSearchClient();
+
+		doNothing()
+				.when(handler)
+				.addIndexWithRetry(
+						any(),
+						anyString(),
+						anyString(),
+						any(JSONObject.class),
+						anyString(),
+						any());
+
+		doReturn(false)
+				.when(handler)
+				.setIndexedMetadata(
+						anyString(),
+						anyString(),
+						anyString(),
+						any(JSONObject.class),
+						anyString());
+
+		String result =
+				handler.handleRequest(
+						Map.of("fileId", "123"),
+						context);
+
+		assertEquals("Closed", result);
+
+		verify(logger)
+				.log(contains("Failed to add metadata"));
+	}
+
     @Test
     void shouldHandleGenericException()
             throws Exception {
@@ -586,4 +783,96 @@ class ProcessSQSMessageTest {
         verify(logger)
                 .log(contains("Failure to recieve file from WFDM"));
     }
+
+    @Test
+	void shouldSkipProtectedCFiles()
+			throws Exception {
+
+		ProcessSQSMessage handler =
+				spy(new ProcessSQSMessage());
+
+		Context context = mock(Context.class);
+		LambdaLogger logger = mock(LambdaLogger.class);
+
+		when(context.getLogger())
+				.thenReturn(logger);
+
+		doReturn("bucket")
+				.when(handler)
+				.getBucketName();
+
+		doReturn("secret")
+				.when(handler)
+				.getSecretManagerName();
+
+		doReturn("\"client\" \"password\"")
+				.when(handler)
+				.retrieveSecret(anyString());
+
+		doReturn("token")
+				.when(handler)
+				.getAccessToken(anyString(), anyString());
+
+		HttpResponse<String> response =
+				mock(HttpResponse.class);
+
+		com.mashape.unirest.http.Headers headers =
+				mock(com.mashape.unirest.http.Headers.class);
+
+		when(response.getHeaders())
+				.thenReturn(headers);
+
+		when(headers.getFirst("ETag"))
+				.thenReturn("etag");
+
+		JSONArray metadata =
+				new JSONArray();
+
+		JSONObject securityMeta =
+				new JSONObject();
+
+		securityMeta.put(
+				"metadataName",
+				"SecurityClassification");
+
+		securityMeta.put(
+				"metadataValue",
+				"Protected C");
+
+		metadata.put(securityMeta);
+
+		JSONObject fileDetails =
+				new JSONObject();
+
+		fileDetails.put("fileId", "123");
+		fileDetails.put("filePath", "/folder/test.txt");
+		fileDetails.put("metadata", metadata);
+
+		when(response.getBody())
+				.thenReturn(fileDetails.toString());
+
+		doReturn(response)
+				.when(handler)
+				.getFileInformation(
+						anyString(),
+						anyString());
+
+		String result =
+				handler.handleRequest(
+						Map.of("fileId", "123"),
+						context);
+
+		assertEquals("Closed", result);
+
+		verify(handler, never())
+				.addIndexWithRetry(
+						any(),
+						anyString(),
+						anyString(),
+						any(JSONObject.class),
+						anyString(),
+						any());
+	}
+
+
 }
