@@ -153,4 +153,38 @@ class TikaParseDocumentTest {
         assertTrue(result.contains("unknown"));
         assertTrue(result.contains("ContentLength"));
     }
+
+
+    @Test
+	void shouldUseTxtParserForPlainText()
+			throws Exception {
+
+	InputStream stream =
+				new ByteArrayInputStream(
+						"hello world".getBytes());
+
+		String result =
+				TikaParseDocument.parseStream(
+						stream,
+						"text/plain");
+
+		assertNotNull(result);
+		assertTrue(result.contains("hello"));
+    }
+
+	@Test
+	void shouldUseTextAndCsvParserForCsv()
+			throws Exception {
+
+		InputStream stream =
+				new ByteArrayInputStream(
+						"name,value\nfoo,bar".getBytes());
+
+		String result =
+				TikaParseDocument.parseStream(
+						stream,
+						"text/csv");
+
+		assertNotNull(result);
+	}
 }
